@@ -1,0 +1,35 @@
+/* Animasi panah */
+    .arrow-animate {
+        animation: arrowMove 1s infinite;
+    }
+
+    @keyframes arrowMove {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(8px); }
+        100% { transform: translateX(0); }
+    }
+
+    /* Animasi panah bawah */
+    @keyframes arrowDownMove {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(8px); }
+        100% { transform: translateY(0); }
+    }
+
+    .arrow-down {
+        display: none; /* default: hidden di desktop */
+        animation: arrowDownMove 1s infinite;
+    }
+
+    .arrow-col {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    /* Mobile view: panah kanan disembunyikan, panah bawah ditampilkan */
+    @media (max-width: 767.98px) {
+        .arrow-right { display: none; }
+        .arrow-down { display: inline-block; }
+    }

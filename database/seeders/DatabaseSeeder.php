@@ -1,0 +1,68 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database.
+     */
+    public function run(): void
+    {
+// Jalankan seeder roles, permissions, dan mapping
+        $this->call([
+            RoleSeeder::class,
+            PermissionSeeder::class,
+            RolePermissionSeeder::class,
+        ]);
+
+        // Buat user default admin
+        $admin = User::firstOrCreate(
+            ['email' => 'it@yahoo.com'],
+            [
+                'name'     => 'Ganteng',
+                'password' => Hash::make('Admin123!'), // password kompleks
+                'status'   => 1, // Active
+            ]
+        );
+        $admin->assignRole('admin');
+
+        // User default frontliner
+        $frontliner = User::firstOrCreate(
+            ['email' => 'frontliner@example.com'],
+            [
+                'name'     => 'Frontliner',
+                'password' => Hash::make('Front123!'),
+                'status'   => 1,
+            ]
+        );
+        $frontliner->assignRole('frontliner');
+
+        // User default pegawai
+        $pegawai = User::firstOrCreate(
+            ['email' => 'pegawai@example.com'],
+            [
+                'name'     => 'Pegawai',
+                'password' => Hash::make('Pegawai123!'),
+                'status'   => 1,
+            ]
+        );
+        $pegawai->assignRole('pegawai');
+
+        // User default tamu (Inactive contoh)
+        $tamu = User::firstOrCreate(
+            ['email' => 'tamu@example.com'],
+            [
+                'name'     => 'Tamu',
+                'password' => Hash::make('Tamu123!'),
+                'status'   => 0, // Inactive
+            ]
+        );
+        // $tamu->assignRole('tamu');
+    }
+}
