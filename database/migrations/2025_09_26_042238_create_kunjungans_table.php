@@ -28,7 +28,8 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
 
-            $table->foreign('tamu_id')->references('id')->on('users')->onDelete('cascade');
+            // Foreign keys
+            $table->foreign('tamu_id')->references('id')->on('tamu')->onDelete('cascade');
             $table->foreign('pegawai_id')->references('id')->on('pegawai')->onDelete('cascade');
         });
     }

@@ -19,6 +19,8 @@ use App\Http\Controllers\Frontliner\KunjunganController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
+use App\Http\Controllers\Tamu\DashboardController as TamuDashboardController;
+use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -44,6 +46,8 @@ Route::prefix('tamu')->name('tamu.')->group(function () {
     Route::get('/kunjungan/status', [TamuController::class, 'status'])->name('kunjungan.status');
 
     Route::get('/thanks', fn () => view('tamu.thanks'))->name('thanks');
+
+
 
     // AJAX filter pegawai by bidang
     Route::get('/get-pegawai/{bidangId}', [TamuController::class, 'getPegawaiByBidang'])
@@ -74,12 +78,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     // Dashboard untuk admin, frontliner, pegawai
-    Route::middleware('role:admin|frontliner|pegawai')
-        ->prefix('dashboard')
-        ->name('dashboard.')
-        ->group(function () {
-            Route::get('/', [DashboardController::class, 'index'])->name('index');
-        });
+    // Dashboard tunggal untuk semua role
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('role:admin|frontliner|pegawai|tamu')
+        ->name('dashboard.index');
 
     // Admin resource management
     Route::middleware('role:admin')
@@ -98,40 +100,67 @@ Route::middleware('auth')->group(function () {
             ->only(['index','show']);
         });
         Route::middleware(['role:frontliner'])
-        ->prefix('kunjungan')
-        ->name('kunjungan.')
+        ->prefix('frontliner')
+        ->name('frontliner.')
         ->group(function () {
-            // Daftar tamu menunggu
-            Route::get('/', [KunjunganController::class, 'index'])->name('index');
+            // Halaman khusus tamu menunggu
+            // Route::get('/tamu-menunggu', [KunjunganController::class, 'menunggu'])
+            //     ->name('tamu.menunggu');
+
+            // Halaman daftar semua kunjungan (bisa difilter ?status=menunggu, dll)
+            Route::get('/kunjungan', [KunjunganController::class, 'index'])
+                ->name('kunjungan.index');
 
             // Aksi frontliner terhadap kunjungan
-            Route::post('/{kunjungan}/approve', [KunjunganController::class, 'approve'])->name('approve');
-            Route::post('/{kunjungan}/reject', [KunjunganController::class, 'reject'])->name('reject');
-            Route::post('/{kunjungan}/checkout', [KunjunganController::class, 'checkout'])->name('checkout');
+            Route::post('/kunjungan/{kunjungan}/approve', [KunjunganController::class, 'approve'])
+                ->name('kunjungan.approve');
+            Route::post('/kunjungan/{kunjungan}/reject', [KunjunganController::class, 'reject'])
+                ->name('kunjungan.reject');
+            Route::post('/kunjungan/{kunjungan}/checkout', [KunjunganController::class, 'checkout'])
+                ->name('kunjungan.checkout');
 
-    Route::middleware(['auth','role:pegawai'])
-        ->prefix('pegawai/kunjungan')
-        ->name('pegawai.kunjungan.')
-        ->group(function () {
-            Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
-            Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
         });
-    });
+        Route::middleware(['auth','role:pegawai'])
+            ->prefix('pegawai/kunjungan')
+            ->name('pegawai.kunjungan.')
+            ->group(function () {
+                Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
+                Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
+            });
 
+
+    Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
+        Route::get('/kunjungan/create', [TamuKunjunganController::class, 'create'])->name('kunjungan.create');
+        Route::post('/kunjungan', [TamuKunjunganController::class, 'store'])->name('kunjungan.store');
+        Route::get('/kunjungan/status', [TamuKunjunganController::class, 'status'])->name('kunjungan.status');
+    });
 
     // User biasa (role:user)
-    Route::middleware('role:user')->group(function () {
-        Route::get('/user/dashboard', fn () => view('dashboard.user'))->name('user.dashboard');
-    });
+    // Route::middleware('role:user')->group(function () {
+    //     Route::get('/user/dashboard', fn () => view('dashboard.user'))->name('user.dashboard');
+    // });
 
     // // Change Password umum (non-admin)
     // Route::get('/password/change', [ChangePasswordController::class, 'show'])->name('password.change');
     // Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change.update');
 
-    Route::middleware(['role:admin|frontliner|pegawai|user'])->group(function () {
+    Route::middleware(['role:admin|frontliner|pegawai|tamu'])->group(function () {
         Route::get('/password/change', [AdminChangePasswordController::class, 'edit'])->name('password.change');
         Route::post('/password/change', [AdminChangePasswordController::class, 'update'])->name('password.change.update');
     });
+
+    // Tamu checkout sendiri
+    Route::post('/tamu/kunjungan/{kunjungan}/checkout',
+        [TamuKunjunganController::class, 'checkout'])
+        ->middleware(['auth','role:tamu'])
+        ->name('tamu.kunjungan.checkout');
+
+    // Frontliner checkout tamu
+    Route::post('/kunjungan/{kunjungan}/checkout',
+        [KunjunganController::class, 'checkout'])
+        ->middleware(['auth','role:frontliner'])
+        ->name('kunjungan.checkout');
+
 
 
     // Logout

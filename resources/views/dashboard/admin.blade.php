@@ -130,27 +130,33 @@
 
 {{-- Dashboard untuk Tamu --}}
 @if($role === 'tamu')
-<div class="card">
-  <div class="card-header"><h4>Status Kunjungan Saya</h4></div>
-  <div class="card-body">
-    @if($kunjunganSaya->isEmpty())
-      <div class="alert alert-info">Anda belum memiliki riwayat kunjungan.</div>
-    @else
-      <ul class="list-group">
-        @foreach($kunjunganSaya as $k)
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ $k->keperluan }} - {{ $k->pegawai->bidang->nama_bidang ?? '-' }}
-            <span class="badge
-              @if($k->status === 'menunggu') badge-warning
-              @elseif($k->status === 'disetujui') badge-success
-              @elseif($k->status === 'ditolak') badge-danger
-              @else badge-secondary @endif">
-              {{ ucfirst($k->status) }}
-            </span>
-          </li>
-        @endforeach
-      </ul>
-    @endif
+<div class="row">
+  <div class="col-lg-4 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Total Kunjungan Saya</h4></div>
+        <div class="card-body">{{ $total }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-success"><i class="fas fa-check"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Kunjungan Diterima</h4></div>
+        <div class="card-body">{{ $diterima }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-danger"><i class="fas fa-times"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Kunjungan Ditolak</h4></div>
+        <div class="card-body">{{ $ditolak }}</div>
+      </div>
+    </div>
   </div>
 </div>
 @endif

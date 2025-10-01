@@ -21,7 +21,7 @@ class RedirectIfAuthenticatedWithRole
             $user = Auth::user();
 
             // Admin, Frontliner, Pegawai → dashboard Stisla
-            if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
+            if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai') || $user->hasRole('tamu')) {
                 return redirect()->route('dashboard.index');
             }
 

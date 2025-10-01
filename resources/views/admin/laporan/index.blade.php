@@ -21,8 +21,8 @@
       <tbody>
         @forelse($kunjungan as $k)
           <tr>
-            <td>{{ $k->tamu?->nama ?? '-' }}</td>
-            <td>{{ $k->pegawai?->nama ?? '-' }}</td>
+            <td>{{ $k->tamu?->nama ?? $k->tamu?->user?->name ?? '-' }}</td>
+            <td>{{ $k->pegawai?->user?->name ?? '-' }}</td>
             <td>{{ $k->keperluan }}</td>
             <td>{{ ucfirst($k->status) }}</td>
             <td>{{ $k->waktu_masuk }}</td>

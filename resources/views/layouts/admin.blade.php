@@ -228,5 +228,7 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
       }
     });
   </script>
+  {{-- Stack untuk script tambahan --}}
+    @stack('scripts')
 </body>
 </html>

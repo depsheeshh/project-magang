@@ -40,25 +40,28 @@
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
             <li>
                 {{-- Dashboard dinamis berdasarkan role --}}
-                @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('frontliner') || Auth::user()->hasRole('pegawai'))
-                <a class="dropdown-item" href="{{ route('dashboard.index') }}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                @elseif(Auth::user()->hasRole('user'))
-                <a class="dropdown-item" href="{{ route('user.dashboard') }}">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard User
-                </a>
-                @elseif(Auth::user()->hasRole('tamu'))
-                {{-- tamu diarahkan ke halaman status kunjungan --}}
-                <a class="dropdown-item" href="{{ route('tamu.kunjungan.status') }}">
-                    <i class="fas fa-clipboard-list"></i> Status Kunjungan
-                </a>
+                @if(Auth::check())
+                    @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('frontliner') || Auth::user()->hasRole('pegawai') || Auth::user()->hasRole('tamu'))
+                        <a class="dropdown-item" href="{{ route('dashboard.index') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    @elseif(Auth::user()->hasRole('user'))
+                        <a class="dropdown-item" href="{{ route('user.dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard User
+                        </a>
+                    @else
+                        <a class="dropdown-item" href="{{ url('/') }}">
+                            <i class="fas fa-home"></i> Home
+                        </a>
+                    @endif
                 @else
-                <a class="dropdown-item" href="{{ url('/') }}">
-                    <i class="fas fa-home"></i> Home
-                </a>
+                    {{-- Jika belum login --}}
+                    <a class="dropdown-item" href="{{ route('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
                 @endif
             </li>
+
             <li>
                 <a class="dropdown-item" href="{{ route('logout') }}"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

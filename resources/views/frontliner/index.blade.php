@@ -24,22 +24,32 @@
         </tr>
       </thead>
       <tbody>
-        @forelse($kunjunganMenunggu as $k)
+        @forelse($kunjungan as $k)
           <tr>
             <td>{{ $k->tamu->nama }}</td>
             <td>{{ $k->tamu->email }}</td>
             <td>{{ $k->pegawai->user->name }}</td>
             <td>{{ $k->keperluan }}</td>
             <td>
-              <form action="{{ route('kunjungan.approve',$k) }}" method="POST" class="d-inline">
-                @csrf
-                <button class="btn btn-success btn-sm">Setujui</button>
-              </form>
-              <form action="{{ route('kunjungan.reject',$k) }}" method="POST" class="d-inline">
-                @csrf
-                <button class="btn btn-danger btn-sm">Tolak</button>
-              </form>
-            </td>
+                @if($k->status === 'menunggu')
+                    <form action="{{ route('frontliner.kunjungan.approve',$k->id) }}" method="POST" style="display:inline">
+                    @csrf
+                    <button class="btn btn-sm btn-success">Setujui</button>
+                    </form>
+                    <form action="{{ route('frontliner.kunjungan.reject',$k->id) }}" method="POST" style="display:inline">
+                    @csrf
+                    <button class="btn btn-sm btn-danger">Tolak</button>
+                    </form>
+                @elseif($k->status === 'sedang_bertamu')
+                    <form action="{{ route('frontliner.kunjungan.checkout',$k->id) }}" method="POST" style="display:inline">
+                    @csrf
+                    <button class="btn btn-sm btn-primary">Checkout</button>
+                    </form>
+                @else
+                    <span class="badge badge-secondary">{{ ucfirst($k->status) }}</span>
+                @endif
+                </td>
+
           </tr>
         @empty
           <tr>

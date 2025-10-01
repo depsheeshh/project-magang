@@ -17,56 +17,57 @@ class DashboardController extends Controller
         $user = Auth::user();
         $role = $user->getRoleNames()->first(); // ambil role utama
 
-        $data = compact('user','role');
+        // Data default
+        $totalUsers = $totalPegawai = $totalBidang = $totalJabatan = null;
+        $kunjunganMenunggu = $kunjunganTerbaru = $kunjunganSaya = collect();
+
+        // Tambahkan default untuk role tamu
+        $total = $diterima = $ditolak = 0;
 
         if ($role === 'admin') {
-            $data = array_merge($data, [
-                'totalUsers'   => User::count(),
-                'totalPegawai' => Pegawai::count(),
-                'totalBidang'  => Bidang::count(),
-                'totalJabatan' => Jabatan::count(),
-            ]);
+            $totalUsers   = User::count();
+            $totalPegawai = Pegawai::count();
+            $totalBidang  = Bidang::count();
+            $totalJabatan = Jabatan::count();
         }
 
         if ($role === 'frontliner') {
-            $data['kunjunganMenunggu'] = Kunjungan::with([
-                    'tamu',
-                    'pegawai.user',
-                    'pegawai.bidang' // bidang lewat pegawai
-                ])
-                ->where('status', 'menunggu')
-                ->orderBy('waktu_masuk','desc')
-                ->take(10)
+            $kunjunganMenunggu = Kunjungan::with(['tamu.user','pegawai.user','pegawai.bidang'])
+                ->where('status','menunggu')
+                ->latest()
                 ->get();
         }
 
         if ($role === 'pegawai') {
-            $pegawaiId = optional($user->pegawai)->id;
-            $data['kunjunganTerbaru'] = Kunjungan::with([
-                    'tamu',
-                    'pegawai.user',
-                    'pegawai.bidang'
-                ])
-                ->when($pegawaiId, fn($q) => $q->where('pegawai_id', $pegawaiId))
-                ->orderBy('waktu_masuk','desc')
-                ->take(10)
-                ->get();
+            $pegawai = $user->pegawai; // relasi user->pegawai
+            if ($pegawai) {
+                $kunjunganTerbaru = Kunjungan::with('tamu')
+                    ->where('pegawai_id',$pegawai->id)
+                    ->latest()
+                    ->take(5)
+                    ->get();
+            }
         }
 
         if ($role === 'tamu') {
-            $tamu = Tamu::where('user_id', $user->id)->first();
-            $data['kunjunganSaya'] = $tamu
-                ? Kunjungan::with([
-                        'pegawai.user',
-                        'pegawai.bidang'
-                    ])
-                    ->where('tamu_id', $tamu->id)
-                    ->orderBy('waktu_masuk','desc')
-                    ->take(5)
-                    ->get()
-                : collect();
+            $tamu = $user->tamu;
+            if ($tamu) {
+                $total    = Kunjungan::where('tamu_id', $tamu->id)->count();
+                $diterima = Kunjungan::where('tamu_id', $tamu->id)
+                                ->whereIn('status',['sedang_bertamu','selesai'])
+                                ->count();
+                $ditolak  = Kunjungan::where('tamu_id', $tamu->id)
+                                ->where('status','ditolak')
+                                ->count();
+            } else {
+                $total = $diterima = $ditolak = 0;
+            }
         }
 
-        return view('dashboard.admin', $data);
+        return view('dashboard.admin', compact(
+            'role',
+            'totalUsers','totalPegawai','totalBidang','totalJabatan',
+            'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya','total','diterima','ditolak'
+        ));
     }
 }

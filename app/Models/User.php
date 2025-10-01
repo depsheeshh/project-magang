@@ -72,5 +72,11 @@ class User extends Authenticatable
     return $this->hasOne(Pegawai::class, 'user_id');
 }
 
+public function tamu()
+{
+    return $this->hasOne(Tamu::class, 'user_id');
+}
+
+
 
 }
