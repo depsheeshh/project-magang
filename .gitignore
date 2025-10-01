@@ -19,6 +19,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/startbootstrap-freelancer-master
 Homestead.json
 Homestead.yaml
 Thumbs.db
