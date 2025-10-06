@@ -11,14 +11,6 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-
-//     public function __construct()
-// {
-//     $this->middleware(['auth', 'role:admin']);
-// }
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         // eager load relasi roles supaya data role selalu fresh
@@ -45,8 +37,14 @@ class UserController extends Controller
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
-            'status'   => (int) $request->status, // langsung ambil nilainya
+            'status'   => (int) $request->status,
         ]);
+
+        // Cegah assign role jika belum verifikasi email
+        if (is_null($user->email_verified_at)) {
+            return redirect()->route('admin.users.index')
+                ->withErrors(['role' => 'User belum verifikasi email, tidak bisa diberi role.']);
+        }
 
         $user->syncRoles([$request->role]);
 
@@ -75,7 +73,7 @@ class UserController extends Controller
         $data = [
             'name'   => $request->name,
             'email'  => $request->email,
-            'status' => (int) $request->status, // jangan kasih default 1
+            'status' => (int) $request->status,
         ];
 
         if ($request->filled('password')) {
@@ -83,6 +81,13 @@ class UserController extends Controller
         }
 
         $user->update($data);
+
+        // Cegah assign role jika belum verifikasi email
+        if (is_null($user->email_verified_at)) {
+            return redirect()->route('admin.users.index')
+                ->withErrors(['role' => 'User belum verifikasi email, tidak bisa diberi role.']);
+        }
+
         $user->syncRoles([$request->role]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui');

@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,7 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-// Jalankan seeder roles, permissions, dan mapping
+        // Jalankan seeder roles, permissions, dan mapping
         $this->call([
             RoleSeeder::class,
             PermissionSeeder::class,
@@ -25,9 +24,10 @@ class DatabaseSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'it@yahoo.com'],
             [
-                'name'     => 'Ganteng',
-                'password' => Hash::make('Admin123!'), // password kompleks
-                'status'   => 1, // Active
+                'name'              => 'Ganteng',
+                'password'          => Hash::make('Admin123!'), // password kompleks
+                'status'            => 1, // Active
+                'email_verified_at' => now(), // langsung verified
             ]
         );
         $admin->assignRole('admin');
@@ -36,9 +36,10 @@ class DatabaseSeeder extends Seeder
         $frontliner = User::firstOrCreate(
             ['email' => 'frontliner@example.com'],
             [
-                'name'     => 'Frontliner',
-                'password' => Hash::make('Front123!'),
-                'status'   => 1,
+                'name'              => 'Frontliner',
+                'password'          => Hash::make('Front123!'),
+                'status'            => 1,
+                'email_verified_at' => now(),
             ]
         );
         $frontliner->assignRole('frontliner');
@@ -47,9 +48,10 @@ class DatabaseSeeder extends Seeder
         $pegawai = User::firstOrCreate(
             ['email' => 'pegawai@example.com'],
             [
-                'name'     => 'Pegawai',
-                'password' => Hash::make('Pegawai123!'),
-                'status'   => 1,
+                'name'              => 'Pegawai',
+                'password'          => Hash::make('Pegawai123!'),
+                'status'            => 1,
+                'email_verified_at' => now(),
             ]
         );
         $pegawai->assignRole('pegawai');
@@ -58,9 +60,10 @@ class DatabaseSeeder extends Seeder
         $tamu = User::firstOrCreate(
             ['email' => 'tamu@example.com'],
             [
-                'name'     => 'Tamu',
-                'password' => Hash::make('Tamu123!'),
-                'status'   => 0, // Inactive
+                'name'              => 'Tamu',
+                'password'          => Hash::make('Tamu123!'),
+                'status'            => 0, // Inactive
+                'email_verified_at' => now(),
             ]
         );
         // $tamu->assignRole('tamu');

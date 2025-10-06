@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationCodeMail;
 
 class RegisterController extends Controller
 {
@@ -32,16 +34,29 @@ class RegisterController extends Controller
             'password.min' => 'Password minimal 8 karakter.',
         ]);
 
+        // Buat user baru
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+        // Generate kode verifikasi
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'verification_code'       => $code, // string
+            'verification_expires_at' => now()->addMinutes(15), // datetime
+        ]);
+
+        // Kirim email kode verifikasi
+        Mail::to($user->email)->send(new VerificationCodeMail($code));
+
+        // Login user sementara
         Auth::login($user);
 
-        // Biarkan middleware yang menentukan redirect
-        return redirect()->intended()
-            ->with('status','Registrasi berhasil, selamat datang!');
+        // Redirect ke halaman verifikasi
+        return redirect()->route('verification.form')
+            ->with('status','Registrasi berhasil! Silakan cek email untuk kode verifikasi.');
     }
 }

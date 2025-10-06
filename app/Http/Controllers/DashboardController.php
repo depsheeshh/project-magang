@@ -24,6 +24,10 @@ class DashboardController extends Controller
         // Tambahkan default untuk role tamu
         $total = $diterima = $ditolak = 0;
 
+         // khusus pegawai
+        $totalKunjungan = $sedangBertamu = $menunggu = $selesai = $ditolakPegawai = 0;
+        $riwayatSingkat = collect();
+
         if ($role === 'admin') {
             $totalUsers   = User::count();
             $totalPegawai = Pegawai::count();
@@ -39,15 +43,36 @@ class DashboardController extends Controller
         }
 
         if ($role === 'pegawai') {
-            $pegawai = $user->pegawai; // relasi user->pegawai
+            $pegawai = $user->pegawai;
             if ($pegawai) {
+                // Kunjungan terbaru
                 $kunjunganTerbaru = Kunjungan::with('tamu')
                     ->where('pegawai_id',$pegawai->id)
                     ->latest()
                     ->take(5)
                     ->get();
+
+                // Ringkasan statistik
+                $totalKunjungan   = Kunjungan::where('pegawai_id',$pegawai->id)->count();
+                $sedangBertamu    = Kunjungan::where('pegawai_id',$pegawai->id)
+                                        ->where('status','sedang_bertamu')->count();
+                $menunggu         = Kunjungan::where('pegawai_id',$pegawai->id)
+                                        ->where('status','menunggu')->count();
+                $selesai          = Kunjungan::where('pegawai_id',$pegawai->id)
+                                        ->where('status','selesai')->count();
+                $ditolakPegawai   = Kunjungan::where('pegawai_id',$pegawai->id)
+                                        ->where('status','ditolak')->count();
+
+                // Riwayat singkat
+                $riwayatSingkat = Kunjungan::with('tamu')
+                    ->where('pegawai_id',$pegawai->id)
+                    ->whereIn('status',['selesai','ditolak'])
+                    ->latest()
+                    ->take(5)
+                    ->get();
             }
         }
+
 
         if ($role === 'tamu') {
             $tamu = $user->tamu;
@@ -67,7 +92,8 @@ class DashboardController extends Controller
         return view('dashboard.admin', compact(
             'role',
             'totalUsers','totalPegawai','totalBidang','totalJabatan',
-            'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya','total','diterima','ditolak'
+            'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya','total','diterima','ditolak',
+            'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat'
         ));
     }
 }

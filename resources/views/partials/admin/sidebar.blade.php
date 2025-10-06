@@ -100,7 +100,7 @@
         {{-- History Logs --}}
         @can('logs.view')
           <li>
-            <a class="nav-link {{ request()->is('admin/history_logs*') ? 'active' : '' }}"
+            <a class="nav-link {{ request()->routeIs('admin.history_logs.*') ? 'active' : '' }}"
                href="{{ route('admin.history_logs.index') }}">
               <i class="fas fa-book"></i> Logs
             </a>

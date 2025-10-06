@@ -22,8 +22,12 @@ class PegawaiController extends Controller
     {
         $pegawai = Pegawai::with(['user','bidang','jabatan'])->paginate(10);
 
-        // Tampilkan hanya user yang belum punya entri pegawai
-        $users   = User::doesntHave('pegawai')->orderBy('name')->get();
+        // hanya ambil user yang punya role 'pegawai' dan belum punya entri pegawai
+        $users = User::role('pegawai')
+            ->doesntHave('pegawai')
+            ->orderBy('name')
+            ->get();
+
         $bidang  = Bidang::orderBy('nama_bidang')->get();
         $jabatan = Jabatan::orderBy('nama_jabatan')->get();
 
@@ -59,6 +63,12 @@ class PegawaiController extends Controller
             'telepon'   => 'nullable|string|max:20',
             'reason'    => 'nullable|string|max:1000',
         ]);
+
+        // pastikan user yang dipilih memang punya role 'pegawai'
+        $user = User::findOrFail($validated['user_id']);
+        if (!$user->hasRole('pegawai')) {
+            return redirect()->back()->withErrors(['user_id' => 'User yang dipilih bukan role pegawai.']);
+        }
 
         Pegawai::create([
             'user_id'   => $validated['user_id'],
@@ -110,7 +120,7 @@ class PegawaiController extends Controller
         ]);
 
         // Pastikan observer bisa membaca reason: reason sudah ada di $request
-        $pegawai->update([
+         $pegawai->update([
             'bidang_id' => $validated['bidang_id'] ?? null,
             'jabatan_id'=> $validated['jabatan_id'] ?? null,
             'nip'       => $validated['nip'] ?? null,

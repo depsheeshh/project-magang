@@ -23,13 +23,15 @@
           <tr>
             <th>Role</th>
             <td>
-              @foreach($user->roles as $role)
+              @forelse($user->roles as $role)
                 <span class="badge badge-info">{{ ucfirst($role->name) }}</span>
-              @endforeach
+              @empty
+                <span class="text-muted">Belum ada role</span>
+              @endforelse
             </td>
           </tr>
           <tr>
-            <th>Status</th>
+            <th>Status Akun</th>
             <td>
               @if($user->status)
                 <span class="badge badge-success">Active</span>
@@ -37,6 +39,26 @@
                 <span class="badge badge-danger">Inactive</span>
               @endif
             </td>
+          </tr>
+          <tr>
+            <th>Verifikasi Email</th>
+            <td>
+              @if($user->email_verified_at)
+                <span class="badge badge-success">Terverifikasi</span>
+                <br>
+                <small class="text-muted">pada {{ $user->email_verified_at->format('d M Y H:i') }}</small>
+              @else
+                <span class="badge badge-danger">Belum Verifikasi</span>
+              @endif
+            </td>
+          </tr>
+          <tr>
+            <th>Dibuat</th>
+            <td>{{ $user->created_at->format('d M Y H:i') }}</td>
+          </tr>
+          <tr>
+            <th>Terakhir Update</th>
+            <td>{{ $user->updated_at->format('d M Y H:i') }}</td>
           </tr>
         </table>
       </div>

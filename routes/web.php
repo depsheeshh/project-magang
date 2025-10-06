@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Frontliner\KunjunganController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
@@ -75,91 +76,105 @@ Route::middleware('guest')->group(function () {
 });
 
 // Authenticated routes
-Route::middleware('auth')->group(function () {
+Route::middleware('auth',)->group(function () {
 
-    // Dashboard untuk admin, frontliner, pegawai
-    // Dashboard tunggal untuk semua role
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->middleware('role:admin|frontliner|pegawai|tamu')
-        ->name('dashboard.index');
+    // Verifikasi Email
+    Route::get('/verify-email', [VerificationController::class, 'showForm'])->name('verification.form');
+    Route::post('/verify-email', [VerificationController::class, 'verify'])->name('verification.verify');
+     Route::post('/verify-email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
 
-    // Admin resource management
-    Route::middleware('role:admin')
-        ->prefix('admin')
-        ->name('admin.')
-        ->group(function () {
-            Route::resource('/users', AdminUserController::class);
-            Route::resource('/roles', RoleController::class);
-            Route::resource('/permissions', PermissionController::class);
-            // Tambahan master data
-            Route::resource('/pegawai', PegawaiController::class);
-            Route::resource('/bidang', BidangController::class);
-            Route::resource('/laporan', LaporanController::class);
-            Route::resource('/jabatan', JabatanController::class);
-            Route::resource('/history_logs', HistoryLogController::class)
-            ->only(['index','show']);
-        });
-        Route::middleware(['role:frontliner'])
-        ->prefix('frontliner')
-        ->name('frontliner.')
-        ->group(function () {
-            // Halaman khusus tamu menunggu
-            // Route::get('/tamu-menunggu', [KunjunganController::class, 'menunggu'])
-            //     ->name('tamu.menunggu');
+     // Semua route lain WAJIB verified
+    Route::middleware('ensure.verified')->group(function() {
+        // Dashboard untuk admin, frontliner, pegawai
+        // Dashboard tunggal untuk semua role
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->middleware('verified','role:admin|frontliner|pegawai|tamu')
+            ->name('dashboard.index');
 
-            // Halaman daftar semua kunjungan (bisa difilter ?status=menunggu, dll)
-            Route::get('/kunjungan', [KunjunganController::class, 'index'])
-                ->name('kunjungan.index');
-
-            // Aksi frontliner terhadap kunjungan
-            Route::post('/kunjungan/{kunjungan}/approve', [KunjunganController::class, 'approve'])
-                ->name('kunjungan.approve');
-            Route::post('/kunjungan/{kunjungan}/reject', [KunjunganController::class, 'reject'])
-                ->name('kunjungan.reject');
-            Route::post('/kunjungan/{kunjungan}/checkout', [KunjunganController::class, 'checkout'])
-                ->name('kunjungan.checkout');
-
-        });
-        Route::middleware(['auth','role:pegawai'])
-            ->prefix('pegawai/kunjungan')
-            ->name('pegawai.kunjungan.')
+        // Admin resource management
+        Route::middleware('role:admin')
+            ->prefix('admin')
+            ->name('admin.')
             ->group(function () {
-                Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
-                Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
+                Route::resource('/users', AdminUserController::class);
+                Route::resource('/roles', RoleController::class);
+                Route::resource('/permissions', PermissionController::class);
+                // Tambahan master data
+                Route::resource('/pegawai', PegawaiController::class);
+                Route::resource('/bidang', BidangController::class);
+                // Export PDF
+                Route::get('/laporan/cetak', [LaporanController::class, 'cetakPdf'])
+                    ->name('laporan.cetak');
+                Route::resource('/laporan', LaporanController::class);
+                Route::resource('/jabatan', JabatanController::class);
+                Route::resource('/history_logs', HistoryLogController::class)
+                ->only(['index','show']);
             });
+            Route::middleware(['role:frontliner'])
+            ->prefix('frontliner')
+            ->name('frontliner.')
+            ->group(function () {
+                // Halaman khusus tamu menunggu
+                // Route::get('/tamu-menunggu', [KunjunganController::class, 'menunggu'])
+                //     ->name('tamu.menunggu');
+
+                // Halaman daftar semua kunjungan (bisa difilter ?status=menunggu, dll)
+                Route::get('/kunjungan', [KunjunganController::class, 'index'])
+                    ->name('kunjungan.index');
+
+                // Aksi frontliner terhadap kunjungan
+                Route::post('/kunjungan/{kunjungan}/approve', [KunjunganController::class, 'approve'])
+                    ->name('kunjungan.approve');
+                Route::post('/kunjungan/{kunjungan}/reject', [KunjunganController::class, 'reject'])
+                    ->name('kunjungan.reject');
+                Route::post('/kunjungan/{kunjungan}/checkout', [KunjunganController::class, 'checkout'])
+                    ->name('kunjungan.checkout');
+
+            });
+            Route::middleware(['role:pegawai'])
+                ->prefix('pegawai')
+                ->name('pegawai.')
+                ->group(function () {
+                    Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
+                        Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
+                        Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
+                        Route::post('/{kunjungan}/konfirmasi', [PegawaiKunjunganController::class, 'konfirmasi'])->name('konfirmasi');
+                });
+                });
 
 
-    Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
-        Route::get('/kunjungan/create', [TamuKunjunganController::class, 'create'])->name('kunjungan.create');
-        Route::post('/kunjungan', [TamuKunjunganController::class, 'store'])->name('kunjungan.store');
-        Route::get('/kunjungan/status', [TamuKunjunganController::class, 'status'])->name('kunjungan.status');
+        Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
+            Route::get('/kunjungan/create', [TamuKunjunganController::class, 'create'])->name('kunjungan.create');
+            Route::post('/kunjungan', [TamuKunjunganController::class, 'store'])->name('kunjungan.store');
+            Route::get('/kunjungan/status', [TamuKunjunganController::class, 'status'])->name('kunjungan.status');
+        });
+
+        // User biasa (role:user)
+        // Route::middleware('role:user')->group(function () {
+        //     Route::get('/user/dashboard', fn () => view('dashboard.user'))->name('user.dashboard');
+        // });
+
+        // // Change Password umum (non-admin)
+        // Route::get('/password/change', [ChangePasswordController::class, 'show'])->name('password.change');
+        // Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change.update');
+
+        Route::middleware(['role:admin|frontliner|pegawai|tamu'])->group(function () {
+            Route::get('/password/change', [AdminChangePasswordController::class, 'edit'])->name('password.change');
+            Route::post('/password/change', [AdminChangePasswordController::class, 'update'])->name('password.change.update');
+        });
+
+        // Tamu checkout sendiri
+        Route::post('/tamu/kunjungan/{kunjungan}/checkout',
+            [TamuKunjunganController::class, 'checkout'])
+            ->middleware(['auth','role:tamu'])
+            ->name('tamu.kunjungan.checkout');
+
+        // Frontliner checkout tamu
+        Route::post('/kunjungan/{kunjungan}/checkout',
+            [KunjunganController::class, 'checkout'])
+            ->middleware(['auth','role:frontliner'])
+            ->name('kunjungan.checkout');
     });
-
-    // User biasa (role:user)
-    // Route::middleware('role:user')->group(function () {
-    //     Route::get('/user/dashboard', fn () => view('dashboard.user'))->name('user.dashboard');
-    // });
-
-    // // Change Password umum (non-admin)
-    // Route::get('/password/change', [ChangePasswordController::class, 'show'])->name('password.change');
-    // Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change.update');
-
-    Route::middleware(['role:admin|frontliner|pegawai|tamu'])->group(function () {
-        Route::get('/password/change', [AdminChangePasswordController::class, 'edit'])->name('password.change');
-        Route::post('/password/change', [AdminChangePasswordController::class, 'update'])->name('password.change.update');
-    });
-
-    // Tamu checkout sendiri
-    Route::post('/tamu/kunjungan/{kunjungan}/checkout',
-        [TamuKunjunganController::class, 'checkout'])
-        ->middleware(['auth','role:tamu'])
-        ->name('tamu.kunjungan.checkout');
-
-    // Frontliner checkout tamu
-    Route::post('/kunjungan/{kunjungan}/checkout',
-        [KunjunganController::class, 'checkout'])
-        ->middleware(['auth','role:frontliner'])
-        ->name('kunjungan.checkout');
 
 
 

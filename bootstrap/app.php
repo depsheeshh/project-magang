@@ -8,6 +8,7 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticatedWithRole;
 use App\Http\Middleware\EnsureTamuScanned;
+use App\Http\Middleware\EnsureEmailIsVerified;
 
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'redirect.role' => RedirectIfAuthenticatedWithRole::class,
             'tamu.scanned' => EnsureTamuScanned::class,
+            'ensure.verified' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

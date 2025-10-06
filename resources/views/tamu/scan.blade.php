@@ -3,9 +3,9 @@
 @section('title','Scan QR Code')
 
 @section('content')
-<div class="container d-flex flex-column justify-content-center align-items-center mt-4" style="min-height: 80vh;">
+<div class="container d-flex flex-column justify-content-center align-items-center mt-5" style="min-height: 80vh;">
 
-  <h2 class="mb-2 fw-bold">📷 Scan QR Code</h2>
+  <h2 class="mb-2 mt-5 fw-bold">📷 Scan QR Code</h2>
   <p class="text-muted mb-4">Arahkan kamera Anda ke QR Code yang tersedia</p>
 
   {{-- Placeholder untuk scanner --}}
@@ -45,7 +45,7 @@
     });
 }
 
-  let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+  let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
   html5QrcodeScanner.render(onScanSuccess);
   // contoh toggle flash
     // let isFlashOn = false;

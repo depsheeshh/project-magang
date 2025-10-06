@@ -28,6 +28,7 @@
                 <th>Role</th>
                 <th>Dibuat</th>
                 <th>Status</th>
+                <th>Verifikasi Email</th> <!-- kolom baru -->
                 <th>Aksi</th>
               </tr>
             </thead>
@@ -49,6 +50,13 @@
                   @else
                     <div class="badge badge-danger">Inactive</div>
                   @endif
+                </td>
+                <td>
+                    @if($user->email_verified_at)
+                    <div class="badge badge-success">Terverifikasi</div>
+                    @else
+                    <div class="badge badge-danger">Belum Verifikasi</div>
+                    @endif
                 </td>
                 <td>
                   <!-- Tombol trigger modal edit -->
