@@ -13,7 +13,6 @@ class UserController extends Controller
 {
     public function index()
     {
-        // eager load relasi roles supaya data role selalu fresh
         $users = User::with('roles')->paginate(10);
         $roles = Role::all();
 
@@ -34,17 +33,12 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'status'   => (int) $request->status,
+            'name'              => $request->name,
+            'email'             => $request->email,
+            'password'          => Hash::make($request->password),
+            'status'            => (int) $request->status,
+            'email_verified_at' => now(),
         ]);
-
-        // Cegah assign role jika belum verifikasi email
-        if (is_null($user->email_verified_at)) {
-            return redirect()->route('admin.users.index')
-                ->withErrors(['role' => 'User belum verifikasi email, tidak bisa diberi role.']);
-        }
 
         $user->syncRoles([$request->role]);
 
@@ -63,9 +57,10 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users,email,' . $user->id,
             'role'     => 'required|exists:roles,name',
             'status'   => 'required|in:0,1',
-            'password' => [
-                'sometimes',
+            'old_password' => 'nullable|required_with:new_password',
+            'new_password' => [
                 'nullable',
+                'confirmed',
                 Password::min(8)->mixedCase()->letters()->numbers()->symbols(),
             ],
         ]);
@@ -76,18 +71,28 @@ class UserController extends Controller
             'status' => (int) $request->status,
         ];
 
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+        // ✅ Validasi password lama & baru
+        if ($request->filled('old_password') && !$request->filled('new_password')) {
+            return back()->withErrors(['new_password' => 'Password baru wajib diisi jika Anda mengisi password lama.']);
+        }
+
+        if ($request->filled('new_password')) {
+            if (!$request->filled('old_password')) {
+                return back()->withErrors(['old_password' => 'Password lama wajib diisi untuk mengganti password.']);
+            }
+
+            if (!Hash::check($request->old_password, $user->password)) {
+                return back()->withErrors(['old_password' => 'Password lama tidak sesuai.']);
+            }
+
+            if (Hash::check($request->new_password, $user->password)) {
+                return back()->withErrors(['new_password' => 'Password baru tidak boleh sama dengan password lama.']);
+            }
+
+            $data['password'] = Hash::make($request->new_password);
         }
 
         $user->update($data);
-
-        // Cegah assign role jika belum verifikasi email
-        if (is_null($user->email_verified_at)) {
-            return redirect()->route('admin.users.index')
-                ->withErrors(['role' => 'User belum verifikasi email, tidak bisa diberi role.']);
-        }
-
         $user->syncRoles([$request->role]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui');

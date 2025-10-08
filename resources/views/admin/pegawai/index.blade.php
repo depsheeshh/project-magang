@@ -46,7 +46,6 @@
             </button>
             <form action="{{ route('admin.pegawai.destroy',$p->id) }}" method="POST" class="d-inline">
                 @csrf @method('DELETE')
-                <input type="hidden" name="reason" value="Menghapus pegawai {{ $p->user->name }}">
                 <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
                 <i class="fas fa-trash"></i>
                 </button>
@@ -105,10 +104,6 @@
               @endforeach
             </select>
           </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
-          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary">Simpan</button>
@@ -164,10 +159,6 @@
                 </option>
               @endforeach
             </select>
-          </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
           </div>
         </div>
         <div class="modal-footer">

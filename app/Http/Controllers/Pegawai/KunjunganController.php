@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pegawai;
 use App\Http\Controllers\Controller;
 use App\Models\Kunjungan;
 use Illuminate\Support\Facades\Auth;
+use App\Models\HistoryLog;
 use Illuminate\Http\Request;
 
 class KunjunganController extends Controller
@@ -56,13 +57,34 @@ class KunjunganController extends Controller
         }
 
         if ($request->aksi === 'terima') {
-            $kunjungan->status = 'sedang_bertamu';
-        } elseif ($request->aksi === 'tolak') {
-            $kunjungan->status = 'ditolak';
-        }
+        $kunjungan->status = 'sedang_bertamu';
+        $kunjungan->alasan_penolakan = null; // bersihkan jika sebelumnya pernah ditolak
+    } elseif ($request->aksi === 'tolak') {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+        ]);
+
+        $kunjungan->status = 'ditolak';
+        $kunjungan->alasan_penolakan = $request->reason;
+
+        // Simpan ke history log
+        HistoryLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'update',
+            'table_name' => 'kunjungan',
+            'record_id'  => $kunjungan->id,
+            'reason'     => 'Pegawai menolak tamu dengan alasan: '.$request->reason,
+            'old_values' => null,
+            'new_values' => json_encode([
+                'status' => 'ditolak',
+                'alasan_penolakan' => $request->reason,
+            ]),
+        ]);
+    }
 
         $kunjungan->save();
 
         return back()->with('success', 'Konfirmasi berhasil diperbarui.');
     }
+
 }

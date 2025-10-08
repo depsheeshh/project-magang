@@ -32,14 +32,21 @@
         <tr>
           <td>{{ $loop->iteration }}</td>
           <td>{{ $b->nama_bidang }}</td>
-          <td>{{ $b->deskripsi }}</td>
           <td>
+            {{ Str::limit($b->deskripsi, 120) }}
+            @if(strlen($b->deskripsi) > 120)
+              <a href="{{ route('admin.bidang.show', $b->id) }}">Lihat Selengkapnya</a>
+            @endif
+          </td>
+          <td>
+            <a href="{{ route('admin.bidang.show', $b->id) }}" class="btn btn-info btn-sm">
+              <i class="fas fa-eye"></i>
+            </a>
             <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editBidangModal{{ $b->id }}">
               <i class="fas fa-edit"></i>
             </button>
             <form action="{{ route('admin.bidang.destroy',$b->id) }}" method="POST" class="d-inline">
               @csrf @method('DELETE')
-              <input type="hidden" name="reason" value="Menghapus bidang {{ $b->nama_bidang }}">
               <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
                 <i class="fas fa-trash"></i>
               </button>
@@ -74,10 +81,6 @@
             <label>Deskripsi</label>
             <textarea name="deskripsi" class="form-control"></textarea>
           </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
-          </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary">Simpan</button>
@@ -106,10 +109,6 @@
           <div class="form-group">
             <label>Deskripsi</label>
             <textarea name="deskripsi" class="form-control">{{ $b->deskripsi }}</textarea>
-          </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
           </div>
         </div>
         <div class="modal-footer">

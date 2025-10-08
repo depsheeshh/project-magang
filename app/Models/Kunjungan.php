@@ -19,6 +19,7 @@ class Kunjungan extends Model
         'status',
         'waktu_masuk',
         'waktu_keluar',
+        'alasan_penolakan', // tambahkan ini
         'catatan',
     ];
 

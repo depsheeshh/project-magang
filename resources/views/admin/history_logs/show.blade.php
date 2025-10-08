@@ -22,21 +22,57 @@
       <dt class="col-sm-3">Record ID</dt>
       <dd class="col-sm-9">{{ $historyLog->record_id }}</dd>
 
-      <dt class="col-sm-3">Old Values</dt>
+      <dt class="col-sm-3">Perubahan Data</dt>
       <dd class="col-sm-9">
-        @if($historyLog->old_values)
-          <pre>{{ json_encode(json_decode($historyLog->old_values), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
-        @else
-          <em>-</em>
-        @endif
-      </dd>
+        @php
+          $oldValues = json_decode($historyLog->old_values, true) ?? [];
+          $newValues = json_decode($historyLog->new_values, true) ?? [];
+          $changes = [];
+          $ignore = ['id','created_at','updated_at','deleted_at','deleted_id'];
 
-      <dt class="col-sm-3">New Values</dt>
-      <dd class="col-sm-9">
-        @if($historyLog->new_values)
-          <pre>{{ json_encode(json_decode($historyLog->new_values), JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
+          if ($historyLog->action === 'created') {
+              foreach ($newValues as $key => $val) {
+                  if (!in_array($key, $ignore)) {
+                      $changes[$key] = ['old' => null, 'new' => $val];
+                  }
+              }
+          } elseif ($historyLog->action === 'updated') {
+              foreach ($newValues as $key => $newVal) {
+                  if (in_array($key, $ignore)) continue;
+                  $oldVal = $oldValues[$key] ?? null;
+                  if ($oldVal != $newVal) {
+                      $changes[$key] = ['old' => $oldVal, 'new' => $newVal];
+                  }
+              }
+          } elseif ($historyLog->action === 'deleted') {
+              $mainField = $oldValues['nama']
+                  ?? $oldValues['nama_jabatan']
+                  ?? $oldValues['nama_bidang']
+                  ?? $historyLog->record_id;
+              $changes = ['deleted' => ['old' => $mainField, 'new' => null]];
+          }
+        @endphp
+
+        @if(count($changes))
+          <ul class="list-unstyled">
+            @foreach($changes as $field => $change)
+              @if($field === 'deleted')
+                <li><span class="text-danger">Data <strong>{{ $change['old'] }}</strong> dihapus</span></li>
+              @elseif(is_null($change['old']))
+                <li><strong>{{ ucfirst(str_replace('_',' ',$field)) }}</strong>:
+                  <span class="text-success">{{ $change['new'] }}</span>
+                </li>
+              @else
+                <li><strong>{{ ucfirst(str_replace('_',' ',$field)) }}</strong>:
+                  <span class="text-danger">{{ $change['old'] }}</span>
+                  <i class="fas fa-arrow-right mx-1"></i>
+                  <span class="text-success">{{ $change['new'] }}</span>
+                </li>
+              @endif
+            @endforeach
+          </ul>
         @else
-          <em>-</em>
+          <em>Tidak ada perubahan data</em>
         @endif
       </dd>
 

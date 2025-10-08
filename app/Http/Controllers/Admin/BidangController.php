@@ -32,6 +32,11 @@ class BidangController extends Controller
     Bidang::create($validated);
         return redirect()->route('admin.bidang.index')->with('status','Bidang berhasil ditambahkan');
     }
+    public function show($id)
+{
+    $bidang = Bidang::findOrFail($id);
+    return view('admin.bidang.show', compact('bidang'));
+}
 
     // public function edit(Bidang $bidang)
     // {

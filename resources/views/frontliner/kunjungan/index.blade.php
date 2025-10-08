@@ -12,36 +12,11 @@
 
     {{-- Tab navigasi filter status --}}
     <ul class="nav nav-pills mb-3">
-      <li class="nav-item">
-        <a class="nav-link {{ !request()->has('status') ? 'active' : '' }}"
-           href="{{ route('frontliner.kunjungan.index') }}">
-          Semua
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request('status')==='menunggu' ? 'active' : '' }}"
-           href="{{ route('frontliner.kunjungan.index',['status'=>'menunggu']) }}">
-          Menunggu
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request('status')==='sedang_bertamu' ? 'active' : '' }}"
-           href="{{ route('frontliner.kunjungan.index',['status'=>'sedang_bertamu']) }}">
-          Sedang Bertamu
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request('status')==='selesai' ? 'active' : '' }}"
-           href="{{ route('frontliner.kunjungan.index',['status'=>'selesai']) }}">
-          Selesai
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link {{ request('status')==='ditolak' ? 'active' : '' }}"
-           href="{{ route('frontliner.kunjungan.index',['status'=>'ditolak']) }}">
-          Ditolak
-        </a>
-      </li>
+      <li class="nav-item"><a class="nav-link {{ !request()->has('status') ? 'active' : '' }}" href="{{ route('frontliner.kunjungan.index') }}">Semua</a></li>
+      <li class="nav-item"><a class="nav-link {{ request('status')==='menunggu' ? 'active' : '' }}" href="{{ route('frontliner.kunjungan.index',['status'=>'menunggu']) }}">Menunggu</a></li>
+      <li class="nav-item"><a class="nav-link {{ request('status')==='sedang_bertamu' ? 'active' : '' }}" href="{{ route('frontliner.kunjungan.index',['status'=>'sedang_bertamu']) }}">Sedang Bertamu</a></li>
+      <li class="nav-item"><a class="nav-link {{ request('status')==='selesai' ? 'active' : '' }}" href="{{ route('frontliner.kunjungan.index',['status'=>'selesai']) }}">Selesai</a></li>
+      <li class="nav-item"><a class="nav-link {{ request('status')==='ditolak' ? 'active' : '' }}" href="{{ route('frontliner.kunjungan.index',['status'=>'ditolak']) }}">Ditolak</a></li>
     </ul>
 
     {{-- Tabel daftar kunjungan --}}
@@ -54,7 +29,9 @@
             <th>Pegawai Tujuan</th>
             <th>Keperluan</th>
             <th>Waktu Masuk</th>
+            <th>Waktu Keluar</th>
             <th>Status</th>
+            <th>Alasan Penolakan</th>
             <th>Aksi</th>
           </tr>
         </thead>
@@ -67,6 +44,16 @@
               <td>{{ $k->keperluan }}</td>
               <td>{{ \Carbon\Carbon::parse($k->waktu_masuk)->format('d/m/Y H:i') }}</td>
               <td>
+                @if($k->waktu_keluar)
+                    <span class="text-success">
+                        {{ \Carbon\Carbon::parse($k->waktu_keluar)->translatedFormat('d/m/Y H:i') }}
+                    </span>
+                @else
+                    <span class="text-muted">-</span>
+                @endif
+            </td>
+
+              <td>
                 @if($k->status === 'menunggu')
                   <span class="badge badge-warning">Menunggu</span>
                 @elseif($k->status === 'sedang_bertamu')
@@ -78,15 +65,24 @@
                 @endif
               </td>
               <td>
+                @if($k->status === 'ditolak')
+                    {{ $k->alasan_penolakan ?? '-' }}
+                @else
+                    <em>-</em>
+                @endif
+                </td>
+              <td>
                 @if($k->status === 'menunggu')
+                  {{-- Setujui --}}
                   <form action="{{ route('frontliner.kunjungan.approve',$k->id) }}" method="POST" style="display:inline">
                     @csrf
                     <button class="btn btn-sm btn-success">Setujui</button>
                   </form>
-                  <form action="{{ route('frontliner.kunjungan.reject',$k->id) }}" method="POST" style="display:inline">
-                    @csrf
-                    <button class="btn btn-sm btn-danger">Tolak</button>
-                  </form>
+
+                  {{-- Tolak (trigger modal) --}}
+                  <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#tolakModal{{ $k->id }}">
+                    Tolak
+                  </button>
                 @elseif($k->status === 'sedang_bertamu')
                   <form action="{{ route('frontliner.kunjungan.checkout',$k->id) }}" method="POST" style="display:inline">
                     @csrf
@@ -105,4 +101,35 @@
     </div>
   </div>
 </div>
+@endsection
+
+@section('modals')
+  @foreach($kunjungan as $k)
+    @if($k->status === 'menunggu')
+    <!-- Modal Tolak -->
+    <div class="modal fade" id="tolakModal{{ $k->id }}" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <form action="{{ route('frontliner.kunjungan.reject',$k->id) }}" method="POST">
+            @csrf
+            <div class="modal-header">
+              <h5 class="modal-title">Alasan Penolakan</h5>
+              <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Alasan</label>
+                <textarea name="reason" class="form-control" required placeholder="Tuliskan alasan menolak tamu ini..."></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-danger">Tolak</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    @endif
+  @endforeach
 @endsection

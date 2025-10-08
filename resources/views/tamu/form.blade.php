@@ -7,39 +7,56 @@
   <form class="mt-3" action="{{ route('tamu.store') }}" method="POST">
     @csrf
 
-    {{-- Nama & Email otomatis dari user login --}}
+    {{-- Nama & Email otomatis --}}
     <div class="form-group mb-4">
       <label>Nama Lengkap</label>
       <input type="text" class="form-control" value="{{ $user->name }}" disabled>
-      <input type="hidden" name="nama" value="{{ $user->name }}">
     </div>
 
     <div class="form-group mb-4">
       <label>Email</label>
       <input type="email" class="form-control" value="{{ $user->email }}" disabled>
-      <input type="hidden" name="email" value="{{ $user->email }}">
     </div>
 
+    {{-- Instansi --}}
     <div class="form-group mb-4">
       <label>Instansi / Perusahaan</label>
-      <input type="text" name="instansi" class="form-control">
+      <input type="text" name="instansi" class="form-control"
+             value="{{ old('instansi', $tamu->instansi ?? '') }}"
+             @if($tamu && $tamu->instansi) disabled @endif>
+      @if($tamu && $tamu->instansi)
+        <input type="hidden" name="instansi" value="{{ $tamu->instansi }}">
+      @endif
     </div>
 
+    {{-- No HP --}}
     <div class="form-group mb-4">
       <label>No HP</label>
-      <input type="tel" name="no_hp" class="form-control">
+      <input type="tel" name="no_hp" class="form-control"
+             value="{{ old('no_hp', $tamu->no_hp ?? '') }}"
+             @if($tamu && $tamu->no_hp) disabled @endif>
+      @if($tamu && $tamu->no_hp)
+        <input type="hidden" name="no_hp" value="{{ $tamu->no_hp }}">
+      @endif
     </div>
 
+    {{-- Alamat --}}
     <div class="form-group mb-4">
       <label>Alamat</label>
-      <textarea name="alamat" class="form-control"></textarea>
+      <textarea name="alamat" class="form-control"
+                @if($tamu && $tamu->alamat) disabled @endif>{{ old('alamat', $tamu->alamat ?? '') }}</textarea>
+      @if($tamu && $tamu->alamat)
+        <input type="hidden" name="alamat" value="{{ $tamu->alamat }}">
+      @endif
     </div>
 
+    {{-- Keperluan --}}
     <div class="form-group mb-4">
       <label>Keperluan</label>
-      <textarea name="keperluan" class="form-control" required></textarea>
+      <textarea name="keperluan" class="form-control" required>{{ old('keperluan') }}</textarea>
     </div>
 
+    {{-- Tujuan Bidang --}}
     <div class="form-group mb-4">
       <label>Tujuan Bidang</label>
       <select id="bidang" class="form-control" required>
@@ -50,6 +67,7 @@
       </select>
     </div>
 
+    {{-- Tujuan Pegawai --}}
     <div class="form-group mb-4">
       <label>Tujuan Pegawai</label>
       <select name="pegawai_id" id="pegawai" class="form-control" required>
@@ -61,6 +79,7 @@
   </form>
 </div>
 @endsection
+
 @push('scripts')
 <script>
 document.getElementById('bidang').addEventListener('change', function() {
@@ -83,4 +102,3 @@ document.getElementById('bidang').addEventListener('change', function() {
 });
 </script>
 @endpush
-

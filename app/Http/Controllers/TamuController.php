@@ -13,23 +13,32 @@ class TamuController extends Controller
 {
     public function create()
     {
-        $bidang  = Bidang::all();
-        $user    = Auth::user();
+        $bidang = Bidang::all();
+        $user   = Auth::user();
+        $tamu   = Tamu::where('user_id', $user->id)->first();
 
-        return view('tamu.form', compact('bidang','user'));
+        return view('tamu.form', compact('bidang','user','tamu'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'instansi'   => 'nullable|string|max:150',
-            'no_hp'      => 'nullable|string|max:20',
-            'alamat'     => 'nullable|string',
-            'keperluan'  => 'required|string|max:255',
-            'pegawai_id' => 'required|exists:pegawai,id', // wajib pilih pegawai
-        ]);
-
         $user = Auth::user();
+        $tamu = Tamu::where('user_id', $user->id)->first();
+
+        // Validasi
+        $rules = [
+            'keperluan'  => 'required|string|max:255',
+            'pegawai_id' => 'required|exists:pegawai,id',
+        ];
+
+        // Kalau tamu belum punya data → wajib isi instansi, no_hp, alamat
+        if (!$tamu) {
+            $rules['instansi'] = 'required|string|max:150';
+            $rules['no_hp']    = 'required|string|max:20';
+            $rules['alamat']   = 'required|string';
+        }
+
+        $validated = $request->validate($rules);
 
         // Update atau buat data tamu
         $tamu = Tamu::updateOrCreate(
@@ -37,13 +46,13 @@ class TamuController extends Controller
             [
                 'nama'     => $user->name,
                 'email'    => $user->email,
-                'instansi' => $validated['instansi'] ?? null,
-                'no_hp'    => $validated['no_hp'] ?? null,
-                'alamat'   => $validated['alamat'] ?? null,
+                'instansi' => $validated['instansi'] ?? $tamu->instansi ?? null,
+                'no_hp'    => $validated['no_hp'] ?? $tamu->no_hp ?? null,
+                'alamat'   => $validated['alamat'] ?? $tamu->alamat ?? null,
             ]
         );
 
-        // Buat kunjungan baru (tanpa bidang_id)
+        // Buat kunjungan baru
         Kunjungan::create([
             'tamu_id'     => $tamu->id,
             'pegawai_id'  => $validated['pegawai_id'],
@@ -52,7 +61,7 @@ class TamuController extends Controller
             'status'      => 'menunggu',
         ]);
 
-        // Tambahkan role tamu jika user belum punya role apapun
+        // Tambahkan role tamu jika user belum punya role
         if ($user && $user->roles()->count() === 0) {
             $user->assignRole('tamu');
         }
@@ -77,7 +86,6 @@ class TamuController extends Controller
         return view('tamu.status', compact('kunjungan'));
     }
 
-    // Endpoint AJAX untuk filter pegawai berdasarkan bidang
     public function getPegawaiByBidang($bidangId)
     {
         $pegawai = Pegawai::with('user')

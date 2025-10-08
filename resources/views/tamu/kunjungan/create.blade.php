@@ -12,31 +12,25 @@
     <form action="{{ route('tamu.kunjungan.store') }}" method="POST">
       @csrf
 
-      {{-- Instansi --}}
+      {{-- Data Profil Tamu (readonly, otomatis dari profil) --}}
       <div class="form-group">
-        <label for="instansi">Instansi (opsional)</label>
-        <input type="text" name="instansi" id="instansi"
-               class="form-control @error('instansi') is-invalid @enderror"
-               value="{{ old('instansi') }}">
-        @error('instansi') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label>Instansi</label>
+        <input type="text" class="form-control"
+               value="{{ auth()->user()->tamu->instansi ?? '-' }}" readonly>
       </div>
 
-      {{-- No HP --}}
       <div class="form-group">
-        <label for="no_hp">No HP (opsional)</label>
-        <input type="text" name="no_hp" id="no_hp"
-               class="form-control @error('no_hp') is-invalid @enderror"
-               value="{{ old('no_hp') }}">
-        @error('no_hp') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label>No HP</label>
+        <input type="text" class="form-control"
+               value="{{ auth()->user()->tamu->no_hp ?? '-' }}" readonly>
       </div>
 
-      {{-- Alamat --}}
       <div class="form-group">
-        <label for="alamat">Alamat (opsional)</label>
-        <textarea name="alamat" id="alamat" rows="2"
-                  class="form-control @error('alamat') is-invalid @enderror">{{ old('alamat') }}</textarea>
-        @error('alamat') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label>Alamat</label>
+        <textarea class="form-control" rows="2" readonly>{{ auth()->user()->tamu->alamat ?? '-' }}</textarea>
       </div>
+
+      <hr>
 
       {{-- Bidang --}}
       <div class="form-group">

@@ -36,7 +36,6 @@
             </button>
             <form action="{{ route('admin.jabatan.destroy',$j->id) }}" method="POST" class="d-inline">
               @csrf @method('DELETE')
-              <input type="hidden" name="reason" value="Menghapus jabatan {{ $j->nama_jabatan }}">
               <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')"><i class="fas fa-trash"></i></button>
             </form>
           </td>
@@ -44,7 +43,7 @@
         @endforeach
       </tbody>
     </table>
-    {{ $jabatan->links() }}
+    {{ $jabatan->links('pagination::bootstrap-5') }}
   </div>
 </div>
 @endsection
@@ -64,10 +63,6 @@
           <div class="form-group">
             <label>Nama Jabatan</label>
             <input type="text" name="nama_jabatan" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -93,10 +88,6 @@
           <div class="form-group">
             <label>Nama Jabatan</label>
             <input type="text" name="nama_jabatan" value="{{ $j->nama_jabatan }}" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Alasan</label>
-            <textarea name="reason" class="form-control"></textarea>
           </div>
         </div>
         <div class="modal-footer">

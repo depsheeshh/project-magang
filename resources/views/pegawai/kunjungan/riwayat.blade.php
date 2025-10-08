@@ -41,6 +41,7 @@
             <th>Email</th>
             <th>Keperluan</th>
             <th>Status</th>
+            <th>Alasan Penolakan</th>
             <th>Waktu Masuk</th>
             <th>Waktu Keluar</th>
           </tr>
@@ -58,6 +59,13 @@
                   <span class="badge badge-danger">Ditolak</span>
                 @endif
               </td>
+              <td>
+                @if($k->status === 'ditolak')
+                  <span>{{ $k->alasan_penolakan ?? '-' }}</span>
+                @else
+                  <em>-</em>
+                @endif
+              </td>
               <td>{{ $k->waktu_masuk }}</td>
               <td>
                 @if($k->waktu_keluar)
@@ -69,7 +77,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="text-center text-muted py-3">
+              <td colspan="7" class="text-center text-muted py-3">
                 Belum ada riwayat kunjungan
               </td>
             </tr>

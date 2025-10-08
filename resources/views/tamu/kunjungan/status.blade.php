@@ -13,6 +13,7 @@
           <th>Pegawai Tujuan</th>
           <th>Keperluan</th>
           <th>Status</th>
+          <th>Alasan Penolakan</th>
           <th>Waktu Masuk</th>
           <th>Waktu Keluar</th>
           <th>Aksi</th>
@@ -32,6 +33,14 @@
                 <span class="badge badge-warning">Sedang Bertamu</span>
               @else
                 <span class="badge badge-secondary">{{ ucfirst($k->status) }}</span>
+              @endif
+            </td>
+            <td>
+              {{-- ✅ tampilkan alasan hanya jika ditolak --}}
+              @if($k->status === 'ditolak')
+                {{ $k->alasan_penolakan ?? '-' }}
+              @else
+                -
               @endif
             </td>
             <td>{{ $k->waktu_masuk }}</td>

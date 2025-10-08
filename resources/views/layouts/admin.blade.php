@@ -126,7 +126,93 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
     background-color: #2a2a3d;
     border-bottom: 1px solid #444;
     }
+
+    /* Dark mode overrides */
+    body.dark-mode label {
+    color: #e0e0e0; /* label jadi terang */
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+    background-color: #2b2b2b;
+    color: #f1f1f1;
+    border: 1px solid #444;
+    }
+
+    body.dark-mode .form-control:focus,
+    body.dark-mode .form-select:focus {
+    background-color: #2b2b2b;
+    color: #fff;
+    border-color: #0d6efd; /* biru bootstrap */
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+    }
+
+    body.dark-mode textarea.form-control {
+    background-color: #2b2b2b;
+    color: #f1f1f1;
+    }
+
+    /* Dark mode modal overrides */
+    body.dark-mode .modal-content {
+    background-color: #1e1e1e;   /* latar modal gelap */
+    color: #f1f1f1;              /* teks default terang */
+    }
+
+    body.dark-mode .modal-header,
+    body.dark-mode .modal-footer {
+    border-color: #333;          /* garis pemisah lebih halus */
+    }
+
+    body.dark-mode .modal-title {
+    color: #fff;                 /* judul modal putih */
+    }
+
+    body.dark-mode label {
+    color: #e0e0e0;              /* label lebih terang */
+    }
+
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+    background-color: #2b2b2b;   /* input gelap */
+    color: #f1f1f1;              /* teks input terang */
+    border: 1px solid #444;      /* border abu */
+    }
+
+    body.dark-mode .form-control:focus,
+    body.dark-mode .form-select:focus {
+    background-color: #2b2b2b;
+    color: #fff;
+    border-color: #0d6efd;       /* biru bootstrap */
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+    }
+
+    body.dark-mode .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    }
+
+    body.dark-mode .btn-secondary {
+    background-color: #444;
+    border-color: #444;
+    color: #fff;
+    }
+
+    /* .card-statistic-1 .card-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    .card-statistic-1 .card-header,
+    .card-statistic-1 .card-body {
+    display: inline;
+    margin: 0;
+    padding: 0 5px;
+    } */
+
 </style>
+<!-- Tempat untuk CSS tambahan dari child view -->
+    @stack('style')
 </head>
 
 <body>

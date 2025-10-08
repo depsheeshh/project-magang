@@ -22,6 +22,7 @@ use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganControll
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
 use App\Http\Controllers\Tamu\DashboardController as TamuDashboardController;
 use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
+use App\Http\Controllers\ProfileController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -91,12 +92,21 @@ Route::middleware('auth',)->group(function () {
             ->middleware('verified','role:admin|frontliner|pegawai|tamu')
             ->name('dashboard.index');
 
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+
         // Admin resource management
         Route::middleware('role:admin')
             ->prefix('admin')
             ->name('admin.')
             ->group(function () {
                 Route::resource('/users', AdminUserController::class);
+                // // Tambahan fitur password
+                // Route::post('/users/{user}/change-password', [AdminUserController::class, 'changePassword'])
+                //     ->name('users.change-password');
+                // Route::post('/users/{user}/send-reset-link', [AdminUserController::class, 'sendResetLink'])
+                //     ->name('users.send-reset-link');
                 Route::resource('/roles', RoleController::class);
                 Route::resource('/permissions', PermissionController::class);
                 // Tambahan master data

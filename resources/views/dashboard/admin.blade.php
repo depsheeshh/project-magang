@@ -5,6 +5,49 @@
 
 @section('content')
 
+@push('style')
+<style>
+/* 🌙 Dark Mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+
+/* Card umum */
+body.dark-mode .card {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+/* Header card */
+body.dark-mode .card-header {
+  background-color: #2a2a2a;
+  border-bottom: 1px solid #333;
+  color: #f5f5f5;
+}
+
+/* Body card */
+body.dark-mode .card-body {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+/* List group */
+body.dark-mode .list-group-item {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+/* Badge tetap kontras */
+body.dark-mode .badge {
+  color: #fff !important;
+}
+</style>
+@endpush
+
+
 {{-- Dashboard untuk Admin --}}
 @if($role === 'admin')
 <div class="row">

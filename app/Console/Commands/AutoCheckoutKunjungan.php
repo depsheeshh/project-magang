@@ -13,34 +13,30 @@ class AutoCheckoutKunjungan extends Command
      *
      * @var string
      */
-    protected $signature = 'kunjungan:auto-checkout {--duration=2}';
+    protected $signature = 'kunjungan:auto-checkout';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Auto checkout kunjungan setelah durasi tertentu (jam)';
+    protected $description = 'Auto checkout kunjungan yang belum checkout setelah batas waktu tertentu';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $duration = (int) $this->option('duration');
-        $limit = Carbon::now()->subHours($duration);
+        $batasJam = 2;
+        $now = now();
 
-        $kunjungan = Kunjungan::where('status','sedang_bertamu')
-            ->where('waktu_masuk','<=',$limit)
-            ->get();
-
-        foreach ($kunjungan as $k) {
-            $k->update([
-                'status' => 'selesai',
-                'waktu_keluar' => now(),
+        $affected = Kunjungan::whereNull('checkout_time')
+            ->where('waktu_masuk', '<', $now->subHours($batasJam))
+            ->update([
+                'checkout_time' => now(),
+                'status' => 'selesai'
             ]);
-        }
 
-        $this->info("Auto checkout selesai untuk {$kunjungan->count()} kunjungan.");
+        $this->info("Auto checkout berhasil untuk {$affected} kunjungan.");
     }
 }

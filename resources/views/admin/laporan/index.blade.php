@@ -4,6 +4,54 @@
 @section('page-title','Laporan Kunjungan')
 
 @section('content')
+
+@push('style')
+    <style>
+        .card-stat {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px; /* lebih lega */
+        }
+        .card.shadow-sm {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        }
+
+
+        .card-stat .icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-right: 15px;
+        color: #fff;
+        }
+
+        .card-stat .info {
+        flex: 1;
+        }
+
+        .card-stat .info .label {
+        font-weight: bold;
+        font-size: 14px;
+        margin-bottom: 4px;
+        line-height: 1.2;
+        }
+
+        .card-stat .info .value {
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.2;
+        }
+    </style>
+@endpush
+
 <div class="card">
   <div class="card-header"><h4>Rekap Kunjungan</h4></div>
   <div class="card-body">
@@ -49,52 +97,73 @@
 
     {{-- Rekap Statistik --}}
     <div class="row mb-3">
-      <div class="col-md-2 col-sm-6">
-        <div class="card card-statistic-1">
-          <div class="card-icon bg-primary"><i class="fas fa-list"></i></div>
-          <div class="card-wrap">
-            <div class="card-header"><h4>Total</h4></div>
-            <div class="card-body">{{ $rekap['total'] }}</div>
-          </div>
+        {{-- Total --}}
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card shadow-sm">
+            <div class="card-stat">
+                <div class="icon bg-primary"><i class="fas fa-list"></i></div>
+                <div class="info">
+                <div class="label">Total</div>
+                <div class="value">{{ $rekap['total'] }}</div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-2 col-sm-6">
-        <div class="card card-statistic-1">
-          <div class="card-icon bg-warning"><i class="fas fa-hourglass-half"></i></div>
-          <div class="card-wrap">
-            <div class="card-header"><h4>Menunggu</h4></div>
-            <div class="card-body">{{ $rekap['menunggu'] }}</div>
-          </div>
+
+        {{-- Menunggu --}}
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card shadow-sm">
+            <div class="card-stat">
+                <div class="icon bg-warning"><i class="fas fa-hourglass-half"></i></div>
+                <div class="info">
+                <div class="label">Menunggu</div>
+                <div class="value">{{ $rekap['menunggu'] }}</div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-2 col-sm-6">
-        <div class="card card-statistic-1">
-          <div class="card-icon bg-info"><i class="fas fa-user-clock"></i></div>
-          <div class="card-wrap">
-            <div class="card-header"><h4>Sedang Bertamu</h4></div>
-            <div class="card-body">{{ $rekap['sedang_bertamu'] }}</div>
-          </div>
+
+        {{-- Sedang Bertamu --}}
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card shadow-sm">
+            <div class="card-stat">
+                <div class="icon bg-info"><i class="fas fa-user-clock"></i></div>
+                <div class="info">
+                <div class="label">Sedang Bertamu</div>
+                <div class="value">{{ $rekap['sedang_bertamu'] }}</div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-2 col-sm-6">
-        <div class="card card-statistic-1">
-          <div class="card-icon bg-success"><i class="fas fa-check"></i></div>
-          <div class="card-wrap">
-            <div class="card-header"><h4>Selesai</h4></div>
-            <div class="card-body">{{ $rekap['selesai'] }}</div>
-          </div>
+
+        {{-- Selesai --}}
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card shadow-sm">
+            <div class="card-stat">
+                <div class="icon bg-success"><i class="fas fa-check"></i></div>
+                <div class="info">
+                <div class="label">Selesai</div>
+                <div class="value">{{ $rekap['selesai'] }}</div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-      <div class="col-md-2 col-sm-6">
-        <div class="card card-statistic-1">
-          <div class="card-icon bg-danger"><i class="fas fa-times"></i></div>
-          <div class="card-wrap">
-            <div class="card-header"><h4>Ditolak</h4></div>
-            <div class="card-body">{{ $rekap['ditolak'] }}</div>
-          </div>
+
+        {{-- Ditolak --}}
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card shadow-sm">
+            <div class="card-stat">
+                <div class="icon bg-danger"><i class="fas fa-times"></i></div>
+                <div class="info">
+                <div class="label">Ditolak</div>
+                <div class="value">{{ $rekap['ditolak'] }}</div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-    </div>
+        </div>
+
+
 
     {{-- Tabel Laporan --}}
     <table class="table table-bordered">

@@ -218,6 +218,33 @@
             @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
+          {{-- Password Lama --}}
+            <div class="form-group">
+            <label>Password Lama</label>
+            <input type="password" name="old_password"
+                    class="form-control @error('old_password') is-invalid @enderror"
+                    placeholder="Isi jika ingin mengganti password">
+            @error('old_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- Password Baru --}}
+            <div class="form-group">
+            <label>Password Baru</label>
+            <input type="password" name="new_password"
+                    class="form-control @error('new_password') is-invalid @enderror"
+                    placeholder="Kosongkan jika tidak ingin mengubah">
+            @error('new_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- Konfirmasi Password Baru --}}
+            <div class="form-group">
+            <label>Konfirmasi Password Baru</label>
+            <input type="password" name="new_password_confirmation"
+                    class="form-control"
+                    placeholder="Ulangi password baru">
+            </div>
+
+
           {{-- Role --}}
           <div class="form-group">
             <label>Role</label>
@@ -259,6 +286,8 @@
 </div>
 @endforeach
 @endsection
+
+
 
 {{-- Script untuk auto-open modal jika validasi gagal --}}
 @if ($errors->any())

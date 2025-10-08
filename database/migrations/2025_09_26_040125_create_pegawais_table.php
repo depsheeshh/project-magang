@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('pegawai', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->unique(); // 1 user = 1 pegawai
-            $table->unsignedBigInteger('bidang_id');
-            $table->unsignedBigInteger('jabatan_id');
+            $table->unsignedBigInteger('bidang_id')->nullable();
+            $table->unsignedBigInteger('jabatan_id')->nullable();
             $table->string('nip', 50)->nullable();
             $table->string('telepon', 20)->nullable();
 
@@ -29,8 +29,8 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('bidang_id')->references('id')->on('bidang')->onDelete('cascade');
-            $table->foreign('jabatan_id')->references('id')->on('jabatan')->onDelete('cascade');
+            $table->foreign('bidang_id')->references('id')->on('bidang')->nullOnDelete();
+            $table->foreign('jabatan_id')->references('id')->on('jabatan')->nullOnDelete();
         });
 
     }

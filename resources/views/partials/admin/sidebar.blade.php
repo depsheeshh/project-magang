@@ -152,16 +152,17 @@
 
         <li class="{{ request()->is('tamu/kunjungan/create') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.create') }}">
-            <i class="fas fa-plus"></i> <span>Tambah Kunjungan</span>
+                <i class="fas fa-plus"></i> <span>Tambah Kunjungan</span>
             </a>
         </li>
 
         <li class="{{ request()->is('tamu/kunjungan/status*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.status') }}">
-            <i class="fas fa-clipboard-list"></i> <span>Status Kunjungan</span>
+                <i class="fas fa-clipboard-list"></i> <span>Status Kunjungan</span>
             </a>
         </li>
         @endrole
+
 
 
     </ul>

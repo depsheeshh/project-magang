@@ -33,36 +33,36 @@
                   <span class="badge badge-warning">Menunggu</span>
                 @elseif($k->status == 'sedang_bertamu')
                   <span class="badge badge-success">Sedang Bertamu</span>
+                @elseif($k->status == 'ditolak')
+                  <span class="badge badge-danger">Ditolak</span>
                 @endif
               </td>
               <td>{{ $k->waktu_masuk ?? '-' }}</td>
               <td>
                 @if($k->status === 'menunggu')
-                    <form action="{{ route('pegawai.kunjungan.konfirmasi', $k->id) }}" method="POST" class="d-inline">
+                  {{-- Terima --}}
+                  <form action="{{ route('pegawai.kunjungan.konfirmasi', $k->id) }}" method="POST" class="d-inline">
                     @csrf
                     <input type="hidden" name="aksi" value="terima">
                     <button type="submit" class="btn btn-sm btn-success">
-                        <i class="fas fa-check"></i> Saya Bisa Menerima
+                      <i class="fas fa-check"></i> Saya Bisa Menerima
                     </button>
-                    </form>
+                  </form>
 
-                    <form action="{{ route('pegawai.kunjungan.konfirmasi', $k->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    <input type="hidden" name="aksi" value="tolak">
-                    <button type="submit" class="btn btn-sm btn-danger">
-                        <i class="fas fa-times"></i> Saya Tidak Bisa
-                    </button>
-                    </form>
+                  {{-- Tolak (pakai modal alasan) --}}
+                  <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#tolakModal{{ $k->id }}">
+                    <i class="fas fa-times"></i> Saya Tidak Bisa
+                  </button>
                 @elseif($k->status === 'sedang_bertamu')
-                    <span class="badge badge-success">Diterima</span>
+                  <span class="badge badge-success">Diterima</span>
                 @elseif($k->status === 'ditolak')
-                    <span class="badge badge-danger">Ditolak</span>
+                  <span class="badge badge-danger">Ditolak</span>
                 @endif
-                </td>
+              </td>
             </tr>
           @empty
             <tr>
-              <td colspan="5" class="text-center text-muted py-3">
+              <td colspan="6" class="text-center text-muted py-3">
                 Tidak ada tamu saat ini
               </td>
             </tr>
@@ -72,4 +72,36 @@
     </div>
   </div>
 </div>
+@endsection
+
+@section('modals')
+  @foreach($notifikasi as $k)
+    @if($k->status === 'menunggu')
+    <!-- Modal Tolak -->
+    <div class="modal fade" id="tolakModal{{ $k->id }}" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <form action="{{ route('pegawai.kunjungan.konfirmasi', $k->id) }}" method="POST">
+            @csrf
+            <input type="hidden" name="aksi" value="tolak">
+            <div class="modal-header">
+              <h5 class="modal-title">Alasan Penolakan</h5>
+              <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Alasan</label>
+                <textarea name="reason" class="form-control" required placeholder="Tuliskan alasan menolak tamu ini..."></textarea>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+              <button type="submit" class="btn btn-danger">Tolak</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    @endif
+  @endforeach
 @endsection
