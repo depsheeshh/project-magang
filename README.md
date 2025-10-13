@@ -81,6 +81,61 @@ Akses di browser: [http://localhost:8000](http://localhost:8000)
 
 ---
 
+## 👤 Panduan Penggunaan untuk Guest / User Baru
+
+### 1. Akses Aplikasi
+- Buka aplikasi melalui browser di alamat yang sudah disediakan (misalnya `http://localhost:8000` atau domain instansi).  
+- Tamu akan melihat halaman **Selamat Datang** dengan menu navigasi (Fitur, Alur, Tentang, Login).
+
+### 2. Scan QR Code
+- Tamu diarahkan untuk **scan QR Code** yang tersedia di lokasi (misalnya di meja resepsionis/frontliner).  
+- QR Code akan membuka halaman form tamu di aplikasi.
+
+### 3. Registrasi / Login
+- Jika tamu belum memiliki akun, lakukan **registrasi** singkat (nama, email, password).  
+- Jika sudah punya akun, cukup **login** menggunakan email & password.
+
+### 4. Isi Data Kunjungan
+- Setelah login, tamu mengisi form kunjungan:  
+  - Nama lengkap  
+  - Instansi/Perusahaan asal  
+  - Tujuan kunjungan (pegawai yang dituju)  
+  - Keperluan  
+- Data ini akan tersimpan di sistem.
+
+### 5. Verifikasi oleh Frontliner
+- Frontliner akan menerima notifikasi bahwa ada tamu baru.  
+- Frontliner memverifikasi apakah pegawai yang dituju tersedia.  
+  - Jika **diterima**, status tamu menjadi *Sedang Bertamu*.  
+  - Jika **ditolak**, tamu tidak dapat melanjutkan.
+
+### 6. Bertemu Pegawai
+- Setelah verifikasi berhasil, tamu dipersilakan masuk untuk bertemu pegawai yang dituju.  
+- Pegawai juga mendapat notifikasi bahwa ada tamu yang datang.
+
+### 7. Check Out
+- Setelah selesai bertemu, tamu melakukan **Check Out** melalui aplikasi.  
+- Jika tamu lupa, frontliner bisa melakukan check out manual.  
+- Status kunjungan berubah menjadi *Selesai*.
+
+### 8. Laporan & Riwayat
+- Semua data kunjungan otomatis tersimpan.  
+- Admin dapat melihat laporan kunjungan lengkap (harian, bulanan, dsb).  
+- Tamu bisa melihat riwayat kunjungan pribadinya.
+
+---
+
+## 📌 Ringkasan Alur Guest
+1. Scan QR Code   
+2. Registrasi/Login   
+3. Isi Form Kunjungan   
+4. Verifikasi Frontliner   
+5. Bertemu Pegawai   
+6. Check Out   
+7. Data tersimpan di laporan.
+
+---
+
 ## 📂 Struktur Direktori (Singkat)
 ```
 app/            -> Logic aplikasi (Controllers, Models)
