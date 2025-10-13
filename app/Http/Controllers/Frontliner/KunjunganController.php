@@ -12,6 +12,10 @@ class KunjunganController extends Controller
     // Halaman semua kunjungan (dengan filter status opsional)
     public function index(Request $request)
     {
+        $request->validate([
+            'status' => 'nullable|in:menunggu,sedang_bertamu,selesai,ditolak',
+        ]);
+
         $query = Kunjungan::with(['tamu.user','pegawai.user','pegawai.bidang'])
             ->orderBy('waktu_masuk','desc');
 
@@ -40,6 +44,17 @@ class KunjunganController extends Controller
     {
         if ($kunjungan->status === 'menunggu') {
             $kunjungan->update(['status' => 'sedang_bertamu']);
+
+            // Catat ke history log
+            HistoryLog::create([
+                'user_id'    => auth()->id(),
+                'action'     => 'update',
+                'table_name' => 'kunjungan',
+                'record_id'  => $kunjungan->id,
+                'reason'     => 'Frontliner menyetujui kunjungan',
+                'old_values' => null,
+                'new_values' => ['status' => 'sedang_bertamu'],
+            ]);
         }
         return back()->with('success','Kunjungan disetujui, tamu dipersilakan masuk.');
     }
@@ -47,14 +62,17 @@ class KunjunganController extends Controller
     // Tolak kunjungan (wajib alasan)
     public function reject(Request $request, Kunjungan $kunjungan)
     {
-        $request->validate([
+        $validated = $request->validate([
             'reason' => 'required|string|max:255',
         ]);
+
+        // Sanitasi alasan agar tidak bisa sisipkan script
+        $reason = strip_tags($validated['reason']);
 
         if ($kunjungan->status === 'menunggu') {
             $kunjungan->update([
                 'status' => 'ditolak',
-                'alasan_penolakan' => $request->reason,
+                'alasan_penolakan' => $reason,
             ]);
 
             // Simpan ke history log
@@ -63,12 +81,12 @@ class KunjunganController extends Controller
                 'action'     => 'update',
                 'table_name' => 'kunjungan',
                 'record_id'  => $kunjungan->id,
-                'reason'     => 'Menolak tamu dengan alasan: '.$request->reason,
+                'reason'     => 'Menolak tamu dengan alasan: '.$reason,
                 'old_values' => null,
-                'new_values' => json_encode([
+                'new_values' => [
                     'status' => 'ditolak',
-                    'alasan_penolakan' => $request->reason,
-                ]),
+                    'alasan_penolakan' => $reason,
+                ],
             ]);
         }
 
@@ -82,6 +100,20 @@ class KunjunganController extends Controller
             $kunjungan->update([
                 'status' => 'selesai',
                 'waktu_keluar' => now(),
+            ]);
+
+            // Catat ke history log
+            HistoryLog::create([
+                'user_id'    => auth()->id(),
+                'action'     => 'update',
+                'table_name' => 'kunjungan',
+                'record_id'  => $kunjungan->id,
+                'reason'     => 'Frontliner melakukan checkout kunjungan',
+                'old_values' => null,
+                'new_values' => [
+                    'status' => 'selesai',
+                    'waktu_keluar' => now()->toDateTimeString(),
+                ],
             ]);
         }
         return back()->with('success','Kunjungan tamu berhasil di-checkout.');

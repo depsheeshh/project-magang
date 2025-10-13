@@ -6,57 +6,94 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\HistoryLog;
 
 class RoleController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware(['auth','role:admin']);
-    // }
-
     public function index()
     {
         $roles = Role::with('permissions')->paginate(10);
-        $permissions = Permission::all(); // untuk modal create/edit
+        $permissions = Permission::all();
         return view('admin.roles.index', compact('roles','permissions'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name'        => 'required|unique:roles,name',
-            'permissions' => 'array'
+        $validated = $request->validate([
+            'name'        => 'required|string|max:100|unique:roles,name',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions ?? []);
+        $role = Role::create([
+            'name' => strip_tags($validated['name']),
+        ]);
+
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        HistoryLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'create',
+            'table_name' => 'roles',
+            'record_id'  => $role->id,
+            'reason'     => 'Membuat role baru',
+            'new_values' => json_encode(['name' => $role->name]),
+        ]);
 
         return redirect()->route('admin.roles.index')->with('success', 'Role berhasil dibuat');
     }
 
     public function show(Role $role)
     {
-        $role->load('permissions'); // eager load permissions
+        $role->load('permissions');
         return view('admin.roles.show', compact('role'));
     }
 
-
     public function update(Request $request, Role $role)
     {
-        $request->validate([
-            'name'        => 'required|unique:roles,name,' . $role->id,
-            'permissions' => 'array'
+        $validated = $request->validate([
+            'name'        => 'required|string|max:100|unique:roles,name,' . $role->id,
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
-        $role->update(['name' => $request->name]);
-        $role->syncPermissions($request->permissions ?? []);
+        $old = $role->toArray();
+
+        $role->update([
+            'name' => strip_tags($validated['name']),
+        ]);
+
+        $role->syncPermissions($validated['permissions'] ?? []);
+
+        HistoryLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'update',
+            'table_name' => 'roles',
+            'record_id'  => $role->id,
+            'reason'     => 'Memperbarui role',
+            'old_values' => json_encode($old),
+            'new_values' => json_encode($role->toArray()),
+        ]);
 
         return redirect()->route('admin.roles.index')->with('success', 'Role berhasil diperbarui');
     }
 
     public function destroy(Role $role)
     {
+        $id = $role->id;
+        $old = $role->toArray();
+
         $role->delete();
+
+        HistoryLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'delete',
+            'table_name' => 'roles',
+            'record_id'  => $id,
+            'reason'     => 'Menghapus role',
+            'old_values' => json_encode($old),
+        ]);
+
         return redirect()->route('admin.roles.index')->with('success', 'Role berhasil dihapus');
     }
 }

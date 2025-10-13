@@ -68,6 +68,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [LoginController::class, 'login']);
     Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('/register', [RegisterController::class, 'register']);
+    // OAuth Google
+    Route::get('auth/google', [LoginController::class, 'redirectToGoogle'])->name('login.google');
+    Route::get('auth/google/callback', [LoginController::class, 'handleGoogleCallback']);
 
     // Forgot & Reset Password
     Route::get('/password/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');

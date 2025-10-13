@@ -13,7 +13,15 @@ class KunjunganController extends Controller
     // Riwayat kunjungan tamu ke pegawai ini
     public function riwayat(Request $request)
     {
-        $pegawaiId = Auth::user()->pegawai->id;
+        $request->validate([
+        'filter' => 'nullable|in:selesai,ditolak',
+    ]);
+
+        $pegawaiRel = Auth::user()->pegawai ?? null;
+        if (!$pegawaiRel) {
+            abort(403, 'Akun ini tidak memiliki relasi pegawai.');
+        }
+        $pegawaiId = $pegawaiRel->id;
 
         $query = Kunjungan::with('tamu')
             ->where('pegawai_id', $pegawaiId)
@@ -49,7 +57,11 @@ class KunjunganController extends Controller
     // Konfirmasi pegawai: bisa menerima atau tidak
     public function konfirmasi(Request $request, Kunjungan $kunjungan)
     {
-        $pegawaiId = Auth::user()->pegawai->id;
+        $pegawaiRel = Auth::user()->pegawai ?? null;
+        if (!$pegawaiRel) {
+            abort(403, 'Akun ini tidak memiliki relasi pegawai.');
+        }
+        $pegawaiId = $pegawaiRel->id;
 
         // Pastikan kunjungan memang untuk pegawai ini
         if ($kunjungan->pegawai_id !== $pegawaiId) {

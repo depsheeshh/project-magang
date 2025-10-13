@@ -34,11 +34,18 @@ class TamuController extends Controller
         // Kalau tamu belum punya data → wajib isi instansi, no_hp, alamat
         if (!$tamu) {
             $rules['instansi'] = 'required|string|max:150';
-            $rules['no_hp']    = 'required|string|max:20';
+            $rules['no_hp']    = 'required|string|max:20|regex:/^[0-9\+\-\s]+$/';
             $rules['alamat']   = 'required|string';
         }
 
         $validated = $request->validate($rules);
+
+        // Sanitasi input teks
+        foreach (['keperluan','instansi','no_hp','alamat'] as $field) {
+            if (isset($validated[$field])) {
+                $validated[$field] = strip_tags($validated[$field]);
+            }
+        }
 
         // Update atau buat data tamu
         $tamu = Tamu::updateOrCreate(
@@ -49,6 +56,7 @@ class TamuController extends Controller
                 'instansi' => $validated['instansi'] ?? $tamu->instansi ?? null,
                 'no_hp'    => $validated['no_hp'] ?? $tamu->no_hp ?? null,
                 'alamat'   => $validated['alamat'] ?? $tamu->alamat ?? null,
+                'updated_id' => $user->id,
             ]
         );
 

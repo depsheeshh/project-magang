@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class JabatanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $jabatan = Jabatan::orderBy('nama_jabatan')->paginate(10);
@@ -21,43 +18,50 @@ class JabatanController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama_jabatan' => 'required|string|max:100',
+            'nama_jabatan' => 'required|string|max:100|unique:jabatan,nama_jabatan',
             'reason'       => 'nullable|string|max:1000',
         ]);
 
-        // inject audit ids
+        // Sanitize reason (untuk observer/log)
+        $reason = isset($validated['reason']) ? strip_tags($validated['reason']) : null;
+        $request->merge(['reason' => $reason]);
+
         $data = [
             'nama_jabatan' => $validated['nama_jabatan'],
             'created_id'   => Auth::id(),
         ];
 
-        // simpan (observer akan menangkap request('reason'))
         Jabatan::create($data);
 
-        return redirect()->route('admin.jabatan.index')->with('status', 'Jabatan berhasil ditambahkan');
+        return redirect()->route('admin.jabatan.index')
+            ->with('status', 'Jabatan berhasil ditambahkan');
     }
 
     public function update(Request $request, Jabatan $jabatan)
     {
         $validated = $request->validate([
-            'nama_jabatan' => 'required|string|max:100',
+            'nama_jabatan' => 'required|string|max:100|unique:jabatan,nama_jabatan,' . $jabatan->id,
             'reason'       => 'nullable|string|max:1000',
         ]);
+
+        $reason = isset($validated['reason']) ? strip_tags($validated['reason']) : null;
+        $request->merge(['reason' => $reason]);
 
         $jabatan->update([
             'nama_jabatan' => $validated['nama_jabatan'],
             'updated_id'   => Auth::id(),
         ]);
 
-        return redirect()->route('admin.jabatan.index')->with('status', 'Jabatan berhasil diperbarui');
+        return redirect()->route('admin.jabatan.index')
+            ->with('status', 'Jabatan berhasil diperbarui');
     }
 
     public function destroy(Request $request, Jabatan $jabatan)
     {
-        // reason optional, tetap tersalurkan ke observer via request('reason')
         $jabatan->update(['deleted_id' => Auth::id()]);
         $jabatan->delete();
 
-        return redirect()->route('admin.jabatan.index')->with('status', 'Jabatan berhasil dihapus');
+        return redirect()->route('admin.jabatan.index')
+            ->with('status', 'Jabatan berhasil dihapus');
     }
 }

@@ -18,7 +18,9 @@ class Pegawai extends Model
         'jabatan_id',   // relasi ke tabel jabatan
         'bidang_id',    // relasi ke tabel bidang/unit kerja
         'telepon',
-        'email',
+        'created_id',
+        'updated_id',
+        'deleted_id',
     ];
 
     // Relasi ke User (akun login)

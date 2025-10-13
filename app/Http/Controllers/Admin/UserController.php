@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -21,9 +23,15 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => [
+                'required',
+                'string',
+                'email:rfc,dns',
+                'max:255',
+                'unique:users,email',
+            ],
             'password' => [
                 'required',
                 Password::min(8)->mixedCase()->letters()->numbers()->symbols(),
@@ -32,15 +40,20 @@ class UserController extends Controller
             'status'   => 'required|in:0,1',
         ]);
 
+        // Sanitasi input
+        $validated['name']  = strip_tags($validated['name']);
+        $validated['email'] = strip_tags($validated['email']);
+
         $user = User::create([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'password'          => Hash::make($request->password),
-            'status'            => (int) $request->status,
+            'name'              => $validated['name'],
+            'email'             => $validated['email'],
+            'password'          => Hash::make($validated['password']),
+            'status'            => (int) $validated['status'],
             'email_verified_at' => now(),
+            'created_id'        => Auth::id(),
         ]);
 
-        $user->syncRoles([$request->role]);
+        $user->syncRoles([$validated['role']]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan');
     }
@@ -52,9 +65,15 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'email'    => [
+                'required',
+                'string',
+                'email:rfc',
+                'max:255',
+                Rule::unique('users','email')->ignore($user->id),
+            ],
             'role'     => 'required|exists:roles,name',
             'status'   => 'required|in:0,1',
             'old_password' => 'nullable|required_with:new_password',
@@ -65,17 +84,18 @@ class UserController extends Controller
             ],
         ]);
 
+        // Sanitasi input
+        $validated['name']  = strip_tags($validated['name']);
+        $validated['email'] = strip_tags($validated['email']);
+
         $data = [
-            'name'   => $request->name,
-            'email'  => $request->email,
-            'status' => (int) $request->status,
+            'name'       => $validated['name'],
+            'email'      => $validated['email'],
+            'status'     => (int) $validated['status'],
+            'updated_id' => Auth::id(),
         ];
 
-        // ✅ Validasi password lama & baru
-        if ($request->filled('old_password') && !$request->filled('new_password')) {
-            return back()->withErrors(['new_password' => 'Password baru wajib diisi jika Anda mengisi password lama.']);
-        }
-
+        // Validasi password lama & baru
         if ($request->filled('new_password')) {
             if (!$request->filled('old_password')) {
                 return back()->withErrors(['old_password' => 'Password lama wajib diisi untuk mengganti password.']);
@@ -93,14 +113,17 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        $user->syncRoles([$request->role]);
+        $user->syncRoles([$validated['role']]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui');
     }
 
     public function destroy(User $user)
     {
+        // Isi deleted_id sebelum soft delete
+        $user->update(['deleted_id' => Auth::id()]);
         $user->delete();
+
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus');
     }
 }

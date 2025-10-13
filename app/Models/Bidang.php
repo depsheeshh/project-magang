@@ -14,6 +14,9 @@ class Bidang extends Model
     protected $fillable = [
         'nama_bidang',
         'deskripsi', // opsional, kalau mau simpan keterangan bidang
+        'created_id',
+        'updated_id',
+        'deleted_id',
     ];
 
     // Relasi ke Pegawai (satu bidang punya banyak pegawai)

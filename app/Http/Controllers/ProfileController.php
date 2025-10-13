@@ -73,20 +73,28 @@ class ProfileController extends Controller
 
         $data = $request->validate($rules);
 
+        // Sanitasi input
+        $data['name']  = strip_tags($data['name']);
+        $data['email'] = strip_tags($data['email']);
+
+        $data['updated_id'] = Auth::id();
+
         $user->update($data);
 
         // Update relasi pegawai/tamu jika ada
         if ($user->hasRole('tamu') && $user->tamu) {
             $user->tamu->update([
-                'instansi' => $request->instansi,
-                'telepon'  => $request->telepon,
-                'alamat'   => $request->alamat,
+                'instansi' => strip_tags($request->instansi),
+                'telepon'  => strip_tags($request->telepon),
+                'alamat'   => strip_tags($request->alamat),
+                'updated_id' => Auth::id(),
             ]);
         }
 
         if ($user->hasRole('pegawai') && $user->pegawai) {
             $user->pegawai->update([
-                'telepon' => $request->telepon,
+                'telepon'    => strip_tags($request->telepon),
+                'updated_id' => Auth::id(),
             ]);
         }
 

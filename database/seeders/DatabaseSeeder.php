@@ -24,9 +24,9 @@ class DatabaseSeeder extends Seeder
 
         // Buat user default admin
         $admin = User::firstOrCreate(
-            ['email' => 'it@yahoo.com'],
+            ['email' => 'admin@yahoo.com'],
             [
-                'name'              => 'Ganteng',
+                'name'              => 'Admin',
                 'password'          => Hash::make('Admin123!'), // password kompleks
                 'status'            => 1, // Active
                 'email_verified_at' => now(), // langsung verified
@@ -68,6 +68,6 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        // $tamu->assignRole('tamu');
+        $tamu->assignRole('tamu');
     }
 }

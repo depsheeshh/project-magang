@@ -14,39 +14,46 @@ class LaporanController extends Controller
      */
     public function index(Request $request)
     {
+
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'status'     => 'nullable|in:menunggu,sedang_bertamu,selesai,ditolak',
+        ]);
+
        $query = Kunjungan::with(['tamu','pegawai.user'])
         ->orderByDesc('waktu_masuk');
 
-    // Filter periode
-    if ($request->filled('start_date') && $request->filled('end_date')) {
-        $query->whereBetween('waktu_masuk', [
-            $request->start_date . ' 00:00:00',
-            $request->end_date . ' 23:59:59'
-        ]);
-    }
+        // Filter periode
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('waktu_masuk', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
 
-    // Filter status
-    if ($request->filled('status')) {
-        $query->where('status', $request->status);
-    }
+        // Filter status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-    $kunjungan = $query->get();
+        $kunjungan = $query->get();
 
-    // Rekap data sesuai hasil filter
-    $rekap = [
-        'total'          => $kunjungan->count(),
-        'menunggu'       => $kunjungan->where('status','menunggu')->count(),
-        'sedang_bertamu' => $kunjungan->where('status','sedang_bertamu')->count(),
-        'selesai'        => $kunjungan->where('status','selesai')->count(),
-        'ditolak'        => $kunjungan->where('status','ditolak')->count(),
-    ];
+        // Rekap data sesuai hasil filter
+        $rekap = [
+            'total'          => $kunjungan->count(),
+            'menunggu'       => $kunjungan->where('status','menunggu')->count(),
+            'sedang_bertamu' => $kunjungan->where('status','sedang_bertamu')->count(),
+            'selesai'        => $kunjungan->where('status','selesai')->count(),
+            'ditolak'        => $kunjungan->where('status','ditolak')->count(),
+        ];
 
-    return view('admin.laporan.index', compact('kunjungan','rekap'))
-        ->with([
-            'start_date' => $request->start_date,
-            'end_date'   => $request->end_date,
-            'status'     => $request->status,
-        ]);
+        return view('admin.laporan.index', compact('kunjungan','rekap'))
+            ->with([
+                'start_date' => $request->start_date,
+                'end_date'   => $request->end_date,
+                'status'     => $request->status,
+            ]);
     }
 
     public function cetakPdf(Request $request)

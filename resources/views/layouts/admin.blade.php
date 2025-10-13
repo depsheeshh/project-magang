@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="{{ asset('admin/assets/css/style.css') }}">
   <link rel="stylesheet" href="{{ asset('admin/assets/css/components.css') }}">
 
+  <link rel="icon" type="image/x-icon" href="{{ asset('img/logo.png') }}" />
+    <link rel="apple-touch-icon" href="{{ asset('assets/favicon.ico') }}" />
+
   <!-- Fix Modal Z-Index + Dark Mode -->
 <style>
   /* Pastikan modal lebih tinggi dari backdrop */

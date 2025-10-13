@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tamu extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     // Karena nama tabel bukan plural default (tamus), kita definisikan manual
     protected $table = 'tamu';
@@ -19,6 +20,9 @@ class Tamu extends Model
         'no_hp',
         'email',
         'alamat',
+        'created_id',
+        'updated_id',
+        'deleted_id',
     ];
 
     /**

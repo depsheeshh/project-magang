@@ -7,8 +7,7 @@
           <i class="fas fa-map-marker-alt me-2 text-warning"></i> Lokasi
         </h4>
         <p class="lead mb-0">
-          Jl. Contoh Raya No.123<br>
-          Cirebon, Indonesia
+          Jl. DR. Sudarsono No.40, Kesambi, Kec. Kesambi, <br> Kota Cirebon, Jawa Barat 45134
         </p>
       </div>
 
@@ -19,13 +18,13 @@
         </h4>
         <div class="d-flex justify-content-center">
           <a class="btn btn-outline-light btn-social mx-2 rounded-circle shadow-sm" href="#">
-            <i class="fab fa-facebook-f"></i>
+            <i class="fab fa-instagram"></i>
           </a>
           <a class="btn btn-outline-light btn-social mx-2 rounded-circle shadow-sm" href="#">
             <i class="fab fa-twitter"></i>
           </a>
           <a class="btn btn-outline-light btn-social mx-2 rounded-circle shadow-sm" href="#">
-            <i class="fab fa-linkedin-in"></i>
+            <i class="fa-solid fa-globe"></i>
           </a>
         </div>
       </div>

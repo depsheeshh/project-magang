@@ -64,6 +64,13 @@ class PegawaiController extends Controller
             'reason'    => 'nullable|string|max:1000',
         ]);
 
+        // Plain text sanitization
+        foreach (['nip','telepon','reason'] as $f) {
+            if (isset($validated[$f])) {
+                $validated[$f] = strip_tags($validated[$f]);
+            }
+        }
+
         // pastikan user yang dipilih memang punya role 'pegawai'
         $user = User::findOrFail($validated['user_id']);
         if (!$user->hasRole('pegawai')) {

@@ -21,6 +21,9 @@ class Kunjungan extends Model
         'waktu_keluar',
         'alasan_penolakan', // tambahkan ini
         'catatan',
+        'created_id',
+        'updated_id',
+        'deleted_id',
     ];
 
     /**
@@ -30,6 +33,8 @@ class Kunjungan extends Model
         'waktu_masuk' => 'datetime',
         'waktu_keluar' => 'datetime',
     ];
+
+    const STATUS = ['menunggu','sedang_bertamu','selesai','ditolak'];
 
     /**
      * Relasi ke Tamu (bukan langsung ke User)

@@ -14,6 +14,15 @@ class HistoryLogController extends Controller
      */
     public function index(Request $request)
     {
+        // ✅ Validasi filter
+    $request->validate([
+        'user_id'    => 'nullable|exists:users,id',
+        'table_name' => 'nullable|string|max:100',
+        'action'     => 'nullable|string|max:100',
+        'date_from'  => 'nullable|date',
+        'date_to'    => 'nullable|date|after_or_equal:date_from',
+    ]);
+
         $query = HistoryLog::with('user')->orderBy('created_at','desc');
 
         // Filter by user

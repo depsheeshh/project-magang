@@ -25,33 +25,34 @@
       <dt class="col-sm-3">Perubahan Data</dt>
       <dd class="col-sm-9">
         @php
-          $oldValues = json_decode($historyLog->old_values, true) ?? [];
-          $newValues = json_decode($historyLog->new_values, true) ?? [];
-          $changes = [];
-          $ignore = ['id','created_at','updated_at','deleted_at','deleted_id'];
+            $oldValues = is_array($historyLog->old_values) ? $historyLog->old_values : (json_decode($historyLog->old_values, true) ?? []);
+            $newValues = is_array($historyLog->new_values) ? $historyLog->new_values : (json_decode($historyLog->new_values, true) ?? []);
+            $changes = [];
+            $ignore = ['id','created_at','updated_at','deleted_at','deleted_id'];
 
-          if ($historyLog->action === 'created') {
-              foreach ($newValues as $key => $val) {
-                  if (!in_array($key, $ignore)) {
-                      $changes[$key] = ['old' => null, 'new' => $val];
-                  }
-              }
-          } elseif ($historyLog->action === 'updated') {
-              foreach ($newValues as $key => $newVal) {
-                  if (in_array($key, $ignore)) continue;
-                  $oldVal = $oldValues[$key] ?? null;
-                  if ($oldVal != $newVal) {
-                      $changes[$key] = ['old' => $oldVal, 'new' => $newVal];
-                  }
-              }
-          } elseif ($historyLog->action === 'deleted') {
-              $mainField = $oldValues['nama']
-                  ?? $oldValues['nama_jabatan']
-                  ?? $oldValues['nama_bidang']
-                  ?? $historyLog->record_id;
-              $changes = ['deleted' => ['old' => $mainField, 'new' => null]];
-          }
-        @endphp
+            if ($historyLog->action === 'create') {
+                foreach ($newValues as $key => $val) {
+                    if (!in_array($key, $ignore)) {
+                        $changes[$key] = ['old' => null, 'new' => $val];
+                    }
+                }
+            } elseif ($historyLog->action === 'update') {
+                foreach ($newValues as $key => $newVal) {
+                    if (in_array($key, $ignore)) continue;
+                    $oldVal = $oldValues[$key] ?? null;
+                    if ($oldVal != $newVal) {
+                        $changes[$key] = ['old' => $oldVal, 'new' => $newVal];
+                    }
+                }
+            } elseif ($historyLog->action === 'delete') {
+                $mainField = $oldValues['nama']
+                    ?? $oldValues['nama_jabatan']
+                    ?? $oldValues['nama_bidang']
+                    ?? $historyLog->record_id;
+                $changes = ['deleted' => ['old' => $mainField, 'new' => null]];
+            }
+            @endphp
+
 
         @if(count($changes))
           <ul class="list-unstyled">
