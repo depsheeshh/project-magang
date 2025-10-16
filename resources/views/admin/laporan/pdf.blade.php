@@ -2,90 +2,177 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Kunjungan</title>
+    <title>Laporan Rekapan Kunjungan</title>
     <style>
+        /* ====== GLOBAL ====== */
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: "DejaVu Sans", Arial, sans-serif;
             font-size: 12px;
             color: #212529;
-            line-height: 1.4;
+            line-height: 1.6;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
         }
+
+        @page {
+            size: A4 portrait;
+            margin: 100px 40px 80px 40px;
+        }
+
+        /* ====== HEADER ====== */
         header {
             text-align: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             margin-bottom: 20px;
-            overflow: auto;
+            position: relative;
         }
+
         header img {
-            float: left;
-            width: 60px;
-            height: 60px;
-            margin-right: 10px;
+            position: absolute;
+            left: 40px;
+            top: 10px;
+            width: 70px;
+            height: 70px;
         }
-        header .kop {
+
+        .kop {
+            margin: 0 80px;
             text-align: center;
         }
-        header h1 {
-            margin: 0;
+
+        .kop h1 {
             font-size: 18px;
             font-weight: bold;
+            margin-bottom: 2px;
             text-transform: uppercase;
         }
-        header p {
-            margin: 0;
+
+        .kop h2 {
+            font-size: 14px;
+            font-weight: normal;
+            margin-top: 0;
+            text-transform: uppercase;
+        }
+
+        .kop p {
             font-size: 11px;
+            margin: 1px 0;
         }
-        h2 {
+
+        .garis-tebal {
+            border-bottom: 3px double #000;
+            margin-top: 8px;
+        }
+
+        /* ====== JUDUL LAPORAN ====== */
+        h2.judul {
             text-align: center;
-            margin: 0 0 5px 0;
-            font-size: 16px;
+            margin: 0;
+            font-size: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.3px;
         }
+
         .subtitle {
             text-align: center;
             font-size: 11px;
-            color: #6c757d;
-            margin-bottom: 15px;
+            color: #555;
+            margin-top: 3px;
+            margin-bottom: 20px;
         }
 
-        /* Bootstrap-like table */
+        /* ====== TABEL DATA ====== */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #dee2e6;
-            padding: 8px;
-            font-size: 11px;
-        }
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            text-align: center;
-        }
-        tr:nth-child(even) {
-            background-color: #fdfdfe;
+            margin-top: 5px;
         }
 
-        /* Status badge style */
+        th, td {
+            border: 1px solid #b5b5b5;
+            padding: 8px 6px;
+            font-size: 11px;
+        }
+
+        th {
+            background-color: #f2f3f5;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        td {
+            vertical-align: top;
+        }
+
+        /* ====== STATUS BADGE ====== */
         .status {
             display: inline-block;
-            padding: 2px 6px;
+            padding: 3px 8px;
             font-size: 10px;
             font-weight: bold;
             border-radius: 4px;
             text-transform: capitalize;
         }
-        .status-menunggu { background-color: #fff3cd; color: #856404; }
-        .status-sedang_bertamu { background-color: #cce5ff; color: #004085; }
-        .status-selesai { background-color: #d4edda; color: #155724; }
-        .status-ditolak { background-color: #f8d7da; color: #721c24; }
 
-        /* Footer nomor halaman */
-        @page {
-            margin: 100px 25px;
+        .status-menunggu {
+            background-color: #fff7cc;
+            color: #7a6300;
+            border: 1px solid #ffe58a;
         }
+
+        .status-sedang_bertamu {
+            background-color: #d6eaff;
+            color: #004085;
+            border: 1px solid #9ec5fe;
+        }
+
+        .status-selesai {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-ditolak {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* ====== TANDA TANGAN ====== */
+        .ttd-wrapper {
+            page-break-inside: avoid;
+            margin-top: 40px;
+        }
+
+        .ttd {
+            width: 260px;
+            float: right;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .ttd p {
+            margin: 3px 0;
+        }
+
+        .ttd .nama {
+            margin-top: 60px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .ttd .jabatan {
+            font-size: 11px;
+        }
+
+        /* ====== FOOTER ====== */
         footer {
             position: fixed;
             bottom: -20px;
@@ -95,8 +182,20 @@
             font-size: 10px;
             color: #6c757d;
         }
+
         .page-number:after {
             content: counter(page) " / " counter(pages);
+        }
+
+        /* ====== DICETAK PADA ====== */
+        .dicetak {
+            position: fixed;
+            bottom: 45px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10.5px;
+            color: #555;
         }
     </style>
 </head>
@@ -104,30 +203,33 @@
     <header>
         <img src="{{ public_path('img/logo.png') }}" alt="Logo">
         <div class="kop">
-            <h1>Buku Tamu Digital</h1>
-            <p>Jl. Brigjend Dharsono No.1, Sunyaragi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45135</p>
+            <h1>PEMERINTAH KOTA CIREBON</h1>
+            <h2>DINAS KOMUNIKASI, INFORMATIKA DAN STATISTIK</h2>
+            <p>Jl. DR. Sudarsono No.40, Kesambi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45134</p>
+            <p>Telepon: (0231) 123456 &nbsp; | &nbsp; Email: diskominfo@cirebonkota.go.id</p>
+            <div class="garis-tebal"></div>
         </div>
     </header>
 
-    <h2>Laporan Kunjungan</h2>
-        <div class="subtitle">
-            @if(request('start_date') && request('end_date'))
-                Periode: {{ request('start_date') }} s/d {{ request('end_date') }}
-            @else
-                Periode: Semua
-            @endif
-            <br>
-            @if(request('status'))
-                Status: {{ ucfirst(str_replace('_',' ', request('status'))) }}
-            @else
-                Status: Semua
-            @endif
-            <br>
-            Dicetak pada: {{ now()->format('d/m/Y H:i') }}
-        </div>
+    <h2 class="judul">Laporan Rekapan Kunjungan</h2>
+    <div class="subtitle">
+        @if(request('start_date') && request('end_date'))
+            Periode: {{ request('start_date') }} s/d {{ request('end_date') }}
+        @else
+            Periode: Semua
+        @endif
+        <br>
+        @if(request('status'))
+            Status: {{ ucfirst(str_replace('_',' ', request('status'))) }}
+        @else
+            Status: Semua
+        @endif
+    </div>
+
     <table>
         <thead>
             <tr>
+                <th>No</th>
                 <th>Nama Tamu</th>
                 <th>Pegawai Tujuan</th>
                 <th>Keperluan</th>
@@ -137,26 +239,39 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($kunjungan as $k)
+            @forelse($kunjungan as $i => $k)
                 <tr>
+                    <td style="text-align:center;">{{ $i+1 }}</td>
                     <td>{{ $k->tamu?->nama ?? $k->tamu?->user?->name ?? '-' }}</td>
                     <td>{{ $k->pegawai?->user?->name ?? '-' }}</td>
                     <td>{{ $k->keperluan }}</td>
-                    <td><span class="status status-{{ $k->status }}">
-                        {{ str_replace('_',' ',$k->status) }}
-                    </span></td>
-                    <td>{{ $k->waktu_masuk }}</td>
-                    <td>{{ $k->waktu_keluar ?? '-' }}</td>
+                    <td style="text-align:center;">
+                        <span class="status status-{{ $k->status }}">
+                            {{ str_replace('_',' ',$k->status) }}
+                        </span>
+                    </td>
+                    <td style="text-align:center;">{{ $k->waktu_masuk }}</td>
+                    <td style="text-align:center;">{{ $k->waktu_keluar ?? '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:10px;">
-                        Tidak ada data kunjungan
-                    </td>
+                    <td colspan="7" style="text-align:center; padding:10px;">Tidak ada data kunjungan</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+
+    <div class="ttd-wrapper">
+        <div class="ttd">
+            <p>Cirebon, {{ now()->translatedFormat('d F Y') }}</p>
+            <p class="jabatan">Kepala Dinas Komunikasi, Informatika dan Statistik</p>
+            <p class="nama">________________________</p>
+        </div>
+    </div>
+
+    <div class="dicetak">
+        Dicetak pada: {{ now()->format('d/m/Y H:i') }}
+    </div>
 
     <footer>
         Halaman <span class="page-number"></span>

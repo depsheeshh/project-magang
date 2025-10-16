@@ -1,24 +1,17 @@
-<section class="page-section bg-primary text-white mb-0" id="tentang" data-aos="fade-up">
-  <div class="container">
-    <h2 class="page-section-heading text-center text-uppercase" data-aos="fade-down">Tentang Aplikasi</h2>
-    <div class="divider-custom divider-light" data-aos="zoom-in">
-      <div class="divider-custom-line"></div>
-      <div class="divider-custom-icon"><i class="fas fa-info-circle"></i></div>
-      <div class="divider-custom-line"></div>
-    </div>
+<section id="tentang" class="py-5" style="background: linear-gradient(180deg, #030814 0%, #020510 100%);">
+  <div class="container text-center text-light" data-aos="fade-up">
+    <button class="btn btn-outline-light mb-4 px-4 py-2 rounded-pill" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);">
+      Tentang Aplikasi
+    </button>
 
-    <div class="row">
-      <div class="col-lg-8 mx-auto text-center" data-aos="fade-up" data-aos-delay="200">
-        <p class="lead mb-4">
-          <strong>Buku Tamu Digital</strong> adalah sistem pencatatan kunjungan modern yang
-          membantu instansi atau perusahaan dalam memantau tamu, frontliner, dan pegawai dengan
-          mudah. Dengan integrasi <span class="fw-bold">QR Code</span>, notifikasi real-time, dan laporan otomatis,
-          setiap kunjungan menjadi lebih transparan, efisien, dan profesional.
-        </p>
-        <a href="#fitur" class="btn btn-light btn-lg mt-3 shadow-sm" data-aos="zoom-in" data-aos-delay="400">
-          <i class="fas fa-arrow-down me-2"></i> Lihat Fitur Utama
-        </a>
-      </div>
+    <h3 class="fw-bold mb-3">Buku Tamu Digital Terpercaya</h3>
+
+    <div class="mx-auto p-4 rounded-4 shadow-lg" style="max-width: 800px; backdrop-filter: blur(12px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+      <p class="lead mb-0 text-light">
+        Aplikasi <strong>Buku Tamu Digital</strong> adalah solusi modern untuk mencatat dan mengelola kunjungan tamu secara digital.
+        Dengan teknologi <strong>QR Code</strong> dan sistem cloud, kami memastikan setiap kunjungan tercatat dengan akurat dan aman.
+        Digunakan oleh berbagai instansi dan perusahaan di seluruh Indonesia.
+      </p>
     </div>
   </div>
 </section>

@@ -17,6 +17,32 @@
       </a>
     </li>
 
+    <!-- Notification Bell -->
+    <li class="nav-item dropdown">
+    <a href="#" data-toggle="dropdown" class="nav-link nav-link-lg position-relative" aria-label="Notifikasi">
+        <i class="fas fa-bell"></i>
+        <span id="notif-badge" class="badge badge-danger navbar-badge" style="display:none;">0</span>
+    </a>
+
+    <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg shadow-lg border-0 p-0"
+        style="width: 360px; border-radius: 10px; overflow: hidden;">
+        <div class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2 bg-primary text-white">
+        <span class="fw-bold"><i class="fas fa-bell me-2"></i> Notifikasi</span>
+        <button id="clearAllNotif" class="btn btn-sm btn-light text-danger px-2 py-1 rounded-pill">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>
+
+        <div id="notif-list" class="dropdown-list-content"
+            style="max-height: 300px; overflow-y: auto; background-color: var(--bs-body-bg);">
+        <span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>
+        </div>
+    </div>
+    </li>
+
+
+
+
     <!-- User Dropdown -->
     <li class="nav-item dropdown">
       <a href="#" data-toggle="dropdown"

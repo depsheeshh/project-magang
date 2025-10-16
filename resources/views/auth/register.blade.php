@@ -1,112 +1,58 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('title', 'Register')
-
+@section('subtitle', 'Buat akun baru untuk mulai menggunakan sistem')
 @section('content')
-<section class="page-section mt-5" id="register">
-  <div class="container">
-    <h2 class="page-section-heading text-center text-uppercase text-secondary mb-4" data-aos="fade-down">
-      Register
-    </h2>
-    <div class="divider-custom mb-4" data-aos="zoom-in">
-      <div class="divider-custom-line"></div>
-      <div class="divider-custom-icon"><i class="fas fa-user-plus"></i></div>
-      <div class="divider-custom-line"></div>
-    </div>
+<form method="POST" action="{{ route('register') }}" novalidate>
+  @csrf
 
-    <div class="row justify-content-center">
-      <div class="col-lg-6">
-        <div class="card shadow-lg border-0 rounded-4" data-aos="fade-up">
-          <div class="card-body p-4">
-            <form method="POST" action="{{ route('register') }}" novalidate>
-              @csrf
-
-              {{-- Nama --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('name') is-invalid @enderror"
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Nama Lengkap"
-                  value="{{ old('name') }}"
-                  required
-                  autocomplete="name"
-                />
-                <label for="name"><i class="fas fa-user me-2 text-primary"></i>Nama Lengkap</label>
-                @error('name')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Email --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('email') is-invalid @enderror"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value="{{ old('email') }}"
-                  required
-                  autocomplete="email"
-                />
-                <label for="email"><i class="fas fa-envelope me-2 text-primary"></i>Email</label>
-                @error('email')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Password --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('password') is-invalid @enderror"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  required
-                  autocomplete="new-password"
-                />
-                <label for="password"><i class="fas fa-key me-2 text-primary"></i>Password</label>
-                @error('password')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Konfirmasi Password --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('password_confirmation') is-invalid @enderror"
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  type="password"
-                  placeholder="Konfirmasi Password"
-                  required
-                  autocomplete="new-password"
-                />
-                <label for="password_confirmation"><i class="fas fa-check-double me-2 text-primary"></i>Konfirmasi Password</label>
-                @error('password_confirmation')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              <div class="d-grid">
-                <button class="btn btn-primary btn-lg shadow-sm" type="submit">
-                  <i class="fas fa-user-plus me-2"></i> Daftar
-                </button>
-              </div>
-            </form>
-
-            <div class="text-center mt-3">
-              <small>Sudah punya akun?
-                <a href="{{ route('login') }}" class="fw-bold text-primary">Login</a>
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="form-floating mb-3">
+    <input type="text" name="name" id="name"
+           class="form-control @error('name') is-invalid @enderror"
+           placeholder="Nama Lengkap" required>
+    <label for="name"><i class="bi bi-person me-2 text-primary"></i>Nama Lengkap</label>
+    @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
-</section>
+
+  <div class="form-floating mb-3">
+    <input type="email" name="email" id="email"
+           class="form-control @error('email') is-invalid @enderror"
+           placeholder="name@example.com" required>
+    <label for="email"><i class="bi bi-envelope me-2 text-primary"></i>Email</label>
+    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="form-floating mb-3">
+    <input type="password" name="password" id="password"
+           class="form-control @error('password') is-invalid @enderror"
+           placeholder="Password" required>
+    <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password</label>
+    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="form-floating mb-3">
+    <input type="password" name="password_confirmation" id="password_confirmation"
+           class="form-control @error('password_confirmation') is-invalid @enderror"
+           placeholder="Konfirmasi Password" required>
+    <label for="password_confirmation"><i class="bi bi-check2-all me-2 text-primary"></i>Konfirmasi Password</label>
+    @error('password_confirmation') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="d-grid mb-3">
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="bi bi-person-plus me-2"></i> Daftar
+    </button>
+  </div>
+</form>
+@endsection
+
+@section('footer-links')
+<div class="mt-3">
+  <a href="{{ url('/') }}" class="btn btn-outline-light btn-sm">
+    <i class="bi bi-house-door me-1"></i> Kembali ke Home
+  </a>
+</div>
+<div class="mt-2">
+  Sudah punya akun? <a href="{{ route('login') }}" class="fw-bold">Login</a>
+</div>
 @endsection

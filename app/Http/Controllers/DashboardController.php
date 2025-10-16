@@ -40,6 +40,13 @@ class DashboardController extends Controller
                 ->where('status','menunggu')
                 ->latest()
                 ->get();
+
+            // Statistik frontliner
+            $total         = Kunjungan::count();
+            $diterima      = Kunjungan::whereIn('status',['sedang_bertamu','selesai'])->count();
+            $ditolak       = Kunjungan::where('status','ditolak')->count();
+            $sedangBertamu = Kunjungan::where('status','sedang_bertamu')->count();
+            $selesai       = Kunjungan::where('status','selesai')->count();
         }
 
         if ($role === 'pegawai') {

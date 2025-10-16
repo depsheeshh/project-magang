@@ -13,53 +13,48 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\HistoryLogController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Auth\ResetPasswordController;
-use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
-use App\Http\Controllers\Frontliner\KunjunganController;
+use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
-use App\Http\Controllers\Tamu\DashboardController as TamuDashboardController;
 use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\NotificationController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
 
 // Flow tamu
 Route::prefix('tamu')->name('tamu.')->group(function () {
+    // Halaman scan QR (opsional, kalau masih dipakai)
     Route::get('/scan', fn () => view('tamu.scan'))->name('scan');
 
+    // Callback setelah scan (opsional, kalau masih dipakai)
     Route::post('/scan-success', function (\Illuminate\Http\Request $request) {
         $request->session()->put('tamu_scanned', true);
         $request->session()->put('url.intended', route('tamu.form'));
         return response()->json(['status' => 'ok']);
     })->name('scan.success');
 
-    Route::get('/form', [TamuController::class, 'create'])
-        ->middleware(['auth','tamu.scanned'])
-        ->name('form');
+    // Form tamu langsung tanpa auth
+    Route::get('/form', [TamuController::class, 'create'])->name('form');
+    Route::post('/form', [TamuController::class, 'store'])->name('store');
 
-    Route::post('/form', [TamuController::class, 'store'])
-        ->middleware(['auth','tamu.scanned'])
-        ->name('store');
-
-    Route::get('/kunjungan/status', [TamuController::class, 'status'])->name('kunjungan.status');
-
+    // Halaman terima kasih
     Route::get('/thanks', fn () => view('tamu.thanks'))->name('thanks');
 
-
-
-    // AJAX filter pegawai by bidang
+    // AJAX filter pegawai by bidang (tidak perlu auth, karena dipakai di form publik)
     Route::get('/get-pegawai/{bidangId}', [TamuController::class, 'getPegawaiByBidang'])
-        ->middleware('auth')
         ->name('getPegawai');
 });
 
-Route::get('/qrcode/tamu', function () {
-    return view('qrcode.tamu');
-})->middleware(['auth','role:admin|frontliner'])->name('qrcode.tamu');
+Route::middleware(['auth','role:admin|frontliner'])->group(function () {
+    Route::get('/qrcode/tamu', [QrCodeController::class, 'index'])->name('qrcode.tamu');
+    Route::get('/qrcode/tamu/pdf', [QrCodeController::class, 'pdf'])->name('qrcode.tamu.pdf');
+});
 
 
 // Guest routes
@@ -128,19 +123,19 @@ Route::middleware('auth',)->group(function () {
             ->name('frontliner.')
             ->group(function () {
                 // Halaman khusus tamu menunggu
-                // Route::get('/tamu-menunggu', [KunjunganController::class, 'menunggu'])
+                // Route::get('/tamu-menunggu', [FrontlinerKunjunganController::class, 'menunggu'])
                 //     ->name('tamu.menunggu');
 
                 // Halaman daftar semua kunjungan (bisa difilter ?status=menunggu, dll)
-                Route::get('/kunjungan', [KunjunganController::class, 'index'])
+                Route::get('/kunjungan', [FrontlinerKunjunganController::class, 'index'])
                     ->name('kunjungan.index');
 
                 // Aksi frontliner terhadap kunjungan
-                Route::post('/kunjungan/{kunjungan}/approve', [KunjunganController::class, 'approve'])
+                Route::post('/kunjungan/{kunjungan}/approve', [FrontlinerKunjunganController::class, 'approve'])
                     ->name('kunjungan.approve');
-                Route::post('/kunjungan/{kunjungan}/reject', [KunjunganController::class, 'reject'])
+                Route::post('/kunjungan/{kunjungan}/reject', [FrontlinerKunjunganController::class, 'reject'])
                     ->name('kunjungan.reject');
-                Route::post('/kunjungan/{kunjungan}/checkout', [KunjunganController::class, 'checkout'])
+                Route::post('/kunjungan/{kunjungan}/checkout', [FrontlinerKunjunganController::class, 'checkout'])
                     ->name('kunjungan.checkout');
 
             });
@@ -171,6 +166,12 @@ Route::middleware('auth',)->group(function () {
         // Route::get('/password/change', [ChangePasswordController::class, 'show'])->name('password.change');
         // Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change.update');
 
+        // Untuk tamu: cek status kunjungan terakhir
+        Route::middleware(['auth','role:tamu'])->get('/api/tamu/notifikasi', [TamuController::class, 'checkNotification']);
+
+        // Untuk frontliner: cek jumlah tamu menunggu
+        Route::middleware(['auth','role:frontliner'])->get('/api/frontliner/notifikasi', [FrontlinerKunjunganController::class, 'checkNotification']);
+
         Route::middleware(['role:admin|frontliner|pegawai|tamu'])->group(function () {
             Route::get('/password/change', [AdminChangePasswordController::class, 'edit'])->name('password.change');
             Route::post('/password/change', [AdminChangePasswordController::class, 'update'])->name('password.change.update');
@@ -184,11 +185,15 @@ Route::middleware('auth',)->group(function () {
 
         // Frontliner checkout tamu
         Route::post('/kunjungan/{kunjungan}/checkout',
-            [KunjunganController::class, 'checkout'])
+            [FrontlinerKunjunganController::class, 'checkout'])
             ->middleware(['auth','role:frontliner'])
             ->name('kunjungan.checkout');
     });
 
+    Route::get('/notifikasi', [NotificationController::class, 'index']);
+    Route::patch('/notifikasi/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('/notifikasi/{id}', [NotificationController::class, 'destroy']);
+    Route::delete('/notifikasi/clear', [NotificationController::class, 'clearAll']);
 
 
     // Logout

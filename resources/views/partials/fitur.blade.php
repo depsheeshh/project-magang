@@ -1,36 +1,35 @@
-    <section class="page-section" id="fitur">
-    <div class="container">
-        <h2 class="page-section-heading text-center text-uppercase text-secondary mb-0">Fitur Utama</h2>
-        <div class="divider-custom">
-        <div class="divider-custom-line"></div>
-        <div class="divider-custom-icon"><i class="fas fa-cogs"></i></div>
-        <div class="divider-custom-line"></div>
-        </div>
+<section id="fitur" class="py-5" style="background: linear-gradient(180deg, #081a2e 0%, #05101f 100%);">
+  <div class="container text-center text-light">
+    <button class="btn btn-outline-light mb-4 px-4 py-2 rounded-pill" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);">
+      Fitur Utama
+    </button>
 
-        <div class="row text-center">
-        <div class="col-md-4 mb-5" data-aos="flip-left">
-            <div class="feature-box p-4 shadow-sm rounded bg-light h-100">
-            <div class="mb-3 text-primary"><i class="fas fa-qrcode fa-3x"></i></div>
-            <h4 class="text-uppercase">Scan QR</h4>
-            <p class="text-muted">Tamu cukup scan barcode untuk mengisi data kunjungan dengan cepat.</p>
-            </div>
-        </div>
+    <h3 class="fw-bold mb-5">Mengapa Memilih Kami?</h3>
 
-        <div class="col-md-4 mb-5" data-aos="flip-up" data-aos-delay="200">
-            <div class="feature-box p-4 shadow-sm rounded bg-light h-100">
-                <div class="mb-3 text-primary"><i class="fas fa-user-check fa-3x"></i></div>
-                <h4 class="text-uppercase">Approval Frontliner</h4>
-            <p class="text-muted">Frontliner memverifikasi tujuan tamu sebelum masuk ke area instansi.</p>
-            </div>
+    <div class="row justify-content-center g-4">
+      <div class="col-md-4" data-aos="flip-left">
+        <div class="p-4 rounded-4 shadow-sm h-100" style="backdrop-filter: blur(12px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all .3s;">
+          <i class="fas fa-clock fa-3x mb-3 text-info"></i>
+          <h5 class="fw-bold mb-2">Hemat Waktu</h5>
+          <p class="text-light opacity-75">Proses check-in cepat dan efisien tanpa antre panjang.</p>
         </div>
+      </div>
 
-        <div class="col-md-4 mb-5" data-aos="flip-right" data-aos-delay="400">
-            <div class="feature-box p-4 shadow-sm rounded bg-light h-100">
-                <div class="mb-3 text-primary"><i class="fas fa-file-alt fa-3x"></i></div>
-                <h4 class="text-uppercase">Laporan & Status</h4>
-            <p class="text-muted">Pantau status kunjungan dan hasilkan laporan otomatis yang profesional.</p>
-            </div>
+      <div class="col-md-4" data-aos="flip-up">
+        <div class="p-4 rounded-4 shadow-sm h-100" style="backdrop-filter: blur(12px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all .3s;">
+          <i class="fas fa-shield-alt fa-3x mb-3 text-success"></i>
+          <h5 class="fw-bold mb-2">Aman & Terpercaya</h5>
+          <p class="text-light opacity-75">Data tamu tersimpan dengan aman dan terenkripsi.</p>
         </div>
+      </div>
+
+      <div class="col-md-4" data-aos="flip-right">
+        <div class="p-4 rounded-4 shadow-sm h-100" style="backdrop-filter: blur(12px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all .3s;">
+          <i class="fas fa-bolt fa-3x mb-3 text-warning"></i>
+          <h5 class="fw-bold mb-2">Real-time Update</h5>
+          <p class="text-light opacity-75">Pantau kunjungan secara real-time dan akurat.</p>
         </div>
+      </div>
     </div>
-    </section>
+  </div>
+</section>

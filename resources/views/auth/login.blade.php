@@ -1,96 +1,56 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('title', 'Login')
-
+@section('subtitle', 'Silakan masuk untuk melanjutkan')
 @section('content')
-<section class="page-section mt-5" id="login">
-  <div class="container">
-    <h2 class="page-section-heading text-center text-uppercase text-secondary mb-4" data-aos="fade-down">
-      Login
-    </h2>
-    <div class="divider-custom mb-4" data-aos="zoom-in">
-      <div class="divider-custom-line"></div>
-      <div class="divider-custom-icon"><i class="fas fa-lock"></i></div>
-      <div class="divider-custom-line"></div>
-    </div>
+<form method="POST" action="{{ route('login') }}" novalidate>
+  @csrf
 
-    <div class="row justify-content-center">
-      <div class="col-lg-6">
-        <div class="card shadow-lg border-0 rounded-4" data-aos="fade-up">
-          <div class="card-body p-4">
-            {{-- Form login manual --}}
-            <form method="POST" action="{{ route('login') }}" novalidate>
-              @csrf
-
-              {{-- Email --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('email') is-invalid @enderror"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value="{{ old('email') }}"
-                  required
-                  autocomplete="email"
-                />
-                <label for="email"><i class="fas fa-envelope me-2 text-primary"></i>Email</label>
-                @error('email')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Password --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('password') is-invalid @enderror"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password"
-                  required
-                  autocomplete="current-password"
-                />
-                <label for="password"><i class="fas fa-key me-2 text-primary"></i>Password</label>
-                @error('password')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              <div class="d-flex justify-content-between mb-3">
-                <a href="{{ route('password.request') }}" class="small text-decoration-none">
-                  <i class="fas fa-question-circle me-1"></i>Lupa Password?
-                </a>
-              </div>
-
-              <div class="d-grid">
-                <button class="btn btn-primary btn-lg shadow-sm" type="submit">
-                  <i class="fas fa-sign-in-alt me-2"></i> Login
-                </button>
-              </div>
-            </form>
-
-            {{-- Divider --}}
-            <div class="text-center my-3">
-              <span class="text-muted">atau</span>
-            </div>
-
-            {{-- Tombol Social Login --}}
-            <div class="d-grid gap-2">
-              <a href="{{ route('login.google') }}" class="btn btn-danger btn-lg shadow-sm">
-                <i class="fab fa-google me-2"></i> Login dengan Google
-            </a>
-            </div>
-
-            <div class="text-center mt-3">
-              <small>Belum punya akun?
-                <a href="{{ route('register') }}" class="fw-bold text-primary">Daftar</a>
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="form-floating mb-3">
+    <input type="email" name="email" id="email"
+           class="form-control @error('email') is-invalid @enderror"
+           placeholder="name@example.com" required>
+    <label for="email"><i class="bi bi-envelope me-2 text-primary"></i>Email</label>
+    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
-</section>
+
+  <div class="form-floating mb-3">
+    <input type="password" name="password" id="password"
+           class="form-control @error('password') is-invalid @enderror"
+           placeholder="Password" required>
+    <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password</label>
+    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="d-flex justify-content-between mb-3">
+    <a href="{{ route('password.request') }}" class="small text-info text-decoration-none">
+      <i class="bi bi-question-circle me-1"></i>Lupa Password?
+    </a>
+  </div>
+
+  <div class="d-grid mb-3">
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="bi bi-box-arrow-in-right me-2"></i> Login
+    </button>
+  </div>
+</form>
+
+<div class="auth-divider"><span>atau</span></div>
+
+<div class="d-grid mb-3">
+  <a href="{{ route('login.google') }}" class="btn btn-danger btn-lg">
+    <i class="bi bi-google me-2"></i> Login dengan Google
+  </a>
+</div>
+@endsection
+
+@section('footer-links')
+<div class="mt-3">
+  <a href="{{ url('/') }}" class="btn btn-outline-light btn-sm">
+    <i class="bi bi-house-door me-1"></i> Kembali ke Home
+  </a>
+</div>
+<div class="mt-2">
+  Belum punya akun? <a href="{{ route('register') }}" class="fw-bold">Daftar</a>
+</div>
 @endsection

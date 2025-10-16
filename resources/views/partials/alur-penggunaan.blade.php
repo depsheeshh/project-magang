@@ -1,75 +1,31 @@
-<section class="page-section" id="alur">
-    <div class="container">
-        <h2 class="page-section-heading text-center text-uppercase text-secondary mb-0">Alur Penggunaan</h2>
+<section id="alur" class="py-5" style="background: linear-gradient(180deg, #05101f 0%, #030814 100%);">
+  <div class="container text-center text-light">
+    <button class="btn btn-outline-light mb-4 px-4 py-2 rounded-pill" style="backdrop-filter: blur(8px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2);">
+      Alur Penggunaan
+    </button>
 
-        <div class="divider-custom">
-            <div class="divider-custom-line"></div>
-            <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
-            <div class="divider-custom-line"></div>
+    <h3 class="fw-bold mb-5">Cara Kerja Sistem</h3>
+
+    <div class="row justify-content-center g-4">
+      @php
+        $steps = [
+          ['icon'=>'fa-qrcode','title'=>'Scan QR','desc'=>'Scan QR Code di lokasi untuk memulai'],
+          ['icon'=>'fa-id-card','title'=>'Isi Data Tamu','desc'=>'Lengkapi data kunjungan dengan mudah'],
+          ['icon'=>'fa-user-check','title'=>'Verifikasi','desc'=>'Sistem memverifikasi data Anda'],
+          ['icon'=>'fa-user-plus','title'=>'Buat Tamu','desc'=>'Data tamu berhasil tercatat'],
+          ['icon'=>'fa-door-open','title'=>'Check Out','desc'=>'Check out saat selesai berkunjung']
+        ];
+      @endphp
+
+      @foreach($steps as $index => $step)
+        <div class="col-6 col-md-4 col-lg-2" data-aos="zoom-in" data-aos-delay="{{ $index * 100 }}">
+          <div class="p-4 rounded-4 shadow-sm h-100" style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all .3s;">
+            <i class="fas {{ $step['icon'] }} fa-2x mb-3 text-info"></i>
+            <h6 class="text-uppercase fw-bold">{{ $step['title'] }}</h6>
+            <p class="small text-light opacity-75">{{ $step['desc'] }}</p>
+          </div>
         </div>
-
-        <div class="row text-center align-items-center">
-            <!-- Step 1 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up">
-                <div class="mb-3"><i class="fas fa-qrcode fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Scan QR</h4>
-                <p class="text-muted">Tamu melakukan scan barcode untuk memulai proses kunjungan.</p>
-            </div>
-            <div class="col-md-1 mb-5 arrow-col">
-                <i class="fas fa-arrow-right fa-2x text-secondary arrow-animate arrow-right"></i>
-                <i class="fas fa-arrow-down fa-2x text-secondary arrow-animate arrow-down"></i>
-            </div>
-
-            <!-- Step 2 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up" data-aos-delay="200">
-                <div class="mb-3"><i class="fas fa-sign-in-alt fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Login User</h4>
-                <p class="text-muted">Tamu login sebagai user untuk mengakses form data tamu.</p>
-            </div>
-            <div class="col-md-1 mb-5 arrow-col">
-                <i class="fas fa-arrow-right fa-2x text-secondary arrow-animate arrow-right"></i>
-                <i class="fas fa-arrow-down fa-2x text-secondary arrow-animate arrow-down"></i>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up" data-aos-delay="400">
-                <div class="mb-3"><i class="fas fa-id-card fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Isi Data Tamu</h4>
-                <p class="text-muted">Mengisi form data diri dan tujuan kunjungan.</p>
-            </div>
-            <div class="col-md-1 mb-5 arrow-col">
-                <i class="fas fa-arrow-right fa-2x text-secondary arrow-animate arrow-right"></i>
-                <i class="fas fa-arrow-down fa-2x text-secondary arrow-animate arrow-down"></i>
-            </div>
-
-            <!-- Step 4 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up" data-aos-delay="600">
-                <div class="mb-3"><i class="fas fa-user-check fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Verifikasi</h4>
-                <p class="text-muted">Frontliner memverifikasi pegawai yang dituju. Jika tidak ada → tamu ditolak.</p>
-            </div>
-            <div class="col-md-1 mb-5 arrow-col">
-                <i class="fas fa-arrow-right fa-2x text-secondary arrow-animate arrow-right"></i>
-                <i class="fas fa-arrow-down fa-2x text-secondary arrow-animate arrow-down"></i>
-            </div>
-
-            <!-- Step 5 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up" data-aos-delay="800">
-                <div class="mb-3"><i class="fas fa-door-open fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Bertamu</h4>
-                <p class="text-muted">Jika verifikasi berhasil, tamu dipersilakan masuk dengan status "Sedang Bertamu".</p>
-            </div>
-            <div class="col-md-1 mb-5 arrow-col">
-                <i class="fas fa-arrow-right fa-2x text-secondary arrow-animate arrow-right"></i>
-                <i class="fas fa-arrow-down fa-2x text-secondary arrow-animate arrow-down"></i>
-            </div>
-
-            <!-- Step 6 -->
-            <div class="col-md-2 mb-5" data-aos="fade-up" data-aos-delay="1000">
-                <div class="mb-3"><i class="fas fa-sign-out-alt fa-3x text-primary"></i></div>
-                <h4 class="text-uppercase">Check Out</h4>
-                <p class="text-muted">Tamu menekan tombol selesai. Jika lupa, frontliner bisa checkout manual.</p>
-            </div>
-        </div>
+      @endforeach
     </div>
+  </div>
 </section>

@@ -13,16 +13,18 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login'); // resources/views/auth/login.blade.php
+        return view('auth.login');
     }
 
     public function login(Request $request)
     {
+        // Validasi input
         $credentials = $request->validate([
-            'email'    => ['required','email'],
+            'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
+        // Coba login
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
@@ -30,15 +32,22 @@ class LoginController extends Controller
 
             // ✅ Cek apakah email sudah diverifikasi
             if (is_null($user->email_verified_at)) {
-                return redirect()->route('verification.form')
+                Auth::logout();
+                return redirect()
+                    ->route('verification.form')
                     ->with('status', 'Silakan verifikasi email terlebih dahulu.');
             }
 
-            // Kalau sudah verified → lanjut intended
-            return redirect()->intended();
-            // intended akan diarahkan oleh middleware RedirectIfAuthenticatedWithRole
+            // 🚩 Redirect berdasarkan role
+            if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
+                return redirect()->route('dashboard.index');
+            }
+
+            // 🧭 Kalau user biasa (termasuk tamu), arahkan ke home
+            return redirect()->route('home');
         }
 
+        // Gagal login
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->onlyInput('email');
@@ -52,7 +61,9 @@ class LoginController extends Controller
 
         return redirect()->route('login');
     }
-        public function redirectToGoogle()
+
+    // ======== LOGIN GOOGLE ========
+    public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
     }
@@ -66,11 +77,16 @@ class LoginController extends Controller
             [
                 'name' => $googleUser->getName(),
                 'password' => bcrypt(Str::random(16)),
-                'email_verified_at' => now(), // langsung verified
+                'email_verified_at' => now(),
             ]
         );
 
         Auth::login($user);
+
+        // Redirect setelah login via Google
+        if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
+            return redirect()->route('dashboard.index');
+        }
 
         return redirect()->route('home');
     }

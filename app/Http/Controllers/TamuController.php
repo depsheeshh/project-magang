@@ -6,83 +6,110 @@ use App\Models\Tamu;
 use App\Models\Kunjungan;
 use App\Models\Bidang;
 use App\Models\Pegawai;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\VerificationCodeMail;
+use App\Notifications\TamuBaruNotification;
 
 class TamuController extends Controller
 {
     public function create()
     {
         $bidang = Bidang::all();
-        $user   = Auth::user();
-        $tamu   = Tamu::where('user_id', $user->id)->first();
-
-        return view('tamu.form', compact('bidang','user','tamu'));
+        return view('tamu.form', compact('bidang'));
     }
 
     public function store(Request $request)
     {
-        $user = Auth::user();
-        $tamu = Tamu::where('user_id', $user->id)->first();
-
-        // Validasi
-        $rules = [
+        $validated = $request->validate([
+            'name'       => 'required|string|max:150',
+            'email'      => 'required|email|max:255',
+            'instansi'   => 'required|string|max:150',
+            'no_hp'      => 'required|string|max:20|regex:/^[0-9\+\-\s]+$/',
+            'alamat'     => 'required|string',
             'keperluan'  => 'required|string|max:255',
             'pegawai_id' => 'required|exists:pegawai,id',
-        ];
+        ]);
 
-        // Kalau tamu belum punya data → wajib isi instansi, no_hp, alamat
-        if (!$tamu) {
-            $rules['instansi'] = 'required|string|max:150';
-            $rules['no_hp']    = 'required|string|max:20|regex:/^[0-9\+\-\s]+$/';
-            $rules['alamat']   = 'required|string';
-        }
+        $user = User::where('email', $validated['email'])->first();
+        $isNew = false;
 
-        $validated = $request->validate($rules);
+        if (!$user) {
+            $user = User::create([
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => bcrypt("Password123!"),
+            ]);
+            $user->assignRole('tamu');
+            $isNew = true;
 
-        // Sanitasi input teks
-        foreach (['keperluan','instansi','no_hp','alamat'] as $field) {
-            if (isset($validated[$field])) {
-                $validated[$field] = strip_tags($validated[$field]);
+            $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $user->update([
+                'verification_code'       => $code,
+                'verification_expires_at' => now()->addMinutes(15),
+            ]);
+
+            Mail::to($user->email)->send(new VerificationCodeMail($code));
+        } else {
+            if ($user->name !== $validated['name']) {
+                $user->update(['name' => $validated['name']]);
+            }
+            if (!$user->hasRole('tamu')) {
+                $user->assignRole('tamu');
             }
         }
 
-        // Update atau buat data tamu
         $tamu = Tamu::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'nama'     => $user->name,
-                'email'    => $user->email,
-                'instansi' => $validated['instansi'] ?? $tamu->instansi ?? null,
-                'no_hp'    => $validated['no_hp'] ?? $tamu->no_hp ?? null,
-                'alamat'   => $validated['alamat'] ?? $tamu->alamat ?? null,
-                'updated_id' => $user->id,
+                'nama'     => $validated['name'],
+                'email'    => $validated['email'],
+                'instansi' => $validated['instansi'],
+                'no_hp'    => $validated['no_hp'],
+                'alamat'   => $validated['alamat'],
             ]
         );
 
-        // Buat kunjungan baru
-        Kunjungan::create([
+        $kunjungan = Kunjungan::create([
             'tamu_id'     => $tamu->id,
             'pegawai_id'  => $validated['pegawai_id'],
-            'keperluan'   => $validated['keperluan'],
+            'keperluan'   => strip_tags($validated['keperluan']),
             'waktu_masuk' => now(),
             'status'      => 'menunggu',
         ]);
 
-        // Tambahkan role tamu jika user belum punya role
-        if ($user && $user->roles()->count() === 0) {
-            $user->assignRole('tamu');
+        // 🚩 Kirim notifikasi ke pegawai yang dituju
+        $pegawai = Pegawai::with('user')->find($validated['pegawai_id']);
+        if ($pegawai && $pegawai->user) {
+            $pegawai->user->notify(new TamuBaruNotification($tamu, $kunjungan));
         }
 
-        $request->session()->forget('tamu_scanned');
+        // Kirim juga ke semua frontliner
+        $frontliners = User::role('frontliner')->get();
+        foreach ($frontliners as $f) {
+            $f->notify(new TamuBaruNotification($tamu, $kunjungan));
+        }
 
-        return redirect()->route('tamu.thanks');
+        if ($isNew) {
+            Auth::login($user);
+            session(['after_tamu_form' => true]);
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('verification.form')
+                ->with('info','Akun berhasil dibuat. Silakan cek email untuk verifikasi.');
+        }
+
+        Auth::login($user);
+        $request->session()->forget('url.intended');
+        return redirect()->route('tamu.thanks')->with('success','Kunjungan berhasil dicatat!');
     }
 
     public function status()
     {
         $user = Auth::user();
-        $tamu = Tamu::where('user_id', $user->id)->first();
+        $tamu = $user ? Tamu::where('user_id', $user->id)->first() : null;
 
         $kunjungan = $tamu
             ? Kunjungan::with(['pegawai.user'])
@@ -101,5 +128,17 @@ class TamuController extends Controller
             ->get();
 
         return response()->json($pegawai);
+    }
+
+    public function checkNotification()
+    {
+        $tamu = Tamu::where('user_id', Auth::id())->first();
+        $kunjungan = $tamu ? Kunjungan::where('tamu_id', $tamu->id)->latest('waktu_masuk')->first() : null;
+
+        return response()->json([
+            'status'  => $kunjungan?->status,
+            'alasan'  => $kunjungan?->alasan_penolakan,
+            'pegawai' => $kunjungan?->pegawai?->user?->name,
+        ]);
     }
 }

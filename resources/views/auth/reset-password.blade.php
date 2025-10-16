@@ -1,93 +1,51 @@
-@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('title', 'Reset Password')
-
+@section('subtitle', 'Masukkan password baru Anda')
 @section('content')
-<section class="page-section mt-5" id="reset-password">
-  <div class="container">
-    <h2 class="page-section-heading text-center text-uppercase text-secondary mb-4" data-aos="fade-down">
-      Reset Password
-    </h2>
-    <div class="divider-custom mb-4" data-aos="zoom-in">
-      <div class="divider-custom-line"></div>
-      <div class="divider-custom-icon"><i class="fas fa-sync-alt"></i></div>
-      <div class="divider-custom-line"></div>
-    </div>
+<form method="POST" action="{{ route('password.update') }}" novalidate>
+  @csrf
+  <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-    <div class="row justify-content-center">
-      <div class="col-lg-6">
-        <div class="card shadow-lg border-0 rounded-4" data-aos="fade-up">
-          <div class="card-body p-4">
-            <form method="POST" action="{{ route('password.update') }}" novalidate>
-              @csrf
-              <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
-              {{-- Email --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('email') is-invalid @enderror"
-                  id="email"
-                  name="email"
-                  type="email"
-                  value="{{ old('email', $request->email) }}"
-                  required
-                  autocomplete="email"
-                  autofocus
-                />
-                <label for="email"><i class="fas fa-envelope me-2 text-primary"></i>Email</label>
-                @error('email')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Password Baru --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('password') is-invalid @enderror"
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Password Baru"
-                  required
-                  autocomplete="new-password"
-                />
-                <label for="password"><i class="fas fa-key me-2 text-primary"></i>Password Baru</label>
-                @error('password')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              {{-- Konfirmasi Password Baru --}}
-              <div class="form-floating mb-3">
-                <input
-                  class="form-control @error('password_confirmation') is-invalid @enderror"
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  type="password"
-                  placeholder="Konfirmasi Password Baru"
-                  required
-                  autocomplete="new-password"
-                />
-                <label for="password_confirmation"><i class="fas fa-check-double me-2 text-primary"></i>Konfirmasi Password Baru</label>
-                @error('password_confirmation')
-                  <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-              </div>
-
-              <div class="d-grid">
-                <button class="btn btn-primary btn-lg shadow-sm" type="submit">
-                  <i class="fas fa-sync-alt me-2"></i> Reset Password
-                </button>
-              </div>
-            </form>
-
-            <div class="text-center mt-3">
-              <small>Kembali ke <a href="{{ route('login') }}" class="fw-bold text-primary">Login</a></small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="form-floating mb-3">
+    <input type="email" name="email" id="email"
+           class="form-control @error('email') is-invalid @enderror"
+           value="{{ old('email', $request->email) }}" required>
+    <label for="email"><i class="bi bi-envelope me-2 text-primary"></i>Email</label>
+    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
-</section>
+
+  <div class="form-floating mb-3">
+    <input type="password" name="password" id="password"
+           class="form-control @error('password') is-invalid @enderror"
+           placeholder="Password Baru" required>
+    <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password Baru</label>
+    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="form-floating mb-3">
+    <input type="password" name="password_confirmation" id="password_confirmation"
+           class="form-control @error('password_confirmation') is-invalid @enderror"
+           placeholder="Konfirmasi Password Baru" required>
+    <label for="password_confirmation"><i class="bi bi-check2-all me-2 text-primary"></i>Konfirmasi Password Baru</label>
+    @error('password_confirmation') <div class="invalid-feedback">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="d-grid mb-3">
+    <button type="submit" class="btn btn-primary btn-lg">
+      <i class="bi bi-arrow-repeat me-2"></i> Reset Password
+    </button>
+  </div>
+</form>
+@endsection
+
+@section('footer-links')
+<div class="mt-3">
+  <a href="{{ url('/') }}" class="btn btn-outline-light btn-sm">
+    <i class="bi bi-house-door me-1"></i> Kembali ke Home
+  </a>
+</div>
+<div class="mt-2">
+  Kembali ke <a href="{{ route('login') }}" class="fw-bold">Login</a>
+</div>
 @endsection

@@ -118,4 +118,23 @@ class KunjunganController extends Controller
         }
         return back()->with('success','Kunjungan tamu berhasil di-checkout.');
     }
+
+    public function checkNotification()
+    {
+        $kunjungan = Kunjungan::with('tamu')
+        ->where('status','menunggu')
+        ->latest()
+        ->take(5) // ambil 5 terbaru
+        ->get();
+
+    return response()->json([
+        'count' => $kunjungan->count(),
+        'items' => $kunjungan->map(fn($k) => [
+            'nama' => $k->tamu->nama,
+            'instansi' => $k->tamu->instansi,
+            'waktu' => $k->waktu_masuk->diffForHumans(),
+        ]),
+    ]);
+    }
+
 }
