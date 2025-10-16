@@ -1,61 +1,160 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📖 Buku Tamu Digital
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Buku Tamu Digital** adalah aplikasi berbasis web untuk pencatatan kunjungan tamu secara modern, cepat, dan aman. Aplikasi ini membantu instansi, perusahaan, atau organisasi dalam memantau tamu, frontliner, dan pegawai dengan integrasi **QR Code**, notifikasi real‑time, serta laporan otomatis.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
+- **Login Multi‑Role**: Admin, Frontliner, Pegawai, dan Tamu dengan akses berbeda.  
+- **Scan QR Code**: Tamu cukup scan barcode untuk mengisi data kunjungan.  
+- **Approval Frontliner**: Frontliner memverifikasi tujuan tamu sebelum masuk.  
+- **Dashboard**: Statistik kunjungan, status tamu, dan laporan otomatis.  
+- **Laporan & Status**: Pantau status kunjungan (sedang bertamu, selesai, ditolak).  
+- **Notifikasi Real‑Time**: Memberi tahu pegawai terkait adanya tamu.  
+- **Responsif & Mobile‑Friendly**: Tampilan optimal di desktop maupun smartphone.  
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Teknologi yang Digunakan
+- **Laravel** (Backend Framework)  
+- **Blade Template** (Frontend Templating)  
+- **Bootstrap 5** (UI & Responsif)  
+- **AJAX** (Interaksi dinamis tanpa reload)  
+- **MySQL / MariaDB** (Database)  
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Instalasi & Setup
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Clone Repository
+```bash
+git clone https://github.com/depsheeshh/buku-tamu-digital.git
+cd buku-tamu-digital
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Atau download ZIP lalu ekstrak.
 
-## Laravel Sponsors
+### 2. Install Dependencies
+```bash
+composer install
+npm install && npm run dev
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 3. Konfigurasi Environment
+Salin file `.env.example` menjadi `.env`:
+```bash
+cp .env.example .env
+```
 
-### Premium Partners
+Lalu sesuaikan:
+- Database (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`)  
+- App URL (`APP_URL=http://localhost:8000`)  
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 4. Generate Key
+```bash
+php artisan key:generate
+```
 
-## Contributing
+### 5. Migrasi & Seed Database
+```bash
+php artisan migrate --seed
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Seeder akan membuat akun default (misalnya admin).
 
-## Code of Conduct
+### 6. Jalankan Server
+```bash
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Akses di browser: [http://localhost:8000](http://localhost:8000)
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 👥 Cara Menggunakan Aplikasi
+1. **Login** menggunakan akun sesuai role (Admin/Frontliner/Pegawai/Tamu).  
+2. **Admin**: mengelola data, melihat laporan, mengatur user.  
+3. **Frontliner**: memverifikasi tamu, melakukan check‑in/out manual.  
+4. **Pegawai**: menerima notifikasi jika ada tamu yang datang.  
+5. **Tamu**: scan QR Code → isi form → tunggu verifikasi frontliner.  
+6. **Dashboard** menampilkan status kunjungan dan laporan statistik.  
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 👤 Panduan Penggunaan untuk Guest / User Baru
+
+### 1. Akses Aplikasi
+- Buka aplikasi melalui browser di alamat yang sudah disediakan (misalnya `http://localhost:8000` atau domain instansi).  
+- Tamu akan melihat halaman **Selamat Datang** dengan menu navigasi (Fitur, Alur, Tentang, Login).
+
+### 2. Scan QR Code
+- Tamu diarahkan untuk **scan QR Code** yang tersedia di lokasi (misalnya di meja resepsionis/frontliner).  
+- QR Code akan membuka halaman form tamu di aplikasi.
+
+### 3. Registrasi / Login
+- Jika tamu belum memiliki akun, lakukan **registrasi** singkat (nama, email, password).  
+- Jika sudah punya akun, cukup **login** menggunakan email & password.
+
+### 4. Isi Data Kunjungan
+- Setelah login, tamu mengisi form kunjungan:  
+  - Nama lengkap  
+  - Instansi/Perusahaan asal  
+  - Tujuan kunjungan (pegawai yang dituju)  
+  - Keperluan  
+- Data ini akan tersimpan di sistem.
+
+### 5. Verifikasi oleh Frontliner
+- Frontliner akan menerima notifikasi bahwa ada tamu baru.  
+- Frontliner memverifikasi apakah pegawai yang dituju tersedia.  
+  - Jika **diterima**, status tamu menjadi *Sedang Bertamu*.  
+  - Jika **ditolak**, tamu tidak dapat melanjutkan.
+
+### 6. Bertemu Pegawai
+- Setelah verifikasi berhasil, tamu dipersilakan masuk untuk bertemu pegawai yang dituju.  
+- Pegawai juga mendapat notifikasi bahwa ada tamu yang datang.
+
+### 7. Check Out
+- Setelah selesai bertemu, tamu melakukan **Check Out** melalui aplikasi.  
+- Jika tamu lupa, frontliner bisa melakukan check out manual.  
+- Status kunjungan berubah menjadi *Selesai*.
+
+### 8. Laporan & Riwayat
+- Semua data kunjungan otomatis tersimpan.  
+- Admin dapat melihat laporan kunjungan lengkap (harian, bulanan, dsb).  
+- Tamu bisa melihat riwayat kunjungan pribadinya.
+
+---
+
+## 📌 Ringkasan Alur Guest
+1. Scan QR Code   
+2. Registrasi/Login   
+3. Isi Form Kunjungan   
+4. Verifikasi Frontliner   
+5. Bertemu Pegawai   
+6. Check Out   
+7. Data tersimpan di laporan.
+
+---
+
+## 📂 Struktur Direktori (Singkat)
+```
+app/            -> Logic aplikasi (Controllers, Models)
+resources/views -> Blade templates (UI)
+public/         -> Assets (CSS, JS, Images)
+routes/web.php  -> Routing aplikasi
+database/       -> Migrations & Seeders
+```
+
+---
+
+## 🤝 Kontribusi
+1. Fork repository ini.  
+2. Buat branch baru (`git checkout -b fitur-baru`).  
+3. Commit perubahan (`git commit -m 'Tambah fitur baru'`).  
+4. Push ke branch (`git push origin fitur-baru`).  
+5. Buat Pull Request.  
+
+---
+
+## 📜 Lisensi
+Proyek ini dilisensikan di bawah [MIT License](LICENSE).
