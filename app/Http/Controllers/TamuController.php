@@ -75,7 +75,7 @@ class TamuController extends Controller
         $kunjungan = Kunjungan::create([
             'tamu_id'     => $tamu->id,
             'pegawai_id'  => $validated['pegawai_id'],
-            'keperluan'   => strip_tags($validated['keperluan']),
+            'keperluan'   => trim(strip_tags($validated['keperluan'])),
             'waktu_masuk' => now(),
             'status'      => 'menunggu',
         ]);
@@ -128,17 +128,5 @@ class TamuController extends Controller
             ->get();
 
         return response()->json($pegawai);
-    }
-
-    public function checkNotification()
-    {
-        $tamu = Tamu::where('user_id', Auth::id())->first();
-        $kunjungan = $tamu ? Kunjungan::where('tamu_id', $tamu->id)->latest('waktu_masuk')->first() : null;
-
-        return response()->json([
-            'status'  => $kunjungan?->status,
-            'alasan'  => $kunjungan?->alasan_penolakan,
-            'pegawai' => $kunjungan?->pegawai?->user?->name,
-        ]);
     }
 }

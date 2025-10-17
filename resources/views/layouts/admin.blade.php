@@ -223,6 +223,13 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
     transition: all 0.3s ease;
     background: transparent;
     }
+    /* Default (Light mode) */
+    #notif-list .notif-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #212529;   /* teks gelap agar terbaca di light mode */
+    line-height: 1.2;
+    }
     #notif-list .notif-item:hover {
     background: rgba(0, 123, 255, 0.1);
     }
@@ -278,6 +285,74 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
         word-wrap: break-word;     /* pecah kata panjang */
         max-width: 280px;          /* batasi lebar dropdown item */
         line-height: 1.4;          /* jarak antar baris lebih enak dibaca */
+    }
+    /* Container item */
+    .notif-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    transition: background 0.2s ease;
+    }
+    .notif-item:hover {
+    background: rgba(255,255,255,0.05);
+    cursor: pointer;
+    border-radius: 6px;
+    }
+
+    /* Ikon bulat */
+    .notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4e73df, #224abe);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    }
+
+    /* Konten */
+    #notif-list .notif-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #212529; /* hitam/gelap */
+        line-height: 1.2;
+        }
+    .notif-sub {
+    font-size: 12px;
+    color: var(--bs-secondary-color, #6c757d);
+    }
+    .notif-time {
+    font-size: 11px;
+    color: var(--bs-secondary-color, #6c757d);
+    margin-top: 2px;
+    }
+    #notif-list .notif-sub,
+    #notif-list .notif-time {
+    color: #6c757d;   /* abu-abu Bootstrap */
+    }
+    /* Dark mode override */
+    body.dark-mode #notif-list .notif-title {
+    color: #f8f9fc;   /* putih agar kontras di dark mode */
+    }
+
+    body.dark-mode #notif-list .notif-sub,
+    body.dark-mode #notif-list .notif-time {
+    color: #aaa;      /* abu terang di dark mode */
+    }
+
+    /* Status indicator warna */
+    #notif-list .status-disetujui {
+    color: #28a745;   /* hijau Bootstrap */
+    font-weight: 600;
+    }
+    #notif-list .status-ditolak {
+    color: #dc3545;   /* merah Bootstrap */
+    font-weight: 600;
+    }
+    #notif-list .status-menunggu {
+    color: #ffc107;   /* kuning Bootstrap */
+    font-weight: 600;
     }
 
 
@@ -404,245 +479,223 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
       }
     });
   </script>
- <script>
-(function() {
+
+  {{-- Notifications --}}
+<script>
+(function () {
   const roles = @json(Auth::user()->roles->pluck('name'));
-  let endpoint = null;
-  let onRender = null;
-  let lastData = null;
+  const endpoint = '/notifikasi';
+  let renderHandler = null;
 
-  // === FRONTLINER RENDER ===
-  const renderFrontliner = (data) => {
+  // === RENDER GENERIC (admin/frontliner/pegawai) ===
+  function renderCommon(data, color, icon, url = null) {
     const badge = document.getElementById('notif-badge');
     const list = document.getElementById('notif-list');
     if (!badge || !list) return;
 
-    let items = data?.items ?? [];
-
-    if (items.length > 0) {
-      badge.textContent = items.length;
-      badge.style.display = 'inline-block';
-      list.innerHTML = items.map(item => `
-        <div class="dropdown-item d-flex justify-content-between align-items-start" data-id="${item.id}">
-          <div class="d-flex align-items-start">
-            <div class="dropdown-item-icon bg-primary text-white me-3">
-              <i class="fas fa-user"></i>
-            </div>
-            <div>
-              <div><b>${item.nama}</b> dari <i>${item.instansi}</i></div>
-              <small class="text-muted">${item.waktu}</small>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-outline-danger ms-2 delete-notif" data-id="${item.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `).join('');
-    } else {
-      badge.style.display = 'none';
+    const items = data.items ?? [];
+    if (items.length === 0) {
+      badge.classList.add('d-none');
       list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
+      return;
     }
-  };
 
-  // === TAMU RENDER ===
-  const renderTamu = (data) => {
+    badge.textContent = items.length;
+    badge.classList.remove('d-none');
+
+    list.innerHTML = items.map(item => `
+      <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+           data-id="${item.id}" ${url ? `data-url="${url}"` : ''}>
+        <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+             style="width:38px;height:38px;">
+          <i class="fas ${icon}"></i>
+        </div>
+        <div class="notif-content flex-fill">
+          <div class="notif-title font-weight-bold"> ${item.nama ?? 'Notifikasi'} </div>
+          <div class="notif-sub small">
+            ${item.instansi ?? ''} ${item.keperluan ? ' • ' + item.keperluan : ''}
+          </div>
+          <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // === RENDER TAMU ===
+  function renderTamu(data) {
     const badge = document.getElementById('notif-badge');
     const list = document.getElementById('notif-list');
     if (!badge || !list) return;
 
-    const status = data?.status ?? null;
-    const alasan = data?.alasan ?? null;
+    const items = data.items ?? [];
+    if (items.length === 0) {
+      badge.classList.add('d-none');
+      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
+      return;
+    }
 
-    if (status) {
-      badge.textContent = '!';
-      badge.style.display = 'inline-block';
+    badge.textContent = items.length;
+    badge.classList.remove('d-none');
 
-      let statusHtml = '';
-      if (status === 'disetujui') {
-        statusHtml = `<span class="text-success"><i class="fas fa-check-circle"></i> Disetujui</span>`;
-      } else if (status === 'ditolak') {
-        statusHtml = `<span class="text-danger"><i class="fas fa-times-circle"></i> Ditolak</span><br>
-                      <small>Alasan: ${alasan ?? '-'}</small>`;
-      } else {
-        statusHtml = `<span class="text-warning"><i class="fas fa-clock"></i> Menunggu</span>`;
+    list.innerHTML = items.map(item => {
+      let icon = 'fa-clock',
+          color = 'bg-warning',
+          label = 'Menunggu',
+          labelClass = 'status-menunggu';
+
+      if (item.event === 'disetujui') {
+        icon = 'fa-check-circle';
+        color = 'bg-success';
+        label = 'Disetujui';
+        labelClass = 'status-disetujui';
+      }
+      if (item.event === 'ditolak') {
+        icon = 'fa-times-circle';
+        color = 'bg-danger';
+        label = 'Ditolak';
+        labelClass = 'status-ditolak';
       }
 
-      list.innerHTML = `
-        <div class="dropdown-item d-flex justify-content-between align-items-start">
-          <div>
-            <div>Status kunjungan Anda:</div>
-            <div>${statusHtml}</div>
+      return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+             data-id="${item.id}" data-url="/tamu/kunjungan/status">
+          <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+               style="width:38px;height:38px;">
+            <i class="fas ${icon}"></i>
           </div>
-          <button class="btn btn-sm btn-outline-danger delete-notif" data-id="status">
+          <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
+            <div class="${labelClass} small">${label}</div>
+            ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+          </div>
+          <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
             <i class="fas fa-trash"></i>
           </button>
         </div>`;
-    } else {
-      badge.style.display = 'none';
-      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
-    }
-  };
-
-  // === PEGAWAI RENDER ===
-  const renderPegawai = (data) => {
-    const badge = document.getElementById('notif-badge');
-    const list = document.getElementById('notif-list');
-    if (!badge || !list) return;
-
-    let items = data?.items ?? [];
-
-    if (items.length > 0) {
-      badge.textContent = items.length;
-      badge.style.display = 'inline-block';
-      list.innerHTML = items.map(item => `
-        <div class="dropdown-item d-flex justify-content-between align-items-start" data-id="${item.id}">
-          <div class="d-flex align-items-start">
-            <div class="dropdown-item-icon bg-info text-white me-3">
-              <i class="fas fa-user-friends"></i>
-            </div>
-            <div>
-              <div><b>${item.nama}</b> dari <i>${item.instansi}</i></div>
-              <small class="text-muted">${item.waktu}</small>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-outline-danger ms-2 delete-notif" data-id="${item.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `).join('');
-    } else {
-      badge.style.display = 'none';
-      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
-    }
-  };
-
-  // === ADMIN RENDER ===
-  const renderAdmin = (data) => {
-    const badge = document.getElementById('notif-badge');
-    const list = document.getElementById('notif-list');
-    if (!badge || !list) return;
-
-    let items = data?.items ?? [];
-
-    if (items.length > 0) {
-      badge.textContent = items.length;
-      badge.style.display = 'inline-block';
-      list.innerHTML = items.map(it => `
-        <div class="dropdown-item d-flex justify-content-between align-items-start" data-id="${it.id}">
-          <div><i class="fas fa-info-circle text-primary"></i> ${it.message}</div>
-          <button class="btn btn-sm btn-outline-danger ms-2 delete-notif" data-id="${it.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `).join('');
-    } else {
-      badge.style.display = 'none';
-      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
-    }
-  };
-
-  // === ROLE CONFIG ===
-  if (roles.includes('admin')) {
-    endpoint = '/notifikasi'; // sesuaikan endpoint
-    onRender = renderAdmin;
-  } else if (roles.includes('frontliner')) {
-    endpoint = '/notifikasi';
-    onRender = renderFrontliner;
-  } else if (roles.includes('pegawai')) {
-    endpoint = '/notifikasi';
-    onRender = renderPegawai;
-  } else if (roles.includes('tamu')) {
-    endpoint = '/notifikasi';
-    onRender = renderTamu;
+    }).join('');
   }
 
-  if (!endpoint || !onRender) return;
+  // === Role Selector ===
+  if (roles.includes('admin')) {
+    renderHandler = (data) => renderCommon(data, 'bg-warning', 'fa-info-circle');
+  } else if (roles.includes('frontliner')) {
+    renderHandler = (data) => renderCommon(data, 'bg-primary', 'fa-user', '/frontliner/kunjungan');
+  } else if (roles.includes('pegawai')) {
+    renderHandler = (data) => renderCommon(data, 'bg-info', 'fa-user-friends', '/pegawai/kunjungan/notifikasi');
+  } else if (roles.includes('tamu')) {
+    renderHandler = renderTamu;
+  }
 
-  // === FETCH POLLING ===
+  if (!renderHandler) return;
+
+  // === Polling ===
   const poll = () => {
-    fetch(endpoint, { credentials: 'same-origin' })
+    fetch(endpoint, { credentials: 'same-origin', cache: 'no-store' })
       .then(res => res.json())
-      .then(data => {
-        onRender(data);
-
-        if (JSON.stringify(data) !== JSON.stringify(lastData)) {
-          if (lastData !== null) {
-            if (roles.includes('tamu') && data.status) {
-              if (data.status === 'disetujui') {
-                toastr.success("Kunjungan Anda sudah disetujui. Silakan masuk.");
-              } else if (data.status === 'ditolak') {
-                toastr.error("Kunjungan Anda ditolak. Alasan: " + (data.alasan ?? 'Tidak ada alasan'));
-              }
-            }
-            if (roles.includes('frontliner') && data.items?.length) {
-              toastr.info("Ada " + data.items.length + " tamu baru menunggu konfirmasi.");
-            }
-            if (roles.includes('pegawai') && data.items?.length) {
-              toastr.info("Ada " + data.items.length + " kunjungan baru untuk Anda.");
-            }
-            if (roles.includes('admin') && data.items?.length) {
-              toastr.warning("Ada " + data.items.length + " notifikasi admin baru.");
-            }
-          }
-          lastData = data;
-        }
-      })
+      .then(data => renderHandler(data))
       .catch(() => {});
   };
-
   poll();
   setInterval(poll, 10000);
 
-  // === DELETE BUTTON EVENT HANDLER ===
-  document.addEventListener('click', function(e) {
-    if (e.target.closest('.delete-notif')) {
-      const btn = e.target.closest('.delete-notif');
-      const notifId = btn.dataset.id;
+  // === Delete one ===
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.delete-notif');
+    if (!btn) return;
+    const id = btn.dataset.id;
 
-      fetch(`/notifikasi/${notifId}`, {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-          'Accept': 'application/json'
-        },
-        credentials: 'same-origin'
-      })
+    fetch(`/notifikasi/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
       .then(res => res.json())
       .then(() => {
-        btn.closest('.dropdown-item').remove();
-        toastr.success('Notifikasi berhasil dihapus.');
+        toastr.success('Notifikasi dihapus.');
+        poll();
       })
       .catch(() => toastr.error('Gagal menghapus notifikasi.'));
-    }
   });
 
-    // === CLEAR ALL BUTTON EVENT HANDLER ===
-  const clearBtn = document.getElementById('clearAllNotif');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      fetch('/notifikasi/clear', {
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-          'Accept': 'application/json'
-        },
-        credentials: 'same-origin'
-      })
-      .then(res => res.json())
-      .then(() => {
-        const badge = document.getElementById('notif-badge');
-        const list = document.getElementById('notif-list');
-        if (badge) badge.style.display = 'none';
-        if (list) {
-          list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
-        }
-        toastr.success('Semua notifikasi dihapus.');
-      })
-      .catch(() => toastr.error('Gagal menghapus semua notifikasi.'));
+  // === Mark as read + redirect ===
+  document.addEventListener('click', function (e) {
+    const item = e.target.closest('.notif-item');
+    if (!item || e.target.closest('.delete-notif')) return;
+    const id = item.dataset.id;
+    const url = item.dataset.url;
+
+    fetch(`/notifikasi/${id}/read`, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+        'Accept': 'application/json'
+      },
+      credentials: 'same-origin'
+    }).then(() => {
+      if (url) window.location.href = url;
     });
-  }
+  });
+
+//  // === CLEAR ALL ===
+// document.getElementById('clearAllNotif')?.addEventListener('click', function() {
+//     // Show confirmation first
+//     if (!confirm('Hapus semua notifikasi?')) return;
+    
+//     fetch('/notifikasi/clear', {
+//         method: 'DELETE',
+//         headers: {
+//             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+//             'Accept': 'application/json'
+//         },
+//         credentials: 'same-origin'
+//     })
+//     .then(res => {
+//         if (!res.ok) throw new Error('Network response was not ok');
+//         return res.json();
+//     })
+//     .then(data => {
+//         if (data.success) {
+//             // Clear UI immediately
+//             const badge = document.getElementById('notif-badge');
+//             const list = document.getElementById('notif-list');
+            
+//             if (badge) {
+//                 badge.textContent = '';
+//                 badge.classList.add('d-none');
+//             }
+            
+//             if (list) {
+//                 list.innerHTML = `
+//                     <span class="dropdown-item text-muted text-center py-3">
+//                         Tidak ada notifikasi
+//                     </span>
+//                 `;
+//             }
+            
+//             toastr.success('Semua notifikasi berhasil dihapus');
+//         } else {
+//             throw new Error(data.message || 'Gagal menghapus notifikasi');
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error:', error);
+//         toastr.error('Gagal menghapus notifikasi');
+//     });
+// });
+
+
 })();
 </script>
+
+
+
 
 
 

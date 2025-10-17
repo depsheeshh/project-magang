@@ -30,12 +30,14 @@ class TamuBaruNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'tamu_id'   => $this->tamu->id,
-            'nama'      => $this->tamu->nama,
-            'instansi'  => $this->tamu->instansi,
-            'keperluan' => $this->kunjungan->keperluan,
-            'waktu'     => $this->kunjungan->waktu_masuk->format('d-m-Y H:i'),
-            'message'   => "Tamu baru dari {$this->tamu->instansi} untuk keperluan {$this->kunjungan->keperluan}",
+            'kunjungan_id' => $this->kunjungan->id,  // penting!
+        'tamu_id'      => $this->tamu->id,
+        'nama'         => $this->tamu->nama,
+        'instansi'     => $this->tamu->instansi,
+        'keperluan'    => $this->kunjungan->keperluan,
+        'waktu'        => $this->kunjungan->waktu_masuk->format('d-m-Y H:i'),
+        'event'        => 'tamu_baru',
+        'message'      => "Tamu baru dari {$this->tamu->instansi} untuk keperluan {$this->kunjungan->keperluan}",
         ];
     }
 }

@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Pegawai;
 use App\Http\Controllers\Controller;
 use App\Models\Kunjungan;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use App\Models\HistoryLog;
 use Illuminate\Http\Request;
+use App\Notifications\KunjunganDitolakNotification;
+use App\Notifications\KunjunganDisetujuiNotification;
+
 
 class KunjunganController extends Controller
 {
@@ -71,6 +75,33 @@ class KunjunganController extends Controller
         if ($request->aksi === 'terima') {
         $kunjungan->status = 'sedang_bertamu';
         $kunjungan->alasan_penolakan = null; // bersihkan jika sebelumnya pernah ditolak
+
+        // Hapus notifikasi "tamu baru"
+        Auth::user()->notifications()
+            ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+            ->delete();
+
+            User::role('frontliner')->each(function($f) use ($kunjungan) {
+                $f->notifications()
+                ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+                ->delete();
+            });
+
+        // Kirim notifikasi ke tamu
+        $kunjungan->tamu?->user?->notify(
+            new KunjunganDisetujuiNotification($kunjungan)
+        );
+
+        HistoryLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'update',
+            'table_name' => 'kunjungan',
+            'record_id'  => $kunjungan->id,
+            'reason'     => 'Pegawai menerima tamu',
+            'old_values' => null,
+            'new_values' => ['status' => 'sedang_bertamu'],
+        ]);
+
     } elseif ($request->aksi === 'tolak') {
         $request->validate([
             'reason' => 'required|string|max:255',
@@ -78,6 +109,22 @@ class KunjunganController extends Controller
 
         $kunjungan->status = 'ditolak';
         $kunjungan->alasan_penolakan = $request->reason;
+
+        // Hapus notifikasi "tamu baru"
+        Auth::user()->notifications()
+            ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+            ->delete();
+
+            User::role('frontliner')->each(function($f) use ($kunjungan) {
+                $f->notifications()
+                ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+                ->delete();
+            });
+
+        // Kirim notifikasi ke tamu
+        $kunjungan->tamu?->user?->notify(
+            new KunjunganDitolakNotification($kunjungan, $request->reason)
+        );
 
         // Simpan ke history log
         HistoryLog::create([

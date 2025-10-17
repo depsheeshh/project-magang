@@ -5,7 +5,7 @@
 
 @push('style')
 <style>
-/* 🌙 Card Container */
+/* 🌙 Card Container (Dark Mode Default) */
 .card-visit {
   border: none;
   border-radius: 18px;
@@ -31,7 +31,7 @@
   box-shadow: 0 3px 10px rgba(0, 132, 255, 0.3);
 }
 
-/* Custom Radio Card */
+/* Custom Radio Card (Dark Mode Default) */
 .custom-radio-card {
   position: relative;
   border: 1px solid rgba(0, 150, 255, 0.2);
@@ -49,9 +49,7 @@
   border-color: #00bfff;
   box-shadow: 0 0 25px rgba(0,170,255,0.3);
 }
-.custom-radio-card input[type="radio"] {
-  display: none;
-}
+.custom-radio-card input[type="radio"] { display: none; }
 .custom-radio-card input[type="radio"]:checked + .radio-content {
   border-left: 4px solid #00bfff;
   padding-left: 10px;
@@ -60,26 +58,10 @@
   color: #00bfff;
   text-shadow: 0 0 8px rgba(0,180,255,0.5);
 }
-.radio-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-.radio-icon {
-  font-size: 26px;
-  color: #8ab4f8;
-  transition: color 0.3s ease;
-}
-.radio-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #dce6ff;
-}
-.radio-desc {
-  font-size: 13px;
-  color: #a7b8d8;
-  opacity: 0.85;
-}
+.radio-content { display: flex; align-items: flex-start; gap: 12px; }
+.radio-icon { font-size: 26px; color: #8ab4f8; transition: color 0.3s ease; }
+.radio-title { font-weight: 600; font-size: 15px; color: #dce6ff; }
+.radio-desc { font-size: 13px; color: #a7b8d8; opacity: 0.85; }
 
 /* Tombol */
 .btn-save {
@@ -97,7 +79,7 @@
   box-shadow: 0 0 25px rgba(0, 180, 255, 0.5);
 }
 
-/* Input Field Style */
+/* Input Field (Dark Mode Default) */
 .form-control {
   background: rgba(20, 30, 55, 0.85);
   border: 1px solid rgba(0, 150, 255, 0.2);
@@ -109,6 +91,44 @@
   box-shadow: 0 0 10px rgba(0,180,255,0.3);
   background: rgba(25, 35, 60, 0.95);
 }
+
+/* === Light Mode Overrides === */
+body:not(.dark-mode) .card-visit {
+  background: #ffffff;
+  color: #212529;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+body:not(.dark-mode) .card-visit label {
+  color: #212529;
+}
+body:not(.dark-mode) .card-visit .form-control {
+  background: #fff;
+  border: 1px solid #ced4da;
+  color: #212529;
+}
+body:not(.dark-mode) .card-visit .form-control:focus {
+  background: #fff;
+  color: #212529;
+  border-color: #00bfff;
+  box-shadow: 0 0 0 0.2rem rgba(0,180,255,0.25);
+}
+body:not(.dark-mode) .card-visit .custom-radio-card {
+  background: #f8f9fa;
+  color: #212529;
+  border: 1px solid #dee2e6;
+}
+body:not(.dark-mode) .card-visit .custom-radio-card:hover {
+  border-color: #00bfff;
+  box-shadow: 0 0 15px rgba(0,170,255,0.2);
+}
+body:not(.dark-mode) .card-visit .radio-title {
+  color: #212529;
+}
+body:not(.dark-mode) .card-visit .radio-desc {
+  color: #6c757d;
+}
+
+
 </style>
 @endpush
 

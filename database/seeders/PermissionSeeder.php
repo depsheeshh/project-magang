@@ -76,6 +76,10 @@ class PermissionSeeder extends Seeder
             // History Logs
             'logs.view',
             'logs.delete', // opsional kalau mau bisa hapus log
+
+            // Survey
+            'surveys.view',
+            'surveys.delete'
         ];
 
         foreach ($permissions as $permission) {

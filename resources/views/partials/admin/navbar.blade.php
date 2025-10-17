@@ -1,3 +1,29 @@
+<style>
+.navbar-badge {
+  font-size: 0.7rem;
+  top: 8px;
+  right: 6px;
+  position: absolute;
+  border-radius: 50%;
+  padding: 4px 6px;
+}
+
+.notif-item:hover {
+  background: rgba(13, 110, 253, 0.05);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.notif-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+</style>
+
 <nav class="navbar navbar-expand-lg main-navbar">
   <!-- Left Section -->
   <ul class="navbar-nav mr-auto">
@@ -19,26 +45,35 @@
 
     <!-- Notification Bell -->
     <li class="nav-item dropdown">
-    <a href="#" data-toggle="dropdown" class="nav-link nav-link-lg position-relative" aria-label="Notifikasi">
+    <a href="#" class="nav-link nav-link-lg position-relative"
+        data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"
+        aria-label="Notifikasi">
         <i class="fas fa-bell"></i>
-        <span id="notif-badge" class="badge badge-danger navbar-badge" style="display:none;">0</span>
+        <span id="notif-badge"
+            class="badge badge-danger navbar-badge d-none">0</span>
     </a>
 
     <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg shadow-lg border-0 p-0"
         style="width: 360px; border-radius: 10px; overflow: hidden;">
+
+        <!-- Header -->
         <div class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2 bg-primary text-white">
-        <span class="fw-bold"><i class="fas fa-bell me-2"></i> Notifikasi</span>
-        <button id="clearAllNotif" class="btn btn-sm btn-light text-danger px-2 py-1 rounded-pill">
+        <span class="font-weight-bold"><i class="fas fa-bell mr-2"></i> Notifikasi</span>
+        {{-- <button id="clearAllNotif" type="button"
+                class="btn btn-sm btn-light text-danger px-2 py-1 rounded-pill"
+                title="Hapus semua notifikasi">
             <i class="fas fa-trash"></i>
-        </button>
+        </button> --}}
         </div>
 
-        <div id="notif-list" class="dropdown-list-content"
+        <!-- List -->
+        <div id="notif-list" class="dropdown-list-content text-dark"
             style="max-height: 300px; overflow-y: auto; background-color: var(--bs-body-bg);">
         <span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>
         </div>
     </div>
     </li>
+
 
 
 

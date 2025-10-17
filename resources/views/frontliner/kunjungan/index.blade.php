@@ -132,4 +132,59 @@
     </div>
     @endif
   @endforeach
+   @if(session('survey_link'))
+  <!-- Modal Link Survey -->
+  <div class="modal fade show" id="surveyLinkModal" tabindex="-1" role="dialog" style="display:block;" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Link Survey Tamu</h5>
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <p>Berikan link berikut kepada tamu untuk mengisi survey:</p>
+          <div class="input-group">
+            <input type="text" class="form-control" value="{{ session('survey_link') }}" id="surveyLinkInput" readonly>
+            <button class="btn btn-outline-primary" type="button" onclick="copySurveyLink()">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
 @endsection
+
+@push('scripts')
+@if(session('survey_link'))
+<script>
+  $(document).ready(function(){
+    $('#surveyLinkModal').modal('show');
+  });
+
+  function copySurveyLink() {
+    const input = document.getElementById('surveyLinkInput');
+    if (!input) {
+        toastr.error("Input link tidak ditemukan!");
+        return;
+    }
+
+    // Pilih teks
+    input.select();
+    input.setSelectionRange(0, 99999); // untuk mobile
+
+    // Gunakan Clipboard API jika tersedia
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(input.value).then(() => {
+            toastr.success("Link survey berhasil disalin!");
+        }).catch(() => {
+            toastr.error("Gagal menyalin link.");
+        });
+    } else {
+        // fallback lama
+        document.execCommand("copy");
+        toastr.success("Link survey berhasil disalin!");
+    }
+}
+</script>
+@endif
+@endpush

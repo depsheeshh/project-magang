@@ -23,6 +23,7 @@ use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SurveyController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -56,6 +57,11 @@ Route::middleware(['auth','role:admin|frontliner'])->group(function () {
     Route::get('/qrcode/tamu/pdf', [QrCodeController::class, 'pdf'])->name('qrcode.tamu.pdf');
 });
 
+Route::get('/survey/{kunjungan}/{token}', [SurveyController::class, 'form'])
+    ->name('survey.form');
+Route::post('/survey/{kunjungan}/{token}', [SurveyController::class, 'submit'])
+    ->name('survey.submit');
+Route::view('/survey/thanks', 'survey.thanks')->name('survey.thanks');
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -100,33 +106,39 @@ Route::middleware('auth',)->group(function () {
             ->name('admin.')
             ->group(function () {
                 Route::resource('/users', AdminUserController::class);
-                // // Tambahan fitur password
-                // Route::post('/users/{user}/change-password', [AdminUserController::class, 'changePassword'])
-                //     ->name('users.change-password');
-                // Route::post('/users/{user}/send-reset-link', [AdminUserController::class, 'sendResetLink'])
-                //     ->name('users.send-reset-link');
                 Route::resource('/roles', RoleController::class);
                 Route::resource('/permissions', PermissionController::class);
+
                 // Tambahan master data
                 Route::resource('/pegawai', PegawaiController::class);
                 Route::resource('/bidang', BidangController::class);
+                Route::resource('/jabatan', JabatanController::class);
+
                 // Export PDF
                 Route::get('/laporan/cetak', [LaporanController::class, 'cetakPdf'])
                     ->name('laporan.cetak');
                 Route::resource('/laporan', LaporanController::class);
-                Route::resource('/jabatan', JabatanController::class);
+
                 Route::resource('/history_logs', HistoryLogController::class)
-                ->only(['index','show']);
+                    ->only(['index','show']);
+
+                // ✅ Tambahan menu Survey Tamu
+                Route::get('/surveys', [SurveyController::class, 'index'])
+                    ->name('surveys.index')
+                    ->middleware('permission:surveys.view');
+
+                Route::get('/surveys/{survey}', [SurveyController::class, 'show'])
+                    ->name('surveys.show')
+                    ->middleware('permission:surveys.view');
+
+                Route::delete('/surveys/{survey}', [SurveyController::class, 'destroy'])
+                    ->name('surveys.destroy')
+                    ->middleware('permission:surveys.delete');
             });
             Route::middleware(['role:frontliner'])
             ->prefix('frontliner')
             ->name('frontliner.')
             ->group(function () {
-                // Halaman khusus tamu menunggu
-                // Route::get('/tamu-menunggu', [FrontlinerKunjunganController::class, 'menunggu'])
-                //     ->name('tamu.menunggu');
-
-                // Halaman daftar semua kunjungan (bisa difilter ?status=menunggu, dll)
                 Route::get('/kunjungan', [FrontlinerKunjunganController::class, 'index'])
                     ->name('kunjungan.index');
 
@@ -155,17 +167,14 @@ Route::middleware('auth',)->group(function () {
             Route::get('/kunjungan/create', [TamuKunjunganController::class, 'create'])->name('kunjungan.create');
             Route::post('/kunjungan', [TamuKunjunganController::class, 'store'])->name('kunjungan.store');
             Route::get('/kunjungan/status', [TamuKunjunganController::class, 'status'])->name('kunjungan.status');
+            // Checkout tamu
+            Route::post('kunjungan/{id}/checkout', [TamuKunjunganController::class, 'checkout'])
+                ->name('tamu.kunjungan.checkout');
+                // Survey setelah checkout
+            Route::post('/kunjungan/{id}/survey', [SurveyController::class, 'store'])
+                ->name('kunjungan.survey.store');
+
         });
-
-        // User biasa (role:user)
-        // Route::middleware('role:user')->group(function () {
-        //     Route::get('/user/dashboard', fn () => view('dashboard.user'))->name('user.dashboard');
-        // });
-
-        // // Change Password umum (non-admin)
-        // Route::get('/password/change', [ChangePasswordController::class, 'show'])->name('password.change');
-        // Route::post('/password/change', [ChangePasswordController::class, 'update'])->name('password.change.update');
-
         // Untuk tamu: cek status kunjungan terakhir
         Route::middleware(['auth','role:tamu'])->get('/api/tamu/notifikasi', [TamuController::class, 'checkNotification']);
 
@@ -193,7 +202,7 @@ Route::middleware('auth',)->group(function () {
     Route::get('/notifikasi', [NotificationController::class, 'index']);
     Route::patch('/notifikasi/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifikasi/{id}', [NotificationController::class, 'destroy']);
-    Route::delete('/notifikasi/clear', [NotificationController::class, 'clearAll']);
+    // Route::delete('/notifikasi/clear', [NotificationController::class, 'clearAll']);
 
 
     // Logout

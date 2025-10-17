@@ -9,12 +9,10 @@
 
     <ul class="sidebar-menu">
       <li class="menu-header">Dashboard</li>
-        <li class="
-        {{ request()->is('dashboard') || request()->is('tamu/dashboard') ? 'active' : '' }}
-        ">
+        <li class="{{ request()->is('dashboard') || request()->is('tamu/dashboard') ? 'active' : '' }}">
         @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('frontliner') || Auth::user()->hasRole('pegawai') || Auth::user()->hasRole('tamu'))
             <a class="nav-link" href="{{ route('dashboard.index') }}">
-            <i class="fas fa-fire"></i> <span>Dashboard</span>
+              <i class="fas fa-fire"></i> <span>Dashboard</span>
             </a>
         @endif
         </li>
@@ -54,9 +52,9 @@
         @endcanany
 
         {{-- Master Data --}}
-        @canany(['pegawai.view','bidang.view','jabatan.view','reports.view'])
+        @canany(['pegawai.view','bidang.view','jabatan.view','reports.view','surveys.view'])
           <li class="dropdown
-              {{ request()->is('admin/pegawai*') || request()->is('admin/bidang*') || request()->is('admin/jabatan*') || request()->is('admin/laporan*') ? 'active' : '' }}">
+              {{ request()->is('admin/pegawai*') || request()->is('admin/bidang*') || request()->is('admin/jabatan*') || request()->is('admin/laporan*') || request()->is('admin/surveys*') ? 'active' : '' }}">
             <a href="#" class="nav-link has-dropdown">
               <i class="fas fa-database"></i> <span>Master Data</span>
             </a>
@@ -93,6 +91,14 @@
                   </a>
                 </li>
               @endcan
+              @can('surveys.view')
+                <li>
+                  <a class="nav-link {{ request()->is('admin/surveys*') ? 'active' : '' }}"
+                     href="{{ route('admin.surveys.index') }}">
+                    <i class="fas fa-comment-dots"></i> Survey Tamu
+                  </a>
+                </li>
+              @endcan
             </ul>
           </li>
         @endcanany
@@ -111,21 +117,12 @@
       {{-- Menu khusus Frontliner --}}
       @role('frontliner')
         <li class="menu-header">Frontliner</li>
-
         <li class="{{ request()->is('frontliner/kunjungan') && !request()->has('status') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('frontliner.kunjungan.index') }}">
-            <i class="fas fa-list"></i> <span>Daftar Semua Kunjungan</span>
+              <i class="fas fa-list"></i> <span>Daftar Semua Kunjungan</span>
             </a>
         </li>
-
-        {{-- <li class="{{ request()->fullUrlIs('*status=menunggu') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('frontliner.kunjungan.index',['status'=>'menunggu']) }}">
-            <i class="fas fa-hourglass-half"></i> <span>Kunjungan Menunggu</span>
-            </a>
-        </li> --}}
-        @endrole
-
-
+      @endrole
 
       {{-- Menu khusus Pegawai --}}
       @role('pegawai')
@@ -147,24 +144,19 @@
       @endrole
 
       {{-- Menu khusus Tamu --}}
-        @role('tamu')
+      @role('tamu')
         <li class="menu-header">Tamu</li>
-
         <li class="{{ request()->is('tamu/kunjungan/create') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.create') }}">
                 <i class="fas fa-plus"></i> <span>Tambah Kunjungan</span>
             </a>
         </li>
-
         <li class="{{ request()->is('tamu/kunjungan/status*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.status') }}">
                 <i class="fas fa-clipboard-list"></i> <span>Status Kunjungan</span>
             </a>
         </li>
-        @endrole
-
-
-
+      @endrole
     </ul>
   </aside>
 </div>
