@@ -126,7 +126,7 @@ Route::middleware('auth',)->group(function () {
                 Route::get('/surveys', [SurveyController::class, 'index'])
                     ->name('surveys.index')
                     ->middleware('permission:surveys.view');
-
+                Route::get('surveys/rekap', [SurveyController::class, 'rekap'])->name('surveys.rekap');
                 Route::get('/surveys/{survey}', [SurveyController::class, 'show'])
                     ->name('surveys.show')
                     ->middleware('permission:surveys.view');
@@ -134,6 +134,12 @@ Route::middleware('auth',)->group(function () {
                 Route::delete('/surveys/{survey}', [SurveyController::class, 'destroy'])
                     ->name('surveys.destroy')
                     ->middleware('permission:surveys.delete');
+                Route::get('surveys/{survey}/fill', [SurveyController::class, 'fill'])->name('surveys.fill');
+                Route::post('surveys/{survey}/fill', [SurveyController::class, 'fillSubmit'])->name('surveys.fill.submit');
+
+                Route::get('surveys/rekap/export/{periode}', [SurveyController::class, 'exportPdf'])->name('surveys.export.pdf');
+
+
             });
             Route::middleware(['role:frontliner'])
             ->prefix('frontliner')

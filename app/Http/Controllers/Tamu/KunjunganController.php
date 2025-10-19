@@ -90,7 +90,7 @@ class KunjunganController extends Controller
             ['rating' => null, 'feedback' => null, 'link' => null]
         );
 
-        // Bersihkan notifikasi
+        // Bersihkan notifikasi pegawai
         $pegawai = $kunjungan->pegawai?->user;
         if ($pegawai) {
             $pegawai->notifications()
@@ -98,6 +98,7 @@ class KunjunganController extends Controller
                 ->delete();
         }
 
+        // Bersihkan notifikasi frontliner
         $frontliners = User::role('frontliner')->get();
         foreach ($frontliners as $f) {
             $f->notifications()
@@ -105,7 +106,11 @@ class KunjunganController extends Controller
                 ->delete();
         }
 
+        // ✅ Bersihkan notifikasi tamu juga
+        $kunjungan->tamu?->user?->notifications()
+            ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+            ->delete();
+
         return response()->json(['success' => true, 'message' => 'Checkout berhasil.']);
     }
-
 }

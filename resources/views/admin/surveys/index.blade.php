@@ -9,61 +9,60 @@
     <h4>Hasil Survey Tamu</h4>
   </div>
   <div class="card-body">
+    <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead>
         <tr>
-          <th>Tamu</th>
-          <th>Instansi</th>
-          <th>Rating</th>
-          <th>Feedback</th>
-          <th>Tanggal</th>
-          <th>Link Survey</th>
-          <th>Aksi</th>
+            <th>Tamu</th>
+            <th>Instansi</th>
+            <th>Tanggal</th>
+            <th>Link Survey</th>
+            <th>Aksi</th>
         </tr>
-      </thead>
+        </thead>
       <tbody>
         @forelse($surveys as $s)
-          <tr>
+            <tr>
             <td>{{ $s->user->name }}</td>
             <td>{{ $s->kunjungan->tamu->instansi ?? '-' }}</td>
-            <td>
-              @for($i=1; $i<=5; $i++)
-                <i class="fas fa-star {{ $i <= $s->rating ? 'text-warning' : 'text-secondary' }}"></i>
-              @endfor
-            </td>
-            <td>{{ $s->feedback ?? '-' }}</td>
             <td>{{ $s->created_at->format('d-m-Y H:i') }}</td>
             <td>
-              @if(!is_null($s->rating) || !is_null($s->feedback))
+                @if(!is_null($s->rating) || !is_null($s->feedback))
                 <span class="badge bg-success">Sudah diisi</span>
-              @elseif($s->link)
+                @elseif($s->link)
                 <div class="input-group input-group-sm">
-                  <input type="text" class="form-control" value="{{ $s->link }}" readonly id="link-{{ $s->id }}">
-                  <button type="button" class="btn btn-outline-primary" onclick="copyLink({{ $s->id }})" title="Salin link">
+                    <input type="text" class="form-control" value="{{ $s->link }}" readonly id="link-{{ $s->id }}">
+                    <button type="button" class="btn btn-outline-primary" onclick="copyLink({{ $s->id }})">
                     <i class="fas fa-copy"></i>
-                  </button>
+                    </button>
                 </div>
-              @else
+                @else
                 <span class="text-muted">-</span>
-              @endif
+                @endif
             </td>
             <td>
-              <a href="{{ route('admin.surveys.show',$s->id) }}" class="btn btn-sm btn-info">
+                <a href="{{ route('admin.surveys.show',$s->id) }}" class="btn btn-sm btn-info">
                 <i class="fas fa-eye"></i> Detail
-              </a>
+                </a>
+                @if(is_null($s->rating))
+                    <a href="{{ route('admin.surveys.fill',$s->id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i> Isi Survey
+                    </a>
+                @endif
             </td>
-          </tr>
+            </tr>
         @empty
-          <tr>
-            <td colspan="7" class="text-center text-muted">Belum ada survey</td>
-          </tr>
+            <tr>
+            <td colspan="9" class="text-center text-muted">Belum ada survey</td>
+            </tr>
         @endforelse
-      </tbody>
+        </tbody>
     </table>
 
     <div class="mt-3">
       {{ $surveys->links() }}
     </div>
+  </div>
   </div>
 </div>
 @endsection

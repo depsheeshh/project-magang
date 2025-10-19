@@ -74,15 +74,45 @@
         @csrf
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title">Survey Kepuasan</h5>
-          {{-- ✅ Tombol close Bootstrap 4 --}}
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
           <input type="hidden" name="kunjungan_id" id="surveyKunjunganId">
+
           <div class="mb-3">
-            <label class="form-label">Bagaimana pengalaman Anda?</label>
+            <label>Kemudahan Proses Registrasi</label>
+            <select name="kemudahan_registrasi" class="form-control" required>
+              <option value="">-- Pilih --</option>
+              @for($i=1;$i<=5;$i++)
+                <option value="{{ $i }}">{{ $i }}</option>
+              @endfor
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label>Keramahan Pelayanan</label>
+            <select name="keramahan_pelayanan" class="form-control" required>
+              <option value="">-- Pilih --</option>
+              @for($i=1;$i<=5;$i++)
+                <option value="{{ $i }}">{{ $i }}</option>
+              @endfor
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label>Waktu Tunggu</label>
+            <select name="waktu_tunggu" class="form-control" required>
+              <option value="">-- Pilih --</option>
+              @for($i=1;$i<=5;$i++)
+                <option value="{{ $i }}">{{ $i }}</option>
+              @endfor
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label>Rating Umum</label>
             <select name="rating" class="form-control" required>
               <option value="">-- Pilih --</option>
               <option value="1">1 - Sangat Buruk</option>
@@ -92,10 +122,12 @@
               <option value="5">5 - Sangat Baik</option>
             </select>
           </div>
+
           <div class="mb-3">
-            <label class="form-label">Saran / Masukan</label>
-            <textarea name="feedback" class="form-control" rows="3"></textarea>
+            <label>Saran / Masukan</label>
+            <textarea name="saran" class="form-control" rows="3"></textarea>
           </div>
+
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Kirim</button>
@@ -105,6 +137,7 @@
   </div>
 </div>
 @endsection
+
 @endsection
 
 @push('scripts')
@@ -164,13 +197,14 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             toastr.success('Terima kasih, survey Anda tersimpan.');
-            $('#surveyModal').modal('hide'); // ✅ Bootstrap 4 cara hide modal
+            $('#surveyModal').modal('hide');
             setTimeout(() => location.reload(), 1000);
         })
         .catch(err => {
             toastr.error(err.message || 'Terjadi kesalahan saat menyimpan survey.');
         });
     });
+
 });
 </script>
 @endpush

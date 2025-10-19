@@ -355,6 +355,19 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
     font-weight: 600;
     }
 
+    .table-responsive {
+    border: 1px solid #dee2e6; /* sama dengan border card */
+    border-radius: .25rem;
+    overflow-x: auto;
+    }
+    .table {
+    margin-bottom: 0; /* biar tidak ada gap bawah */
+    }
+    .table td, .table th {
+    word-wrap: break-word; /* kalau mau teks panjang turun ke bawah */
+    }
+
+
 
 </style>
 <!-- Tempat untuk CSS tambahan dari child view -->
@@ -647,7 +660,7 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
 // document.getElementById('clearAllNotif')?.addEventListener('click', function() {
 //     // Show confirmation first
 //     if (!confirm('Hapus semua notifikasi?')) return;
-    
+
 //     fetch('/notifikasi/clear', {
 //         method: 'DELETE',
 //         headers: {
@@ -665,12 +678,12 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
 //             // Clear UI immediately
 //             const badge = document.getElementById('notif-badge');
 //             const list = document.getElementById('notif-list');
-            
+
 //             if (badge) {
 //                 badge.textContent = '';
 //                 badge.classList.add('d-none');
 //             }
-            
+
 //             if (list) {
 //                 list.innerHTML = `
 //                     <span class="dropdown-item text-muted text-center py-3">
@@ -678,7 +691,7 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
 //                     </span>
 //                 `;
 //             }
-            
+
 //             toastr.success('Semua notifikasi berhasil dihapus');
 //         } else {
 //             throw new Error(data.message || 'Gagal menghapus notifikasi');

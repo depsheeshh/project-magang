@@ -15,16 +15,22 @@ return new class extends Migration
             $table->id();
             $table->string('link')->nullable()->unique();
             $table->foreignId('kunjungan_id')
-                ->constrained('kunjungan') // ✅ pastikan sesuai nama tabel
+                ->constrained('kunjungan') // pastikan sesuai nama tabel
                 ->onDelete('cascade');
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->onDelete('cascade');
-            $table->tinyInteger('rating')->nullable();
-            $table->text('feedback')->nullable();
+            $table->tinyInteger('rating')->nullable(); // rating umum
+            $table->text('feedback')->nullable();      // feedback umum
+
+            // ✅ Tambahan field sesuai requirement
+            $table->unsignedTinyInteger('kemudahan_registrasi')->nullable();
+            $table->unsignedTinyInteger('keramahan_pelayanan')->nullable();
+            $table->unsignedTinyInteger('waktu_tunggu')->nullable();
+            $table->text('saran')->nullable();
+
             $table->timestamps();
         });
-
     }
 
     /**

@@ -127,6 +127,12 @@ class KunjunganController extends Controller
 
             $this->clearNotifications($kunjungan);
 
+            // ✅ Bersihkan notifikasi tamu juga
+            $kunjungan->tamu?->user?->notifications()
+                ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
+                ->delete();
+
+            // Kirim notifikasi status baru ke tamu (opsional, kalau masih mau kasih info selesai)
             $kunjungan->tamu->user?->notify(new KunjunganSelesaiNotification($kunjungan));
 
             HistoryLog::create([
@@ -141,7 +147,6 @@ class KunjunganController extends Controller
                 ],
             ]);
 
-            // kirim link ke view via flash session
             return back()->with([
                 'success' => 'Kunjungan tamu berhasil di-checkout.',
                 'survey_link' => $survey->link

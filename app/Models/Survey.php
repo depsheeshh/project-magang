@@ -11,7 +11,11 @@ class Survey extends Model
 
     protected $table = 'surveys';
 
-    protected $fillable = ['kunjungan_id','user_id','rating','feedback'];
+    protected $fillable = ['kunjungan_id','user_id','rating','feedback','link',
+    'kemudahan_registrasi',
+    'keramahan_pelayanan',
+    'waktu_tunggu',
+    'saran',];
 
     // Relasi ke Kunjungan
     public function kunjungan()
