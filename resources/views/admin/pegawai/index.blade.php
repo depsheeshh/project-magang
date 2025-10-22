@@ -17,6 +17,7 @@
 
 <div class="card mt-3">
   <div class="card-body">
+    <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
@@ -56,6 +57,7 @@
       </tbody>
     </table>
     {{ $pegawai->links() }}
+  </div>
   </div>
 </div>
 @endsection

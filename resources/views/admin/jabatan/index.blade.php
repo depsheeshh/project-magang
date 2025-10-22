@@ -17,6 +17,7 @@
 
 <div class="card mt-3">
   <div class="card-body">
+    <div class="table-responsive">
     <table class="table table-striped">
       <thead>
         <tr>
@@ -44,6 +45,7 @@
       </tbody>
     </table>
     {{ $jabatan->links('pagination::bootstrap-5') }}
+  </div>
   </div>
 </div>
 @endsection

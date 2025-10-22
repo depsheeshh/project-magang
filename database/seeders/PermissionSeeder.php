@@ -79,7 +79,10 @@ class PermissionSeeder extends Seeder
 
             // Survey
             'surveys.view',
-            'surveys.delete'
+            'surveys.delete',
+
+            // Rapat
+            'rapat.view',
         ];
 
         foreach ($permissions as $permission) {

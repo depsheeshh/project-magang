@@ -20,6 +20,11 @@ return new class extends Migration
             $table->json('old_values')->nullable();  // data sebelum perubahan
             $table->json('new_values')->nullable();  // data setelah perubahan
             $table->text('reason')->nullable();      // alasan/keterangan aksi
+
+            // audit trail standar
+            $table->unsignedBigInteger('created_id')->nullable();
+            $table->unsignedBigInteger('updated_id')->nullable();
+
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

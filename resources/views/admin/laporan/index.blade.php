@@ -166,6 +166,7 @@
 
 
     {{-- Tabel Laporan --}}
+    <div class="table-responsive">
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -192,6 +193,7 @@
         @endforelse
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 @endsection

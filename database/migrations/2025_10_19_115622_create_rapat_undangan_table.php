@@ -14,13 +14,35 @@ return new class extends Migration
         Schema::create('rapat_undangan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('rapat_id')->constrained('rapat')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('instansi_id')->nullable()->constrained('instansi')->onDelete('cascade'); // asal peserta
+
+            $table->integer('jumlah_peserta')->default(1);
+
+            // Status kehadiran
             $table->enum('status_kehadiran', ['pending','hadir','tidak_hadir'])->default('pending');
-            $table->dateTime('checkin_time')->nullable();
-            $table->decimal('checkin_lat', 10, 7)->nullable();
-            $table->decimal('checkin_lng', 10, 7)->nullable();
-            $table->timestamps();
+
+            // Data check-in
+            $table->timestamp('checked_in_at')->nullable();
+            $table->decimal('checkin_latitude', 10, 7)->nullable();
+            $table->decimal('checkin_longitude', 10, 7)->nullable();
+            $table->integer('checkin_distance')->nullable();
+
+            // QR Code check-in
+            $table->string('checkin_token')->nullable()->unique();
+            $table->string('checkin_token_hash')->nullable();
+            $table->timestamp('qr_scanned_at')->nullable();
+
+            // Audit trail
+            $table->unsignedBigInteger('created_id')->nullable();
+            $table->unsignedBigInteger('updated_id')->nullable();
+            $table->unsignedBigInteger('deleted_id')->nullable();
+
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
+            $table->timestamp('deleted_at')->nullable();
         });
+
     }
 
     /**

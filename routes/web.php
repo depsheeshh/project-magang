@@ -2,28 +2,31 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TamuController;
+use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Admin\RapatController;
 use App\Http\Controllers\Admin\BidangController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RapatCheckinController;
 use App\Http\Controllers\Admin\JabatanController;
 use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\Admin\HistoryLogController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
-use App\Http\Controllers\Auth\VerificationController;
-use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
-use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\QrCodeController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -50,6 +53,7 @@ Route::prefix('tamu')->name('tamu.')->group(function () {
     // AJAX filter pegawai by bidang (tidak perlu auth, karena dipakai di form publik)
     Route::get('/get-pegawai/{bidangId}', [TamuController::class, 'getPegawaiByBidang'])
         ->name('getPegawai');
+
 });
 
 Route::middleware(['auth','role:admin|frontliner'])->group(function () {
@@ -113,6 +117,21 @@ Route::middleware('auth',)->group(function () {
                 Route::resource('/pegawai', PegawaiController::class);
                 Route::resource('/bidang', BidangController::class);
                 Route::resource('/jabatan', JabatanController::class);
+                // CRUD rapat
+                // Resource instansi
+                Route::resource('instansi', InstansiController::class)->except(['create','edit']);
+                Route::get('instansi/search', [InstansiController::class, 'search'])->name('instansi.search');
+
+                Route::resource('rapat', RapatController::class)->except(['create','edit']);
+                // Undangan rapat
+                Route::post('rapat/{rapat}/invitation', [RapatController::class, 'storeInvitation'])
+                    ->name('rapat.storeInvitation');
+                Route::delete('rapat/{rapat}/invitation/{invitation}', [RapatController::class, 'destroyInvitation'])
+                    ->name('rapat.destroyInvitation');
+
+                // Export kehadiran
+                Route::get('rapat/{rapat}/export-kehadiran', [RapatController::class, 'exportKehadiran'])
+                    ->name('rapat.export');
 
                 // Export PDF
                 Route::get('/laporan/cetak', [LaporanController::class, 'cetakPdf'])
@@ -121,6 +140,12 @@ Route::middleware('auth',)->group(function () {
 
                 Route::resource('/history_logs', HistoryLogController::class)
                     ->only(['index','show']);
+
+                    // Manajemen undangan (tetap manual karena bukan resource standar)
+                Route::post('rapat/{rapat}/undangan', [RapatController::class, 'storeInvitation'])
+                    ->name('rapat.undangan.store');
+                Route::delete('rapat/{rapat}/undangan/{invitation}', [RapatController::class, 'destroyInvitation'])
+                    ->name('rapat.undangan.destroy');
 
                 // ✅ Tambahan menu Survey Tamu
                 Route::get('/surveys', [SurveyController::class, 'index'])
@@ -170,15 +195,30 @@ Route::middleware('auth',)->group(function () {
 
 
         Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
+            // Kunjungan
             Route::get('/kunjungan/create', [TamuKunjunganController::class, 'create'])->name('kunjungan.create');
             Route::post('/kunjungan', [TamuKunjunganController::class, 'store'])->name('kunjungan.store');
             Route::get('/kunjungan/status', [TamuKunjunganController::class, 'status'])->name('kunjungan.status');
+
             // Checkout tamu
-            Route::post('kunjungan/{id}/checkout', [TamuKunjunganController::class, 'checkout'])
-                ->name('tamu.kunjungan.checkout');
-                // Survey setelah checkout
+            Route::post('/kunjungan/{id}/checkout', [TamuKunjunganController::class, 'checkout'])
+                ->name('kunjungan.checkout');
+
+            // Survey setelah checkout
             Route::post('/kunjungan/{id}/survey', [SurveyController::class, 'store'])
                 ->name('kunjungan.survey.store');
+
+            // Daftar rapat saya
+            Route::get('/rapat-saya', [RapatCheckinController::class, 'index'])
+                ->name('rapat.saya');
+
+            // Aksi check-in manual
+            Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'checkin'])
+                ->name('rapat.checkin');
+
+            // Aksi check-in via QR token (dibatasi 10x per menit)
+            Route::middleware('throttle:10,1')->get('/checkin/{token}', [RapatCheckinController::class, 'checkinByToken'])
+                ->name('rapat.checkin.token');
 
         });
         // Untuk tamu: cek status kunjungan terakhir

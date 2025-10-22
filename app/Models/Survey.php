@@ -15,7 +15,7 @@ class Survey extends Model
     'kemudahan_registrasi',
     'keramahan_pelayanan',
     'waktu_tunggu',
-    'saran',];
+    'saran','created_id','updated_id','deleted_id'];
 
     // Relasi ke Kunjungan
     public function kunjungan()

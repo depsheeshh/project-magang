@@ -21,84 +21,96 @@
 
     {{-- Tabel daftar kunjungan --}}
     <div class="table-responsive">
-      <table class="table table-bordered table-striped">
-        <thead>
-          <tr>
-            <th>Nama Tamu</th>
-            <th>Bidang</th>
-            <th>Pegawai Tujuan</th>
-            <th>Keperluan</th>
-            <th>Waktu Masuk</th>
-            <th>Waktu Keluar</th>
-            <th>Status</th>
-            <th>Alasan Penolakan</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($kunjungan as $k)
-            <tr>
-              <td>{{ $k->tamu->nama ?? $k->tamu->user->name ?? '-' }}</td>
-              <td>{{ $k->pegawai->bidang->nama_bidang ?? '-' }}</td>
-              <td>{{ $k->pegawai->user->name ?? '-' }}</td>
-              <td>{{ $k->keperluan }}</td>
-              <td>{{ \Carbon\Carbon::parse($k->waktu_masuk)->format('d/m/Y H:i') }}</td>
-              <td>
-                @if($k->waktu_keluar)
-                    <span class="text-success">
-                        {{ \Carbon\Carbon::parse($k->waktu_keluar)->translatedFormat('d/m/Y H:i') }}
-                    </span>
-                @else
-                    <span class="text-muted">-</span>
-                @endif
-            </td>
+  <table class="table table-bordered table-striped align-middle shadow-sm">
+    <thead class="thead-dark text-center">
+      <tr>
+        <th>Nama Tamu</th>
+        <th>Bidang</th>
+        <th>Pegawai Tujuan</th>
+        <th>Keperluan</th>
+        <th>Waktu Masuk</th>
+        <th>Waktu Keluar</th>
+        <th>Status</th>
+        <th>Alasan Penolakan</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
 
-              <td>
-                @if($k->status === 'menunggu')
-                  <span class="badge badge-warning">Menunggu</span>
-                @elseif($k->status === 'sedang_bertamu')
-                  <span class="badge badge-info">Sedang Bertamu</span>
-                @elseif($k->status === 'ditolak')
-                  <span class="badge badge-danger">Ditolak</span>
-                @elseif($k->status === 'selesai')
-                  <span class="badge badge-success">Selesai</span>
-                @endif
-              </td>
-              <td>
-                @if($k->status === 'ditolak')
-                    {{ $k->alasan_penolakan ?? '-' }}
-                @else
-                    <em>-</em>
-                @endif
-                </td>
-              <td>
-                @if($k->status === 'menunggu')
-                  {{-- Setujui --}}
-                  <form action="{{ route('frontliner.kunjungan.approve',$k->id) }}" method="POST" style="display:inline">
-                    @csrf
-                    <button class="btn btn-sm btn-success">Setujui</button>
-                  </form>
+    <tbody>
+      @forelse($kunjungan as $k)
+        <tr>
+          <td>{{ $k->tamu->nama ?? $k->tamu->user->name ?? '-' }}</td>
+          <td>{{ $k->pegawai->bidang->nama_bidang ?? '-' }}</td>
+          <td>{{ $k->pegawai->user->name ?? '-' }}</td>
+          <td>{{ $k->keperluan }}</td>
+          <td>{{ \Carbon\Carbon::parse($k->waktu_masuk)->format('d/m/Y H:i') }}</td>
+          <td>
+            @if($k->waktu_keluar)
+              <span class="text-success">{{ \Carbon\Carbon::parse($k->waktu_keluar)->translatedFormat('d/m/Y H:i') }}</span>
+            @else
+              <span class="text-muted">-</span>
+            @endif
+          </td>
 
-                  {{-- Tolak (trigger modal) --}}
-                  <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#tolakModal{{ $k->id }}">
-                    Tolak
-                  </button>
-                @elseif($k->status === 'sedang_bertamu')
-                  <form action="{{ route('frontliner.kunjungan.checkout',$k->id) }}" method="POST" style="display:inline">
-                    @csrf
-                    <button class="btn btn-sm btn-primary">Checkout</button>
-                  </form>
-                @else
-                  <em>-</em>
-                @endif
-              </td>
-            </tr>
-          @empty
-            <tr><td colspan="7" class="text-center">Belum ada kunjungan</td></tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
+          <td>
+            @if($k->status === 'menunggu')
+              <span class="badge bg-warning text-dark">Menunggu</span>
+            @elseif($k->status === 'sedang_bertamu')
+              <span class="badge bg-info text-dark">Sedang Bertamu</span>
+            @elseif($k->status === 'ditolak')
+              <span class="badge bg-danger">Ditolak</span>
+            @elseif($k->status === 'selesai')
+              <span class="badge bg-success">Selesai</span>
+            @endif
+          </td>
+
+          <td>
+            @if($k->status === 'ditolak')
+              {{ $k->alasan_penolakan ?? '-' }}
+            @else
+              <em>-</em>
+            @endif
+          </td>
+
+          <td>
+            @if($k->status === 'menunggu')
+              <form action="{{ route('frontliner.kunjungan.approve',$k->id) }}" method="POST" class="d-inline">
+                @csrf
+                <button class="btn btn-sm btn-success shadow-sm">
+                  <i class="fas fa-check"></i> Setujui
+                </button>
+              </form>
+
+              <button class="btn btn-sm btn-danger shadow-sm" data-toggle="modal" data-target="#tolakModal{{ $k->id }}">
+                <i class="fas fa-times"></i> Tolak
+              </button>
+            @elseif($k->status === 'sedang_bertamu')
+              <form action="{{ route('frontliner.kunjungan.checkout',$k->id) }}" method="POST" class="d-inline">
+                @csrf
+                <button class="btn btn-sm btn-primary shadow-sm">
+                  <i class="fas fa-door-open"></i> Checkout
+                </button>
+              </form>
+            @else
+              <em class="text-muted">-</em>
+            @endif
+          </td>
+        </tr>
+
+      @empty
+        <tr>
+          <td colspan="9" class="text-center py-5">
+            <div class="d-flex flex-column align-items-center text-muted">
+              <i class="fas fa-user-clock fa-3x mb-3 text-secondary"></i>
+              <h6 class="mb-1 text-light">Belum ada kunjungan</h6>
+              <small class="text-secondary">Data akan muncul setelah ada tamu yang melakukan kunjungan.</small>
+            </div>
+          </td>
+        </tr>
+      @endforelse
+    </tbody>
+  </table>
+</div>
   </div>
 </div>
 @endsection
@@ -152,6 +164,7 @@
     </div>
   </div>
   @endif
+
 @endsection
 
 @push('scripts')

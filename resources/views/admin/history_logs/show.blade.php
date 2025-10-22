@@ -27,32 +27,43 @@
         @php
             $oldValues = is_array($historyLog->old_values) ? $historyLog->old_values : (json_decode($historyLog->old_values, true) ?? []);
             $newValues = is_array($historyLog->new_values) ? $historyLog->new_values : (json_decode($historyLog->new_values, true) ?? []);
+            $ignore = ['id','created_at','updated_at','deleted_at','deleted_id','created_id','updated_id'];
+
             $changes = [];
-            $ignore = ['id','created_at','updated_at','deleted_at','deleted_id'];
 
-            if ($historyLog->action === 'create') {
-                foreach ($newValues as $key => $val) {
-                    if (!in_array($key, $ignore)) {
-                        $changes[$key] = ['old' => null, 'new' => $val];
+            switch ($historyLog->action) {
+                case 'created':
+                case 'create':
+                    foreach ($newValues as $key => $val) {
+                        if (!in_array($key, $ignore)) {
+                            $changes[$key] = ['old' => null, 'new' => $val];
+                        }
                     }
-                }
-            } elseif ($historyLog->action === 'update') {
-                foreach ($newValues as $key => $newVal) {
-                    if (in_array($key, $ignore)) continue;
-                    $oldVal = $oldValues[$key] ?? null;
-                    if ($oldVal != $newVal) {
-                        $changes[$key] = ['old' => $oldVal, 'new' => $newVal];
+                    break;
+
+                case 'updated':
+                case 'update':
+                    foreach ($newValues as $key => $val) {
+                        if (!in_array($key, $ignore)) {
+                            $changes[$key] = [
+                                'old' => $oldValues[$key] ?? null,
+                                'new' => $val
+                            ];
+                        }
                     }
-                }
-            } elseif ($historyLog->action === 'delete') {
-                $mainField = $oldValues['nama']
-                    ?? $oldValues['nama_jabatan']
-                    ?? $oldValues['nama_bidang']
-                    ?? $historyLog->record_id;
-                $changes = ['deleted' => ['old' => $mainField, 'new' => null]];
+                    break;
+
+                case 'deleted':
+                case 'delete':
+                    $mainField = $oldValues['nama']
+                        ?? $oldValues['nama_instansi']
+                        ?? $oldValues['nama_jabatan']
+                        ?? $oldValues['nama_bidang']
+                        ?? $historyLog->record_id;
+                    $changes = ['deleted' => ['old' => $mainField, 'new' => null]];
+                    break;
             }
-            @endphp
-
+        @endphp
 
         @if(count($changes))
           <ul class="list-unstyled">

@@ -11,30 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rapat', function (Blueprint $table) {
+        Schema::create('daftar_surveys', function (Blueprint $table) {
             $table->id();
-            $table->string('judul');
-            $table->dateTime('waktu_mulai');
-            $table->dateTime('waktu_selesai');
-
-            // Lokasi rapat (geo-fencing)
-            $table->string('lokasi')->nullable();
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->integer('radius')->default(100); // meter
-
-            $table->integer('jumlah_tamu')->nullable();
+            $table->string('link_survey');
+            $table->integer('is_active')->default(1);
 
             // Audit trail
             $table->unsignedBigInteger('created_id')->nullable();
             $table->unsignedBigInteger('updated_id')->nullable();
             $table->unsignedBigInteger('deleted_id')->nullable();
-
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
         });
-
     }
 
     /**
@@ -42,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rapat');
+        Schema::dropIfExists('daftar_surveys');
     }
 };

@@ -2,16 +2,20 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Tamu;
 use App\Models\User;
-use App\Models\Pegawai;
+use App\Models\Rapat;
 use App\Models\Bidang;
+use App\Models\Survey;
 use App\Models\Jabatan;
+use App\Models\Pegawai;
+use App\Models\Instansi;
 use App\Models\Kunjungan;
 use App\Observers\BaseObserver;
 use App\Observers\UserObserver;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -34,7 +38,11 @@ class AppServiceProvider extends ServiceProvider
         Pegawai::observe(BaseObserver::class);
         Bidang::observe(BaseObserver::class);
         Jabatan::observe(BaseObserver::class);
+        Tamu::observe(BaseObserver::class);
+        Survey::observe(BaseObserver::class);
         Kunjungan::observe(BaseObserver::class);
+        Rapat::observe(BaseObserver::class);
+        Instansi::observe(BaseObserver::class);
         Validator::replacer('Password', function ($message, $attribute, $rule, $parameters) {
         return "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol.";
     });

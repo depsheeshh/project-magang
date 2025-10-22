@@ -18,37 +18,37 @@
         </li>
 
       {{-- Menu khusus Admin --}}
-      @role('admin')
+        @role('admin')
         <li class="menu-header">Manajemen Data</li>
 
         {{-- Data User --}}
         @canany(['users.view','roles.view','permissions.view'])
-          <li class="dropdown
-              {{ request()->is('admin/users*') || request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">
+            <li class="dropdown
+                {{ request()->is('admin/users*') || request()->is('admin/roles*') || request()->is('admin/permissions*') ? 'active' : '' }}">
             <a href="#" class="nav-link has-dropdown">
-              <i class="fas fa-users"></i> <span>Data User</span>
+                <i class="fas fa-users"></i> <span>Data User</span>
             </a>
             <ul class="dropdown-menu">
-              @can('users.view')
+                @can('users.view')
                 <li>
-                  <a class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}"
-                     href="{{ route('admin.users.index') }}">Daftar User</a>
+                    <a class="nav-link {{ request()->is('admin/users*') ? 'active' : '' }}"
+                    href="{{ route('admin.users.index') }}">Daftar User</a>
                 </li>
-              @endcan
-              @can('roles.view')
+                @endcan
+                @can('roles.view')
                 <li>
-                  <a class="nav-link {{ request()->is('admin/roles*') ? 'active' : '' }}"
-                     href="{{ route('admin.roles.index') }}">Daftar Role</a>
+                    <a class="nav-link {{ request()->is('admin/roles*') ? 'active' : '' }}"
+                    href="{{ route('admin.roles.index') }}">Daftar Role</a>
                 </li>
-              @endcan
-              @can('permissions.view')
+                @endcan
+                @can('permissions.view')
                 <li>
-                  <a class="nav-link {{ request()->is('admin/permissions*') ? 'active' : '' }}"
-                     href="{{ route('admin.permissions.index') }}">Daftar Permission</a>
+                    <a class="nav-link {{ request()->is('admin/permissions*') ? 'active' : '' }}"
+                    href="{{ route('admin.permissions.index') }}">Daftar Permission</a>
                 </li>
-              @endcan
+                @endcan
             </ul>
-          </li>
+            </li>
         @endcanany
 
         {{-- Master Data --}}
@@ -59,79 +59,104 @@
             <i class="fas fa-database"></i> <span>Master Data</span>
             </a>
             <ul class="dropdown-menu">
-            @can('pegawai.view')
+                @can('pegawai.view')
                 <li>
-                <a class="nav-link {{ request()->is('admin/pegawai*') ? 'active' : '' }}"
-                    href="{{ route('admin.pegawai.index') }}">
-                    <i class="fas fa-id-card"></i> Data Pegawai
-                </a>
+                    <a class="nav-link {{ request()->is('admin/pegawai*') ? 'active' : '' }}"
+                        href="{{ route('admin.pegawai.index') }}">
+                        <i class="fas fa-id-card"></i> Data Pegawai
+                    </a>
                 </li>
-            @endcan
-            @can('bidang.view')
+                @endcan
+                @can('bidang.view')
                 <li>
-                <a class="nav-link {{ request()->is('admin/bidang*') ? 'active' : '' }}"
-                    href="{{ route('admin.bidang.index') }}">
-                    <i class="fas fa-building"></i> Data Bidang
-                </a>
+                    <a class="nav-link {{ request()->is('admin/bidang*') ? 'active' : '' }}"
+                        href="{{ route('admin.bidang.index') }}">
+                        <i class="fas fa-building"></i> Data Bidang
+                    </a>
                 </li>
-            @endcan
-            @can('jabatan.view')
+                @endcan
+                @can('jabatan.view')
                 <li>
-                <a class="nav-link {{ request()->is('admin/jabatan*') ? 'active' : '' }}"
-                    href="{{ route('admin.jabatan.index') }}">
-                    <i class="fas fa-id-badge"></i> Data Jabatan
-                </a>
+                    <a class="nav-link {{ request()->is('admin/jabatan*') ? 'active' : '' }}"
+                        href="{{ route('admin.jabatan.index') }}">
+                        <i class="fas fa-id-badge"></i> Data Jabatan
+                    </a>
                 </li>
-            @endcan
-            @can('reports.view')
+                @endcan
+                @can('reports.view')
                 <li>
-                <a class="nav-link {{ request()->is('admin/laporan*') ? 'active' : '' }}"
-                    href="{{ route('admin.laporan.index') }}">
-                    <i class="fas fa-file-alt"></i> Laporan
-                </a>
+                    <a class="nav-link {{ request()->is('admin/laporan*') ? 'active' : '' }}"
+                        href="{{ route('admin.laporan.index') }}">
+                        <i class="fas fa-file-alt"></i> Laporan
+                    </a>
                 </li>
-            @endcan
+                @endcan
             </ul>
         </li>
         @endcanany
 
         <li class="menu-header">Fitur</li>
 
-        {{-- Menu Survey Khusus --}}
+        {{-- Menu Survey --}}
         @can('surveys.view')
         <li class="dropdown {{ request()->is('admin/surveys*') ? 'active' : '' }}">
-        <a href="#" class="nav-link has-dropdown">
+            <a href="#" class="nav-link has-dropdown">
             <i class="fas fa-comment-dots"></i> <span>Survey</span>
-        </a>
-        <ul class="dropdown-menu">
-            <li>
-            <a class="nav-link {{ request()->is('admin/surveys') ? 'active' : '' }}"
-                href="{{ route('admin.surveys.index') }}">
-                <i class="fas fa-list"></i> Daftar Survey
             </a>
+            <ul class="dropdown-menu">
+            <li>
+                <a class="nav-link {{ request()->is('admin/surveys') ? 'active' : '' }}"
+                    href="{{ route('admin.surveys.index') }}">
+                    <i class="fas fa-list"></i> Daftar Survey
+                </a>
             </li>
             <li>
-            <a class="nav-link {{ request()->is('admin/surveys/rekap') ? 'active' : '' }}"
-                href="{{ route('admin.surveys.rekap') }}">
-                <i class="fas fa-chart-bar"></i> Rekap Survey
-            </a>
+                <a class="nav-link {{ request()->is('admin/surveys/rekap') ? 'active' : '' }}"
+                    href="{{ route('admin.surveys.rekap') }}">
+                    <i class="fas fa-chart-bar"></i> Rekap Survey
+                </a>
             </li>
-        </ul>
+            </ul>
         </li>
         @endcan
+
+        {{-- Menu Rapat --}}
+        @can('rapat.view')
+        <li class="dropdown {{ request()->is('admin/rapat*') || request()->is('admin/instansi*') ? 'active' : '' }}">
+            <a href="#" class="nav-link has-dropdown">
+                <i class="fas fa-handshake"></i> <span>Rapat</span>
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="nav-link {{ request()->is('admin/rapat*') ? 'active' : '' }}"
+                        href="{{ route('admin.rapat.index') }}">
+                        <i class="fas fa-list"></i> Manajemen Rapat
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {{ request()->is('admin/instansi*') ? 'active' : '' }}"
+                        href="{{ route('admin.instansi.index') }}">
+                        <i class="fas fa-building"></i> Data Instansi
+                    </a>
+                </li>
+            </ul>
+        </li>
+        @endcan
+
 
         <li class="menu-header">History Logs</li>
 
         {{-- History Logs --}}
         @can('logs.view')
-          <li>
-            <a class="nav-link {{ request()->routeIs('admin.history_logs.*') ? 'active' : '' }}"
-               href="{{ route('admin.history_logs.index') }}">
-              <i class="fas fa-book"></i> Logs
+            <li>
+            <a class="nav-link {{ request()->routeIs('admin/history_logs*') ? 'active' : '' }}"
+                href="{{ route('admin.history_logs.index') }}">
+                <i class="fas fa-book"></i> Logs
             </a>
-          </li>
+            </li>
         @endcan
-      @endrole
+        @endrole
+
 
       {{-- Menu khusus Frontliner --}}
       @role('frontliner')
@@ -173,6 +198,11 @@
         <li class="{{ request()->is('tamu/kunjungan/status*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.status') }}">
                 <i class="fas fa-clipboard-list"></i> <span>Status Kunjungan</span>
+            </a>
+        </li>
+        <li class="{{ request()->is('tamu/rapat-saya') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('tamu.rapat.saya') }}">
+                <i class="fas fa-handshake"></i> <span>Agenda Rapat Saya</span>
             </a>
         </li>
       @endrole

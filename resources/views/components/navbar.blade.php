@@ -8,7 +8,7 @@ $isAuthPage = Request::is('login') || Request::is('register') || Request::is('pa
     {{-- Brand --}}
     <a class="navbar-brand fw-bold text-white fs-4 d-flex align-items-center" href="{{ url('/') }}">
       <img src="{{ asset('img/logo.png') }}" alt="Logo" class="me-2" style="height: 32px;">
-      BukuTamu<span class="text-primary">Digital</span>
+      BukuTamu<span class="text-light">Digital</span>
     </a>
 
     {{-- Toggler --}}

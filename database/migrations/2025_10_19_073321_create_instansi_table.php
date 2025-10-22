@@ -11,19 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rapat', function (Blueprint $table) {
+        Schema::create('instansi', function (Blueprint $table) {
             $table->id();
-            $table->string('judul');
-            $table->dateTime('waktu_mulai');
-            $table->dateTime('waktu_selesai');
-
-            // Lokasi rapat (geo-fencing)
-            $table->string('lokasi')->nullable();
-            $table->decimal('latitude', 10, 7)->nullable();
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->integer('radius')->default(100); // meter
-
-            $table->integer('jumlah_tamu')->nullable();
+            $table->string('nama_instansi');
+            $table->string('lokasi')->nullable(); // alamat kantor, opsional
 
             // Audit trail
             $table->unsignedBigInteger('created_id')->nullable();
@@ -34,7 +25,6 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
         });
-
     }
 
     /**
@@ -42,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rapat');
+        Schema::dropIfExists('instansi');
     }
 };

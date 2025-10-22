@@ -10,34 +10,25 @@ class BaseObserver
 {
     protected function log($model, $action, $old = null, $new = null, $reason = null)
     {
-        // Tentukan user_id yang valid
         $userId = null;
-
-        if (Auth::check()) {
-            $authId = Auth::id();
-            // pastikan user benar-benar ada di DB
-            if (User::where('id', $authId)->exists()) {
-                $userId = $authId;
-            }
+        if (Auth::check() && User::where('id', Auth::id())->exists()) {
+            $userId = Auth::id();
         }
-
-        // Kalau tidak ada user login, bisa fallback ke system user id=1
-        // $userId = $userId ?? 1;
 
         HistoryLog::create([
             'user_id'    => $userId,
             'action'     => $action,
             'table_name' => $model->getTable(),
             'record_id'  => $model->id,
-            'old_values' => $old ? json_encode($old) : null,
-            'new_values' => $new ? json_encode($new) : null,
+            'old_values' => $old ?: null,
+            'new_values' => $new ?: null,
             'reason'     => $reason ?? "Aksi {$action} pada tabel {$model->getTable()}",
+            'created_id' => $userId,
         ]);
     }
 
     public function created($model)
     {
-        // Skip log saat membuat user baru & belum ada Auth
         if ($model instanceof User && !Auth::check()) {
             return;
         }
@@ -46,18 +37,29 @@ class BaseObserver
             $model,
             'created',
             null,
-            $model->getAttributes(),
+            $model->getAttributes(), // semua field baru
             request()->input('reason')
         );
     }
 
     public function updated($model)
     {
+        $old = $model->getOriginal();
+        $new = $model->getAttributes();
+
+        // ambil hanya field yang berubah
+        $changes = [];
+        foreach ($new as $key => $value) {
+            if (array_key_exists($key, $old) && $old[$key] != $value) {
+                $changes[$key] = $value;
+            }
+        }
+
         $this->log(
             $model,
             'updated',
-            $model->getOriginal(),
-            $model->getChanges(),
+            $old,
+            $changes,
             request()->input('reason')
         );
     }
@@ -95,3 +97,4 @@ class BaseObserver
         );
     }
 }
+
