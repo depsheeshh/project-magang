@@ -8,7 +8,11 @@ use App\Models\User;
 use App\Models\RapatUndangan;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use App\Notifications\RapatInvitationNotification;
+use App\Notifications\RapatInvitationCancelledNotification;
 
 class RapatController extends Controller
 {
@@ -93,43 +97,66 @@ class RapatController extends Controller
     public function storeInvitation(Request $request, Rapat $rapat)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-        ]);
+        'user_id' => 'required|exists:users,id',
+    ]);
 
-        $existing = RapatUndangan::where('rapat_id', $rapat->id)
-            ->where('user_id', $validated['user_id'])
-            ->first();
+    $existing = RapatUndangan::where('rapat_id', $rapat->id)
+        ->where('user_id', $validated['user_id'])
+        ->first();
 
-        if ($existing) {
-            return redirect()->route('admin.rapat.show', $rapat->id)
-                ->with('warning','User sudah diundang ke rapat ini.');
-        }
-
-        $token = (string) Str::uuid();
-
-        RapatUndangan::create([
-            'rapat_id'           => $rapat->id,
-            'user_id'            => $validated['user_id'],
-            'checkin_token'      => $token,
-            'checkin_token_hash' => hash('sha256', $token),
-            'status_kehadiran'   => 'pending',
-            'created_id'         => Auth::id(),
-        ]);
-
+    if ($existing) {
         return redirect()->route('admin.rapat.show', $rapat->id)
-            ->with('success','Undangan berhasil ditambahkan.');
+            ->with('warning','User sudah diundang ke rapat ini.');
+    }
+
+    $token = (string) Str::uuid();
+
+    $undangan = RapatUndangan::create([
+        'rapat_id'           => $rapat->id,
+        'user_id'            => $validated['user_id'],
+        'checkin_token'      => $token,
+        'checkin_token_hash' => hash('sha256', $token),
+        'status_kehadiran'   => 'pending',
+        'created_id'         => Auth::id(),
+    ]);
+
+    // 🚨 Kirim notifikasi ke user yang diundang
+    $user = User::find($validated['user_id']);
+    if ($user) {
+        $user->notify(new RapatInvitationNotification($rapat));
+    }
+
+    return redirect()->route('admin.rapat.show', $rapat->id)
+        ->with('success','Undangan berhasil ditambahkan & notifikasi terkirim.');
     }
 
     public function destroyInvitation(Rapat $rapat, RapatUndangan $invitation)
     {
         if ($invitation->rapat_id !== $rapat->id) {
-            abort(404);
-        }
+        abort(404);
+    }
 
-        $invitation->update(['deleted_id' => Auth::id()]);
-        $invitation->delete();
+    // simpan user sebelum delete
+    $user = $invitation->user;
 
-        return redirect()->route('admin.rapat.index')->with('success','Undangan berhasil dihapus.');
+    $invitation->update(['deleted_id' => Auth::id()]);
+    $invitation->delete();
+
+    // Kirim notifikasi pembatalan
+    if ($user) {
+        $user->notify(new RapatInvitationCancelledNotification($rapat));
+
+        // Hapus notifikasi "Undangan Rapat Baru" untuk rapat_id ini supaya tidak bikin bingung
+        DB::table('notifications')
+            ->where('notifiable_id', $user->id)
+            ->where('notifiable_type', get_class($user))
+            ->where('data->event', 'rapat_undangan')
+            ->where('data->rapat_id', $rapat->id)
+            ->delete();
+    }
+
+    return redirect()->route('admin.rapat.show', $rapat->id)
+        ->with('success','Undangan berhasil dihapus & notifikasi dibersihkan.');
     }
 
     public function exportKehadiran(Rapat $rapat)
@@ -162,4 +189,122 @@ class RapatController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function exportKehadiranPdf(Rapat $rapat)
+    {
+        $rapat->load(['undangan.user','undangan.instansi']);
+
+        // Data yang akan dilempar ke view
+        $data = [
+            'rapat' => $rapat,
+            'undangan' => $rapat->undangan,
+        ];
+
+        // Render view ke PDF
+        $pdf = Pdf::loadView('admin.rapat.kehadiran_pdf', $data);
+
+        $filename = 'kehadiran_rapat_' . $rapat->id . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    public function endRapat(Rapat $rapat)
+    {
+        if ($rapat->status === 'selesai') {
+            return back()->with('info', 'Rapat ini sudah selesai.');
+        }
+
+        $rapat->update([
+            'status' => 'selesai',
+            'waktu_selesai' => now(), // update waktu selesai aktual
+        ]);
+
+        return redirect()->route('admin.rapat.index')
+            ->with('success', 'Rapat berhasil diakhiri lebih awal.');
+    }
+
+    public function rekapRapat(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'status'     => 'nullable|in:berjalan,selesai,dibatalkan',
+        ]);
+
+        $query = Rapat::with('undangan')->orderByDesc('waktu_mulai');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('waktu_mulai', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $rapat = $query->get();
+
+        $rekap = $rapat->map(function($r) {
+            return [
+                'id'      => $r->id,
+                'judul'   => $r->judul,
+                'waktu'   => \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') .
+                            ' s/d ' .
+                            \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i'),
+                'lokasi'  => $r->lokasi,
+                'status'  => ucfirst($r->status),
+                'total'   => $r->undangan->count(),
+                'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
+                'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
+            ];
+        });
+
+        return view('admin.rapat.rekap_rapat', compact('rekap'))
+            ->with([
+                'start_date' => $request->start_date,
+                'end_date'   => $request->end_date,
+                'status'     => $request->status,
+            ]);
+    }
+
+    public function exportRekapRapatPdf(Request $request)
+    {
+        $query = Rapat::with('undangan')->orderByDesc('waktu_mulai');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('waktu_mulai', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $rapat = $query->get();
+
+        $rekap = $rapat->map(function($r) {
+            return [
+                'judul'   => $r->judul,
+                'waktu'   => \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') .
+                            ' s/d ' .
+                            \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i'),
+                'lokasi'  => $r->lokasi,
+                'status'  => ucfirst($r->status),
+                'total'   => $r->undangan->count(),
+                'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
+                'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
+            ];
+        });
+
+        $pdf = Pdf::loadView('admin.rapat.rekap_rapat_pdf', compact('rekap'))
+                ->setPaper('a4', 'landscape');
+
+        return $pdf->download('rekap_rapat.pdf');
+    }
+
 }

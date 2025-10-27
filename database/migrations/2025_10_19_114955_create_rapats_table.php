@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('radius')->default(100); // meter
 
             $table->integer('jumlah_tamu')->nullable();
+            $table->string('status')->default('berjalan');
 
             // Audit trail
             $table->unsignedBigInteger('created_id')->nullable();

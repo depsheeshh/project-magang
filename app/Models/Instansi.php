@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Instansi extends Model
 {
-    use SoftDeletes;
 
     protected $table = 'instansi';
 
@@ -22,6 +21,11 @@ class Instansi extends Model
     public function undangan()
     {
         return $this->hasMany(RapatUndangan::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_id');
     }
 }
 

@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\InstansiController;
+use App\Http\Controllers\InstansiLookupController;
 use App\Http\Controllers\Admin\HistoryLogController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Auth\VerificationController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
 use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganController;
+use App\Http\Controllers\Frontliner\RapatController as FrontlinerRapatController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -122,7 +124,17 @@ Route::middleware('auth',)->group(function () {
                 Route::resource('instansi', InstansiController::class)->except(['create','edit']);
                 Route::get('instansi/search', [InstansiController::class, 'search'])->name('instansi.search');
 
+                Route::get('rapat/rekap', [RapatController::class, 'rekapRapat'])
+                    ->name('rapat.rekap');
+                Route::get('rapat/rekap/pdf', [RapatController::class, 'exportRekapRapatPdf'])
+                    ->name('rapat.rekap.pdf');
+
                 Route::resource('rapat', RapatController::class)->except(['create','edit']);
+
+
+                Route::get('rapat/{rapat}/export-pdf', [RapatController::class, 'exportKehadiranPdf'])
+                ->name('rapat.export.pdf');
+
                 // Undangan rapat
                 Route::post('rapat/{rapat}/invitation', [RapatController::class, 'storeInvitation'])
                     ->name('rapat.storeInvitation');
@@ -131,7 +143,10 @@ Route::middleware('auth',)->group(function () {
 
                 // Export kehadiran
                 Route::get('rapat/{rapat}/export-kehadiran', [RapatController::class, 'exportKehadiran'])
-                    ->name('rapat.export');
+                    ->name('rapat.export.csv');
+
+
+
 
                 // Export PDF
                 Route::get('/laporan/cetak', [LaporanController::class, 'cetakPdf'])
@@ -181,6 +196,11 @@ Route::middleware('auth',)->group(function () {
                 Route::post('/kunjungan/{kunjungan}/checkout', [FrontlinerKunjunganController::class, 'checkout'])
                     ->name('kunjungan.checkout');
 
+                Route::get('/rapat', [FrontlinerRapatController::class, 'index'])
+                    ->name('rapat.index');
+                Route::get('/rapat/{rapat}', [FrontlinerRapatController::class, 'show'])
+                    ->name('rapat.show');
+
             });
             Route::middleware(['role:pegawai'])
                 ->prefix('pegawai')
@@ -212,6 +232,10 @@ Route::middleware('auth',)->group(function () {
             Route::get('/rapat-saya', [RapatCheckinController::class, 'index'])
                 ->name('rapat.saya');
 
+            Route::get('rapat/{rapat}', [RapatCheckinController::class, 'show'])
+            ->name('rapat.show');
+
+
             // Aksi check-in manual
             Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'checkin'])
                 ->name('rapat.checkin');
@@ -219,6 +243,15 @@ Route::middleware('auth',)->group(function () {
             // Aksi check-in via QR token (dibatasi 10x per menit)
             Route::middleware('throttle:10,1')->get('/checkin/{token}', [RapatCheckinController::class, 'checkinByToken'])
                 ->name('rapat.checkin.token');
+            Route::get('rapat/{rapat}/checkin-form', [RapatCheckinController::class, 'checkinForm'])->name('rapat.checkin.form');
+            Route::post('rapat/store-instansi', [RapatCheckinController::class, 'storeInstansi'])->name('rapat.storeInstansi');
+            Route::post('rapat/update-instansi', [RapatCheckinController::class, 'updateInstansi'])
+            ->name('rapat.updateInstansi');
+
+
+            // API untuk autocomplete: hanya instansi yang dibuat oleh admin
+            Route::get('api/instansi/admin', [InstansiLookupController::class, 'listAdminInstansi'])
+                ->name('api.instansi.admin');
 
         });
         // Untuk tamu: cek status kunjungan terakhir
@@ -243,6 +276,10 @@ Route::middleware('auth',)->group(function () {
             [FrontlinerKunjunganController::class, 'checkout'])
             ->middleware(['auth','role:frontliner'])
             ->name('kunjungan.checkout');
+
+            Route::patch('/admin/rapat/{rapat}/end', [RapatController::class, 'endRapat'])
+            ->name('rapat.end')
+            ->middleware(['role:admin']);
     });
 
     Route::get('/notifikasi', [NotificationController::class, 'index']);

@@ -9,4 +9,6 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('kunjungan:auto-checkout')->everyMinute();
+Schedule::command('rapat:mark-absent')->hourly();
+// Schedule::command('rapat:end-auto')->everyFiveMinutes();
 

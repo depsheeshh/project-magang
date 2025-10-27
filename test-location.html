@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test GPS</title></head>
+<body>
+<button onclick="getLocation()">Cek Lokasi</button>
+<p id="demo"></p>
+
+<script>
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition, showError);
+  } else {
+    document.getElementById("demo").innerHTML = "Geolocation tidak didukung di browser ini.";
+  }
+}
+
+function showPosition(position) {
+  document.getElementById("demo").innerHTML =
+    "Latitude: " + position.coords.latitude +
+    "<br>Longitude: " + position.coords.longitude;
+}
+
+function showError(error) {
+  switch(error.code) {
+    case error.PERMISSION_DENIED:
+      alert("Izin lokasi ditolak.");
+      break;
+    case error.POSITION_UNAVAILABLE:
+      alert("Informasi lokasi tidak tersedia.");
+      break;
+    case error.TIMEOUT:
+      alert("Permintaan lokasi timeout.");
+      break;
+    default:
+      alert("Terjadi kesalahan tak diketahui.");
+  }
+}
+</script>
+</body>
+</html>

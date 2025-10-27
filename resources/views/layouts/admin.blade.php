@@ -173,25 +173,51 @@
     badge.textContent = items.length;
     badge.classList.remove('d-none');
 
-    list.innerHTML = items.map(item => `
-      <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-           data-id="${item.id}" ${url ? `data-url="${url}"` : ''}>
-        <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-             style="width:38px;height:38px;">
-          <i class="fas ${icon}"></i>
-        </div>
-        <div class="notif-content flex-fill">
-          <div class="notif-title font-weight-bold"> ${item.nama ?? 'Notifikasi'} </div>
-          <div class="notif-sub small">
-            ${item.instansi ?? ''} ${item.keperluan ? ' • ' + item.keperluan : ''}
+    list.innerHTML = items.map(item => {
+      // cek kalau event instansi_baru → render khusus
+      if (item.event === 'instansi_baru') {
+        return `
+          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+               data-id="${item.id}" data-url="/admin/instansi">
+            <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:38px;height:38px;">
+              <i class="fas fa-building"></i>
+            </div>
+            <div class="notif-content flex-fill">
+              <div class="notif-title font-weight-bold">Instansi Baru Ditambahkan</div>
+              <div class="notif-sub small">
+                ${(item.nama_instansi || '-')} oleh ${(item.user || 'Peserta')}
+              </div>
+              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
-          <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+        `;
+      }
+
+      // default render
+      return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+             data-id="${item.id}" ${url ? `data-url="${url}"` : ''}>
+          <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+               style="width:38px;height:38px;">
+            <i class="fas ${icon}"></i>
+          </div>
+          <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">${item.nama || 'Notifikasi'}</div>
+            <div class="notif-sub small">
+              ${(item.instansi || '')} ${(item.keperluan ? ' • ' + item.keperluan : '')}
+            </div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
+          </div>
+          <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>
-        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   // === RENDER TAMU ===
@@ -211,22 +237,59 @@
     badge.classList.remove('d-none');
 
     list.innerHTML = items.map(item => {
+      // 🔔 Undangan rapat baru
+      if (item.event === 'rapat_undangan') {
+        return `
+          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+               data-id="${item.id}" data-url="/tamu/rapat/${item.rapat_id}">
+            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:38px;height:38px;">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <div class="notif-content flex-fill">
+              <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
+              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
+              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      // 🔔 Undangan rapat dibatalkan
+      if (item.event === 'rapat_undangan_dibatalkan') {
+        return `
+          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+               data-id="${item.id}">
+            <div class="notif-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:38px;height:38px;">
+              <i class="fas fa-ban"></i>
+            </div>
+            <div class="notif-content flex-fill">
+              <div class="notif-title font-weight-bold">Undangan Rapat Dibatalkan</div>
+              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
+              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      // default kunjungan
       let icon = 'fa-clock',
           color = 'bg-warning',
           label = 'Menunggu',
           labelClass = 'status-menunggu';
 
       if (item.event === 'disetujui') {
-        icon = 'fa-check-circle';
-        color = 'bg-success';
-        label = 'Disetujui';
-        labelClass = 'status-disetujui';
+        icon = 'fa-check-circle'; color = 'bg-success'; label = 'Disetujui'; labelClass = 'status-disetujui';
       }
       if (item.event === 'ditolak') {
-        icon = 'fa-times-circle';
-        color = 'bg-danger';
-        label = 'Ditolak';
-        labelClass = 'status-ditolak';
+        icon = 'fa-times-circle'; color = 'bg-danger'; label = 'Ditolak'; labelClass = 'status-ditolak';
       }
 
       return `
@@ -240,7 +303,7 @@
             <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
             <div class="${labelClass} small">${label}</div>
             ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
-            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
           </div>
           <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
             <i class="fas fa-trash"></i>
@@ -301,6 +364,11 @@
     const id = item.dataset.id;
     const url = item.dataset.url;
 
+    // Fallback: kalau URL kosong/undefined (misal rapat dibatalkan), arahkan ke daftar rapat
+    if (!url) {
+        url = '/tamu/rapat/saya';
+    }
+
     fetch(`/notifikasi/${id}/read`, {
       method: 'PATCH',
       headers: {
@@ -315,6 +383,7 @@
 
 })();
 </script>
+
 
   {{-- Stack untuk script tambahan --}}
     @stack('scripts')

@@ -122,26 +122,32 @@
 
         {{-- Menu Rapat --}}
         @can('rapat.view')
-        <li class="dropdown {{ request()->is('admin/rapat*') || request()->is('admin/instansi*') ? 'active' : '' }}">
-            <a href="#" class="nav-link has-dropdown">
-                <i class="fas fa-handshake"></i> <span>Rapat</span>
-            </a>
-            <ul class="dropdown-menu">
-                <li>
-                    <a class="nav-link {{ request()->is('admin/rapat*') ? 'active' : '' }}"
-                        href="{{ route('admin.rapat.index') }}">
-                        <i class="fas fa-list"></i> Manajemen Rapat
-                    </a>
-                </li>
-                <li>
-                    <a class="nav-link {{ request()->is('admin/instansi*') ? 'active' : '' }}"
-                        href="{{ route('admin.instansi.index') }}">
-                        <i class="fas fa-building"></i> Data Instansi
-                    </a>
-                </li>
-            </ul>
-        </li>
-        @endcan
+            <li class="dropdown {{ request()->is('admin/rapat*') || request()->is('admin/instansi*') ? 'active' : '' }}">
+                <a href="#" class="nav-link has-dropdown">
+                    <i class="fas fa-handshake"></i> <span>Rapat</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="nav-link {{ request()->is('admin/rapat*') ? 'active' : '' }}"
+                            href="{{ route('admin.rapat.index') }}">
+                            <i class="fas fa-list"></i> Manajemen Rapat
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link {{ request()->is('admin/instansi*') ? 'active' : '' }}"
+                            href="{{ route('admin.instansi.index') }}">
+                            <i class="fas fa-building"></i> Data Instansi
+                        </a>
+                    </li>
+                    <li>
+                        <a class="nav-link {{ request()->is('admin/rapat/rekap*') ? 'active' : '' }}"
+                            href="{{ route('admin.rapat.rekap') }}">
+                            <i class="fas fa-chart-bar"></i> Rekap Rapat
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            @endcan
 
 
         <li class="menu-header">History Logs</li>
@@ -161,10 +167,19 @@
       {{-- Menu khusus Frontliner --}}
       @role('frontliner')
         <li class="menu-header">Frontliner</li>
+
         <li class="{{ request()->is('frontliner/kunjungan') && !request()->has('status') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('frontliner.kunjungan.index') }}">
-              <i class="fas fa-list"></i> <span>Daftar Semua Kunjungan</span>
-            </a>
+        <a class="nav-link" href="{{ route('frontliner.kunjungan.index') }}">
+            <i class="fas fa-list"></i>
+            <span>Daftar Semua Kunjungan</span>
+        </a>
+        </li>
+
+        <li class="{{ request()->is('frontliner/rapat') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('frontliner.rapat.index') }}">
+            <i class="fas fa-calendar-check"></i>
+            <span>Rapat Hari Ini</span>
+        </a>
         </li>
       @endrole
 

@@ -15,35 +15,43 @@
     <div class="table-responsive">
       <table class="table table-striped align-middle">
         <thead class="table-dark">
-          <tr>
-            <th>#</th>
-            <th>Nama Instansi</th>
-            <th>Alamat / Lokasi</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($instansi as $i)
             <tr>
-              <td>{{ $loop->iteration }}</td>
-              <td>{{ $i->nama_instansi }}</td>
-              <td>{{ $i->lokasi ?? '-' }}</td>
-              <td>
-                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editInstansiModal{{ $i->id }}">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <form action="{{ route('admin.instansi.destroy', $i->id) }}" method="POST" class="d-inline">
-                  @csrf @method('DELETE')
-                  <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </form>
-              </td>
+                <th>#</th>
+                <th>Nama Instansi</th>
+                <th>Alamat / Lokasi</th>
+                <th>Sumber</th>
+                <th>Aksi</th>
             </tr>
-          @empty
-            <tr><td colspan="4" class="text-center text-muted">Belum ada instansi</td></tr>
-          @endforelse
-        </tbody>
+            </thead>
+            <tbody>
+            @forelse($instansi as $i)
+                <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $i->nama_instansi }}</td>
+                <td>{{ $i->lokasi ?? '-' }}</td>
+                <td>
+                    @if($i->creator && $i->creator->hasRole('admin'))
+                        <span class="badge badge-primary">Admin</span>
+                    @else
+                        <span class="badge badge-success">Peserta</span>
+                    @endif
+                </td>
+                <td>
+                    <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editInstansiModal{{ $i->id }}">
+                    <i class="fas fa-edit"></i>
+                    </button>
+                    <form action="{{ route('admin.instansi.destroy', $i->id) }}" method="POST" class="d-inline">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    </form>
+                </td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="text-center text-muted">Belum ada instansi</td></tr>
+            @endforelse
+            </tbody>
       </table>
       {{ $instansi->links() }}
     </div>

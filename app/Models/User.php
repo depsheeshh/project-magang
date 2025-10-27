@@ -27,6 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'verification_code','verification_expires_at',
         'email_verified_at', // pastikan ada
+        'instansi_id',
         'created_id',
         'updated_id',
         'deleted_id',
@@ -75,15 +76,18 @@ class User extends Authenticatable implements MustVerifyEmail
     // }
 
     public function pegawai()
-{
-    return $this->hasOne(Pegawai::class, 'user_id');
-}
+    {
+        return $this->hasOne(Pegawai::class, 'user_id');
+    }
 
-public function tamu()
-{
-    return $this->hasOne(Tamu::class, 'user_id');
-}
+    public function tamu()
+    {
+        return $this->hasOne(Tamu::class, 'user_id');
+    }
 
-
+    public function instansi()
+    {
+        return $this->belongsTo(Instansi::class, 'instansi_id');
+    }
 
 }

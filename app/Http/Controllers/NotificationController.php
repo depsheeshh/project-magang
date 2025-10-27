@@ -14,22 +14,52 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $items = $user->notifications()
+        $all = $user->notifications()
             ->latest()
-            ->get()
-            ->map(function ($n) {
-                return [
-                    'id'        => $n->id,
-                    'kunjungan' => $n->data['kunjungan_id'] ?? null,
-                    'nama'      => $n->data['nama'] ?? null,
-                    'instansi'  => $n->data['instansi'] ?? null,
-                    'keperluan' => $n->data['keperluan'] ?? null,
-                    'waktu'     => $n->created_at->format('d-m-Y H:i'),
-                    'event'     => $n->data['event'] ?? null,
-                    'alasan'    => $n->data['alasan'] ?? null,
-                    'message'   => $n->data['message'] ?? null,
-                ];
-            });
+            ->get();
+
+        // Map ke struktur unified
+        $items = $all->map(function ($n) {
+            return [
+                'id'          => $n->id,
+                'event'       => $n->data['event'] ?? null,
+                'waktu'       => $n->created_at->format('d-m-Y H:i'),
+
+                // kunjungan legacy
+                'kunjungan'   => $n->data['kunjungan_id'] ?? null,
+                'nama'        => $n->data['nama'] ?? null,
+                'instansi'    => $n->data['instansi'] ?? null,
+                'keperluan'   => $n->data['keperluan'] ?? null,
+                'alasan'      => $n->data['alasan'] ?? null,
+                'message'     => $n->data['message'] ?? null,
+
+                // instansi
+                'nama_instansi' => $n->data['nama_instansi'] ?? null,
+                'user'          => $n->data['user'] ?? null,
+
+                // rapat
+                'rapat_id'    => $n->data['rapat_id'] ?? null,
+                'judul'       => $n->data['judul'] ?? null,
+                'waktu_rapat' => $n->data['waktu'] ?? null,
+                'waktu_notif' => $n->data['waktu_notif'] ?? null,
+            ];
+        });
+
+        // Kumpulkan rapat_id yang punya pembatalan
+        $cancelledIds = collect($items)
+            ->where('event', 'rapat_undangan_dibatalkan')
+            ->pluck('rapat_id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        // Filter: jangan tampilkan "rapat_undangan" jika ada pembatalan untuk rapat yang sama
+        $items = $items->reject(function ($item) use ($cancelledIds) {
+            return $item['event'] === 'rapat_undangan'
+                && $item['rapat_id']
+                && in_array($item['rapat_id'], $cancelledIds, true);
+        })->values();
 
         return response()->json(['items' => $items]);
     }

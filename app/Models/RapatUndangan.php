@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RapatUndangan extends Model
 {
-    use SoftDeletes;
 
     protected $table = 'rapat_undangan';
 

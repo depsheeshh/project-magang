@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Rapat extends Model
 {
-    use SoftDeletes;
 
     protected $table = 'rapat';
 
@@ -23,6 +22,7 @@ class Rapat extends Model
         'created_id',
         'updated_id',
         'deleted_id',
+        'status',
     ];
 
     protected $casts = [

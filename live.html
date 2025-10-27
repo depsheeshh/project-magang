@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>New Tab — Live</title>
+<style>
+  :root{--glass: rgba(255,255,255,0.08);--glass-2: rgba(255,255,255,0.12);--accent:#ffffff;}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;}
+  /* video bg full */
+  .bgvideo{
+    position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2;
+    filter: saturate(1.05) contrast(1.02);
+  }
+  /* dark overlay for readability */
+  .overlay{
+    position:fixed; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.35)); z-index:-1;
+  }
+  /* center content */
+  .container{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:24px; padding:32px;
+  }
+  /* search box */
+  .search{
+    width:min(760px,94%); max-width:90vw;
+    background:var(--glass); backdrop-filter: blur(6px); border-radius:12px; padding:18px 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    display:flex; gap:12px; align-items:center;
+  }
+  .search input[type="text"]{
+    flex:1; border:0; outline:0; background:transparent; font-size:18px; color:var(--accent);
+  }
+  .search button{
+    border:0; background:transparent; color:var(--accent); font-weight:600; cursor:pointer;
+  }
+  /* shortcuts */
+  .shortcuts{
+    width:min(760px,94%); display:flex; flex-wrap:wrap; gap:12px; justify-content:center;
+  }
+  .tile{
+    width:120px; height:88px; border-radius:8px; background:var(--glass-2); display:flex;
+    align-items:center; justify-content:center; flex-direction:column; text-align:center;
+    color:var(--accent); text-decoration:none; padding:8px;
+  }
+  .tile small{opacity:0.9; font-size:13px;}
+  /* small footer */
+  .footer{position:fixed; left:16px; bottom:14px; color:rgba(255,255,255,0.7); font-size:12px;}
+  /* responsive tweaks */
+  @media (max-width:520px){
+    .tile{width:100px;height:72px}
+  }
+</style>
+</head>
+<body>
+  <!-- video background : ganti src sesuai file lokal atau URL mp4 -->
+  <video class="bgvideo" autoplay muted loop playsinline>
+    <source src="anime-boy-villain-moewalls-com.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
+
+  <div class="container">
+    <form class="search" action="https://www.google.com/search" method="GET" target="_blank" onsubmit="saveQuery(this)">
+      <input type="text" name="q" id="q" placeholder="Cari di Google atau ketik URL..." autocomplete="off" />
+      <button type="submit">Search</button>
+    </form>
+
+    <div class="shortcuts" id="shortcuts">
+      <!-- contoh shortcut statis; klik Edit.js nanti untuk ubah -->
+      <a class="tile" href="https://mail.google.com" target="_blank"><strong>Gmail</strong><small>mail</small></a>
+      <a class="tile" href="https://www.youtube.com" target="_blank"><strong>YouTube</strong><small>video</small></a>
+      <a class="tile" href="https://github.com" target="_blank"><strong>GitHub</strong><small>code</small></a>
+      <a class="tile" href="https://www.linkedin.com" target="_blank"><strong>LinkedIn</strong><small>network</small></a>
+    </div>
+  </div>
+
+  <div class="footer">Tip: tekan <kbd>Ctrl+T</kbd> untuk buka tab baru</div>
+
+<script>
+  // Simpel: simpan query terakhir ke localStorage agar tetap ada di New Tab
+  function saveQuery(form){
+    const q = form.q.value || '';
+    try{ localStorage.setItem('nt_last_query', q); }catch(e){}
+  }
+  // load last query
+  (function(){
+    try{
+      const q = localStorage.getItem('nt_last_query') || '';
+      if(q) document.getElementById('q').value = q;
+    }catch(e){}
+  })();
+</script>
+</body>
+</html>

@@ -30,7 +30,16 @@
           @forelse($rapat as $r)
           <tr>
             <td class="text-center">{{ $loop->iteration }}</td>
-            <td><strong>{{ $r->judul }}</strong></td>
+            <td>
+                <strong>{{ $r->judul }}</strong><br>
+                @if($r->status === 'selesai')
+                    <span class="badge badge-success">Selesai</span>
+                @elseif($r->status === 'berjalan')
+                    <span class="badge badge-primary">Sedang Berjalan</span>
+                @elseif($r->status === 'dibatalkan')
+                    <span class="badge badge-secondary">Dibatalkan</span>
+                @endif
+            </td>
             <td>
               {{ \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') }} -
               {{ \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i') }}

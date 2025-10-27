@@ -49,6 +49,18 @@
         {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}
       </dd>
 
+      <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+        @if($rapat->status === 'selesai')
+            <span class="badge badge-success">Selesai</span>
+        @elseif($rapat->status === 'berjalan')
+            <span class="badge badge-primary">Sedang Berjalan</span>
+        @elseif($rapat->status === 'dibatalkan')
+            <span class="badge badge-secondary">Dibatalkan</span>
+        @endif
+        </dd>
+
+
       <dt class="col-sm-3">Lokasi</dt>
       <dd class="col-sm-9">{{ $rapat->lokasi ?? '-' }}</dd>
 
@@ -62,6 +74,34 @@
       <dt class="col-sm-3">Jumlah Tamu</dt>
       <dd class="col-sm-9">{{ $rapat->jumlah_tamu ?? 0 }}</dd>
     </dl>
+
+     @hasanyrole('admin')
+        <div class="mt-3 d-flex">
+            @if($rapat->status === 'berjalan')
+            <form action="{{ route('rapat.end', $rapat->id) }}" method="POST"
+                    onsubmit="return confirm('Yakin ingin mengakhiri rapat ini sekarang?')" class="mr-2">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn btn-danger btn-sm">
+                <i class="fas fa-stop-circle"></i> Akhiri Rapat
+                </button>
+            </form>
+            @endif
+
+            {{-- Tombol Export CSV --}}
+            <a href="{{ route('admin.rapat.export.csv', $rapat->id) }}"
+            class="btn btn-success btn-sm mr-2">
+            <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+
+            {{-- Tombol Export PDF --}}
+            <a href="{{ route('admin.rapat.export.pdf', $rapat->id) }}"
+            class="btn btn-danger btn-sm">
+            <i class="fas fa-file-pdf"></i> Export PDF
+            </a>
+        </div>
+        @endhasanyrole
+
   </div>
 </div>
 
@@ -111,6 +151,7 @@
   </div>
 </div>
 
+
 <div class="card">
   <div class="card-header">
     <h4>Daftar Undangan</h4>
@@ -145,7 +186,12 @@
           </td>
           <td>{{ $undangan->checked_in_at ? $undangan->checked_in_at->format('d-m-Y H:i:s') : '-' }}</td>
           <td>
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(100)->generate(route('tamu.rapat.checkin.token', $undangan->checkin_token)) !!}
+            @if($undangan->checkin_token_hash)
+            {{-- tampilkan QR code --}}
+            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate($undangan->checkin_token_hash) !!}
+            @else
+            <span class="badge badge-success">QR sudah digunakan / tidak tersedia</span>
+            @endif
           </td>
           <td>
             <form action="{{ route('admin.rapat.destroyInvitation', [$rapat->id, $undangan->id]) }}" method="POST" onsubmit="return confirm('Hapus undangan ini?')">
