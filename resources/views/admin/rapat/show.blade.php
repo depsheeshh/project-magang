@@ -17,9 +17,11 @@
           <select name="user_id" class="form-control" required>
             <option value="">-- Pilih User --</option>
             @foreach($users as $user)
-              <option value="{{ $user->id }}">
-                {{ $user->name }} ({{ $user->instansi->nama_instansi ?? '-' }})
-              </option>
+              @if($user->hasRole('tamu') || $user->hasRole('pegawai'))
+                <option value="{{ $user->id }}">
+                  {{ $user->name }} ({{ $user->instansi->nama_instansi ?? '-' }})
+                </option>
+              @endif
             @endforeach
           </select>
         </div>
@@ -33,6 +35,7 @@
   </div>
 </div>
 
+{{-- Detail rapat --}}
 <div class="card mb-3">
   <div class="card-header">
     <h4>Detail Rapat</h4>
@@ -50,16 +53,15 @@
       </dd>
 
       <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">
+      <dd class="col-sm-9">
         @if($rapat->status === 'selesai')
-            <span class="badge badge-success">Selesai</span>
+          <span class="badge badge-success">Selesai</span>
         @elseif($rapat->status === 'berjalan')
-            <span class="badge badge-primary">Sedang Berjalan</span>
+          <span class="badge badge-primary">Sedang Berjalan</span>
         @elseif($rapat->status === 'dibatalkan')
-            <span class="badge badge-secondary">Dibatalkan</span>
+          <span class="badge badge-secondary">Dibatalkan</span>
         @endif
-        </dd>
-
+      </dd>
 
       <dt class="col-sm-3">Lokasi</dt>
       <dd class="col-sm-9">{{ $rapat->lokasi ?? '-' }}</dd>
@@ -75,39 +77,36 @@
       <dd class="col-sm-9">{{ $rapat->jumlah_tamu ?? 0 }}</dd>
     </dl>
 
-     @hasanyrole('admin')
-        <div class="mt-3 d-flex">
-            @if($rapat->status === 'berjalan')
-            <form action="{{ route('rapat.end', $rapat->id) }}" method="POST"
-                    onsubmit="return confirm('Yakin ingin mengakhiri rapat ini sekarang?')" class="mr-2">
-                @csrf
-                @method('PATCH')
-                <button type="submit" class="btn btn-danger btn-sm">
-                <i class="fas fa-stop-circle"></i> Akhiri Rapat
-                </button>
-            </form>
-            @endif
+    @hasanyrole('admin')
+      <div class="mt-3 d-flex">
+        @if($rapat->status === 'berjalan')
+          <form action="{{ route('rapat.end', $rapat->id) }}" method="POST"
+            onsubmit="return confirm('Yakin ingin mengakhiri rapat ini sekarang? Semua peserta hadir akan ditandai selesai.')"
+            class="d-inline">
+            @csrf
+            @method('PATCH')
+            <button type="submit" class="btn btn-danger btn-sm mr-2">
+              <i class="fas fa-stop-circle"></i> Akhiri Rapat
+            </button>
+          </form>
+        @endif
 
-            {{-- Tombol Export CSV --}}
-            <a href="{{ route('admin.rapat.export.csv', $rapat->id) }}"
-            class="btn btn-success btn-sm mr-2">
-            <i class="fas fa-file-csv"></i> Export CSV
-            </a>
-
-            {{-- Tombol Export PDF --}}
-            <a href="{{ route('admin.rapat.export.pdf', $rapat->id) }}"
-            class="btn btn-danger btn-sm">
-            <i class="fas fa-file-pdf"></i> Export PDF
-            </a>
-        </div>
-        @endhasanyrole
-
+        <a href="{{ route('admin.rapat.export.csv', $rapat->id) }}" class="btn btn-success btn-sm mr-2">
+          <i class="fas fa-file-csv"></i> Export CSV
+        </a>
+        <a href="{{ route('admin.rapat.export.pdf', $rapat->id) }}" class="btn btn-danger btn-sm">
+          <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+      </div>
+    @endhasanyrole
   </div>
 </div>
 
+{{-- Statistik --}}
 @php
   $total   = $rapat->undangan->count();
   $hadir   = $rapat->undangan->where('status_kehadiran','hadir')->count();
+  $selesai = $rapat->undangan->where('status_kehadiran','selesai')->count();
   $pending = $rapat->undangan->where('status_kehadiran','pending')->count();
   $tidak   = $rapat->undangan->where('status_kehadiran','tidak_hadir')->count();
 @endphp
@@ -122,7 +121,7 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="card text-center shadow-sm">
       <div class="card-body">
         <i class="fas fa-user-check fa-2x text-success mb-2"></i>
@@ -131,12 +130,21 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-2">
     <div class="card text-center shadow-sm">
       <div class="card-body">
-        <i class="fas fa-hourglass-half fa-2x text-secondary mb-2"></i>
+        <i class="fas fa-flag-checkered fa-2x text-secondary mb-2"></i>
+        <h5 class="card-title mb-1">Selesai</h5>
+        <span class="badge badge-secondary">{{ $selesai }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card text-center shadow-sm">
+      <div class="card-body">
+        <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
         <h5 class="card-title mb-1">Pending</h5>
-        <span class="badge badge-secondary">{{ $pending }}</span>
+        <span class="badge badge-warning">{{ $pending }}</span>
       </div>
     </div>
   </div>
@@ -151,12 +159,13 @@
   </div>
 </div>
 
-
+{{-- Daftar Undangan --}}
 <div class="card">
   <div class="card-header">
     <h4>Daftar Undangan</h4>
   </div>
   <div class="card-body">
+    <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead>
         <tr>
@@ -165,6 +174,7 @@
           <th>Instansi Asal</th>
           <th>Status Kehadiran</th>
           <th>Waktu Check-in</th>
+          <th>Waktu Check-out</th>
           <th>QR Code</th>
           <th>Aksi</th>
         </tr>
@@ -175,22 +185,31 @@
           <td>{{ $loop->iteration }}</td>
           <td>{{ $undangan->user->name ?? '-' }}</td>
           <td>{{ $undangan->instansi->nama_instansi ?? '-' }}</td>
-          <td>
+                    <td>
             @if($undangan->status_kehadiran === 'hadir')
               <span class="badge badge-success">Hadir</span>
+            @elseif($undangan->status_kehadiran === 'selesai')
+              <span class="badge badge-secondary">Selesai</span>
             @elseif($undangan->status_kehadiran === 'tidak_hadir')
               <span class="badge badge-danger">Tidak Hadir</span>
             @else
-              <span class="badge badge-secondary">Pending</span>
+              <span class="badge badge-warning text-dark">Pending</span>
             @endif
           </td>
           <td>{{ $undangan->checked_in_at ? $undangan->checked_in_at->format('d-m-Y H:i:s') : '-' }}</td>
           <td>
-            @if($undangan->checkin_token_hash)
-            {{-- tampilkan QR code --}}
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate($undangan->checkin_token_hash) !!}
+            @if($undangan->checked_out_at)
+                {{ $undangan->checked_out_at->format('d-m-Y H:i:s') }}
             @else
-            <span class="badge badge-success">QR sudah digunakan / tidak tersedia</span>
+                <span class="text-muted">-</span>
+            @endif
+            </td>
+          <td>
+            @if($undangan->checkin_token_hash)
+              {{-- tampilkan QR code --}}
+              {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate($undangan->checkin_token_hash) !!}
+            @else
+              <span class="badge badge-success">QR sudah digunakan / tidak tersedia</span>
             @endif
           </td>
           <td>
@@ -203,10 +222,11 @@
           </td>
         </tr>
         @empty
-        <tr><td colspan="7" class="text-center">Belum ada undangan</td></tr>
+        <tr><td colspan="8" class="text-center">Belum ada undangan</td></tr>
         @endforelse
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 

@@ -14,7 +14,7 @@
   <div class="card-body">
     <div class="table-responsive">
       <table class="table table-striped align-middle">
-        <thead class="table-dark">
+        <thead class="thead-dark">
             <tr>
                 <th>#</th>
                 <th>Nama Instansi</th>

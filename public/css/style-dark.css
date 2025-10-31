@@ -5,45 +5,84 @@
   .modal-dialog, .modal-content { z-index: 1060 !important; }
 
   /* ===================== DARK MODE ===================== */
-  body.dark-mode {
+    body.dark-mode {
     background-color: #1e1e2f;
     color: #f1f1f1;
-  }
+    }
 
-  /* Navbar */
-  body.dark-mode .navbar {
+    /* Navbar */
+    body.dark-mode .navbar {
     background-color: #2a2a3d !important;
     color: #f1f1f1;
-  }
-  body.dark-mode .navbar .nav-link {
+    }
+    body.dark-mode .navbar .nav-link {
     color: #ddd !important;
-  }
-  body.dark-mode .navbar .nav-link:hover {
+    }
+    body.dark-mode .navbar .nav-link:hover {
     color: #fff !important;
-  }
+    }
 
-  /* Sidebar */
-  body.dark-mode .main-sidebar {
+    body.dark-mode .navbar-bg {
+        background-color: #2a2a3d !important;
+        color: #f1f1f1;
+    }
+
+    /* Sidebar (normal + dark mode) */
+    body.dark-mode .main-sidebar,
+    body.dark-mode .main-sidebar.sidebar-style-2,
+    body.dark-mode .main-sidebar.sidebar-style-2 #sidebar-wrapper,
+    body.dark-mode .main-sidebar.sidebar-style-2 .sidebar-menu {
     background-color: #1c1c2b !important;
     color: #f1f1f1;
-  }
-  body.dark-mode .main-sidebar .sidebar-brand a {
+    }
+
+    body.dark-mode .main-sidebar .sidebar-brand a {
     color: #f1f1f1;
-  }
-  body.dark-mode .main-sidebar .sidebar-menu li a {
+    }
+    body.dark-mode .main-sidebar .sidebar-menu li a {
     color: #ddd;
-  }
-  body.dark-mode .main-sidebar .sidebar-menu li a:hover {
+    }
+    body.dark-mode .main-sidebar .sidebar-menu li a:hover {
     background-color: #2a2a3d;
     color: #fff;
-  }
-  body.dark-mode .main-sidebar .sidebar-menu li.active > a {
+    }
+    body.dark-mode .main-sidebar .sidebar-menu li.active > a {
     background-color: #34344a;
     color: #fff;
-  }
-  body.dark-mode .main-sidebar .menu-header {
+    }
+    body.dark-mode .main-sidebar .menu-header {
     color: #aaa;
-  }
+    }
+
+    /* 🌙 Sidebar Mini khusus Dark Mode */
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2,
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 #sidebar-wrapper,
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu {
+    background-color: #1a1a1a !important; /* sidebar mini lebih pekat */
+    color: #e0e0e0 !important;
+    }
+
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu li a {
+    color: #e0e0e0 !important;
+    }
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu li a:hover {
+    background-color: #2a2a2a !important;
+    color: #fff !important;
+    }
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu li.active > a {
+    background-color: #2a2a2a !important;
+    color: #fff !important;
+    }
+
+    /* Ikon di sidebar mini */
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu li a i {
+    color: #bbb !important;
+    }
+    body.dark-mode.sidebar-mini .main-sidebar.sidebar-style-2 .sidebar-menu li.active a i {
+    color: #fff !important;
+    }
+
+
 
   .navbar .navbar-badge {
     position: absolute;
@@ -343,6 +382,15 @@ body.dark-mode .dropdown-menu .dropdown-item:focus {
     .table td, .table th {
     word-wrap: break-word; /* kalau mau teks panjang turun ke bawah */
     }
+
+    /* 🌙 Override pseudo-element sidebar mini di dark mode */
+    body.dark-mode.sidebar-mini .main-sidebar:after {
+    background-color: #1a1a1a !important; /* ganti putih jadi gelap */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5) !important;
+    }
+
+
+
 
 
 

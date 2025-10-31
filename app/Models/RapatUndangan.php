@@ -17,6 +17,7 @@ class RapatUndangan extends Model
         'jumlah_peserta',
         'status_kehadiran',
         'checked_in_at',
+        'checked_out_at',
         'checkin_latitude',
         'checkin_longitude',
         'checkin_distance',
@@ -30,6 +31,7 @@ class RapatUndangan extends Model
 
     protected $casts = [
         'checked_in_at' => 'datetime',
+        'checked_out_at' => 'datetime',
         'qr_scanned_at' => 'datetime',
     ];
 

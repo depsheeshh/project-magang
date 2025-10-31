@@ -213,14 +213,24 @@ class RapatController extends Controller
             return back()->with('info', 'Rapat ini sudah selesai.');
         }
 
+        // Update status rapat
         $rapat->update([
             'status' => 'selesai',
             'waktu_selesai' => now(), // update waktu selesai aktual
         ]);
 
+        // Mass update undangan: semua yang hadir → selesai + isi checked_out_at
+        RapatUndangan::where('rapat_id', $rapat->id)
+            ->where('status_kehadiran', 'hadir')
+            ->update([
+                'status_kehadiran' => 'selesai',
+                'checked_out_at'   => now(),
+            ]);
+
         return redirect()->route('admin.rapat.index')
-            ->with('success', 'Rapat berhasil diakhiri lebih awal.');
+            ->with('success', 'Rapat berhasil diakhiri. Semua peserta hadir ditandai selesai.');
     }
+
 
     public function rekapRapat(Request $request)
     {

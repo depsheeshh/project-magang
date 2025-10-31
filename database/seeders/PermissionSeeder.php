@@ -37,6 +37,7 @@ class PermissionSeeder extends Seeder
             'pegawai.create',
             'pegawai.update',
             'pegawai.delete',
+            'pegawai.rapat.view',
 
             // Bidang Management
             'bidang.view',

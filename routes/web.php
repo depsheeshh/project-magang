@@ -20,15 +20,16 @@ use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\InstansiLookupController;
 use App\Http\Controllers\Admin\HistoryLogController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\SurveyLinkController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
+use App\Http\Controllers\Frontliner\RapatController as FrontlinerRapatController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
 use App\Http\Controllers\Admin\ChangePasswordController as AdminChangePasswordController;
 use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganController;
-use App\Http\Controllers\Frontliner\RapatController as FrontlinerRapatController;
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
@@ -166,6 +167,15 @@ Route::middleware('auth',)->group(function () {
                 Route::get('/surveys', [SurveyController::class, 'index'])
                     ->name('surveys.index')
                     ->middleware('permission:surveys.view');
+
+                // Tambahan survey link
+                Route::get('/survey-links', [SurveyLinkController::class, 'index'])->name('survey_links.index');
+                Route::post('/survey-links', [SurveyLinkController::class, 'store'])->name('survey_links.store');
+                Route::patch('/survey-links/{id}/activate', [SurveyLinkController::class, 'activate'])->name('survey_links.activate');
+                Route::patch('/survey-links/{id}/deactivate', [SurveyLinkController::class, 'deactivate'])->name('survey_links.deactivate');
+                Route::delete('/survey-links/{id}', [SurveyLinkController::class, 'destroy'])->name('survey_links.destroy');
+
+
                 Route::get('surveys/rekap', [SurveyController::class, 'rekap'])->name('surveys.rekap');
                 Route::get('/surveys/{survey}', [SurveyController::class, 'show'])
                     ->name('surveys.show')
@@ -206,6 +216,25 @@ Route::middleware('auth',)->group(function () {
                 ->prefix('pegawai')
                 ->name('pegawai.')
                 ->group(function () {
+                    // ✅ Agenda Rapat Saya
+                    Route::get('/rapat-saya', [RapatCheckinController::class, 'agendaPegawai'])
+                        ->name('rapat.index');
+
+                    Route::get('/rapat/{rapat}', [RapatCheckinController::class, 'showPegawai'])
+                        ->name('rapat.show');
+
+                    // Manual check-in khusus pegawai
+                    Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'pegawaiCheckin'])
+                        ->name('rapat.checkin');
+
+                    // QR check-in khusus pegawai (pakai buffer radius)
+                    Route::middleware('throttle:10,1')->get('/rapat/checkin/{token}', [RapatCheckinController::class, 'pegawaiCheckinByToken'])
+                        ->name('rapat.checkin.token');
+
+                    // Checkout pegawai (kalau belum ada, buat methodnya serupa)
+                    Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'pegawaiCheckout'])
+                        ->name('rapat.checkout');
+
                     Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
                         Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
                         Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
@@ -239,6 +268,10 @@ Route::middleware('auth',)->group(function () {
             // Aksi check-in manual
             Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'checkin'])
                 ->name('rapat.checkin');
+
+            // Aksi checkout manual tamu
+            Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'tamuCheckout'])
+                ->name('rapat.checkout');
 
             // Aksi check-in via QR token (dibatasi 10x per menit)
             Route::middleware('throttle:10,1')->get('/checkin/{token}', [RapatCheckinController::class, 'checkinByToken'])

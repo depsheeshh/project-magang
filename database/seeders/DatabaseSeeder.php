@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             BidangSeeder::class,
             JabatanSeeder::class,
+            InstansiSeeder::class,
         ]);
 
         // Buat user default admin

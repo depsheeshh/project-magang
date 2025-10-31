@@ -20,10 +20,11 @@ return new class extends Migration
             $table->integer('jumlah_peserta')->default(1);
 
             // Status kehadiran
-            $table->enum('status_kehadiran', ['pending','hadir','tidak_hadir'])->default('pending');
+            $table->enum('status_kehadiran', ['pending','hadir','tidak_hadir','selesai'])->default('pending');
 
             // Data check-in
             $table->timestamp('checked_in_at')->nullable();
+            $table->timestamp('checked_out_at')->nullable();
             $table->decimal('checkin_latitude', 10, 7)->nullable();
             $table->decimal('checkin_longitude', 10, 7)->nullable();
             $table->integer('checkin_distance')->nullable();

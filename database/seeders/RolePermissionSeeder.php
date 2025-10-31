@@ -30,6 +30,7 @@ class RolePermissionSeeder extends Seeder
             'pegawai' => [
                 'pegawai.visits.view',
                 'pegawai.visits.details',
+                'pegawai.rapat.view'
             ],
 
             'tamu' => [

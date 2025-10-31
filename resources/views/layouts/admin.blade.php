@@ -24,6 +24,7 @@
     <link rel="apple-touch-icon" href="{{ asset('assets/favicon.ico') }}" />
 
     <link rel="stylesheet" href="{{ asset('css/style-dark.css') }}">
+
 <!-- Tempat untuk CSS tambahan dari child view -->
     @stack('style')
 </head>
@@ -196,6 +197,29 @@
           </div>
         `;
       }
+
+      // cek kalau event survey_baru → render khusus
+        if (item.event === 'survey_baru') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+                data-id="${item.id}" data-url="/admin/surveys">
+            <div class="notif-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width:38px;height:38px;">
+                <i class="fas fa-comment-dots"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">Survey Baru Ditambahkan</div>
+                <div class="notif-sub small">
+                ${(item.judul || 'Survey')} oleh ${(item.user || 'Admin/Peserta')}
+                </div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
 
       // default render
       return `

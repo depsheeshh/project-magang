@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Notifications\SurveyCreatedNotification;
 
 class Survey extends Model
 {
@@ -27,5 +28,14 @@ class Survey extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($survey) {
+            User::role('admin')->each(function ($admin) use ($survey) {
+                $admin->notify(new SurveyCreatedNotification($survey));
+            });
+        });
     }
 }

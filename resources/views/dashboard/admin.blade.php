@@ -51,11 +51,10 @@ body.dark-mode .badge {
 {{-- Dashboard untuk Admin --}}
 @if($role === 'admin')
 <div class="row">
+  {{-- User --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-primary">
-        <i class="fas fa-users"></i>
-      </div>
+      <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
       <div class="card-wrap">
         <div class="card-header"><h4>Total User</h4></div>
         <div class="card-body">{{ $totalUsers }}</div>
@@ -63,11 +62,10 @@ body.dark-mode .badge {
     </div>
   </div>
 
+  {{-- Pegawai --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-success">
-        <i class="fas fa-id-card"></i>
-      </div>
+      <div class="card-icon bg-success"><i class="fas fa-id-card"></i></div>
       <div class="card-wrap">
         <div class="card-header"><h4>Total Pegawai</h4></div>
         <div class="card-body">{{ $totalPegawai }}</div>
@@ -75,11 +73,10 @@ body.dark-mode .badge {
     </div>
   </div>
 
+  {{-- Bidang --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-warning">
-        <i class="fas fa-sitemap"></i>
-      </div>
+      <div class="card-icon bg-warning"><i class="fas fa-sitemap"></i></div>
       <div class="card-wrap">
         <div class="card-header"><h4>Total Bidang</h4></div>
         <div class="card-body">{{ $totalBidang }}</div>
@@ -87,14 +84,46 @@ body.dark-mode .badge {
     </div>
   </div>
 
+  {{-- Jabatan --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-danger">
-        <i class="fas fa-briefcase"></i>
-      </div>
+      <div class="card-icon bg-danger"><i class="fas fa-briefcase"></i></div>
       <div class="card-wrap">
         <div class="card-header"><h4>Total Jabatan</h4></div>
         <div class="card-body">{{ $totalJabatan }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Survey --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-info"><i class="fas fa-comment-dots"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Total Survey</h4></div>
+        <div class="card-body">{{ $totalSurvey }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Rapat --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-secondary"><i class="fas fa-handshake"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Total Rapat</h4></div>
+        <div class="card-body">{{ $totalRapat }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Instansi --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-dark"><i class="fas fa-building"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Total Instansi</h4></div>
+        <div class="card-body">{{ $totalInstansi }}</div>
       </div>
     </div>
   </div>
@@ -319,6 +348,7 @@ body.dark-mode .badge {
 {{-- Dashboard untuk Tamu --}}
 @if($role === 'tamu')
 <div class="row">
+  {{-- Total Kunjungan --}}
   <div class="col-lg-4 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
       <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
@@ -328,6 +358,8 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
+
+  {{-- Kunjungan Diterima --}}
   <div class="col-lg-4 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
       <div class="card-icon bg-success"><i class="fas fa-check"></i></div>
@@ -337,12 +369,25 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
+
+  {{-- Kunjungan Ditolak --}}
   <div class="col-lg-4 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
       <div class="card-icon bg-danger"><i class="fas fa-times"></i></div>
       <div class="card-wrap">
         <div class="card-header"><h4>Kunjungan Ditolak</h4></div>
         <div class="card-body">{{ $ditolak }}</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Undangan Rapat --}}
+  <div class="col-lg-6 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-warning"><i class="fas fa-envelope-open-text"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Undangan Rapat</h4></div>
+        <div class="card-body">{{ $undanganRapat }}</div>
       </div>
     </div>
   </div>

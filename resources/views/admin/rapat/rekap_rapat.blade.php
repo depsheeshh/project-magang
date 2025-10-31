@@ -48,6 +48,7 @@
     </form>
 
     {{-- Tabel Rekap --}}
+    <div class="table-responsive">
     <table class="table table-bordered table-striped">
       <thead>
         <tr>
@@ -78,6 +79,7 @@
         @endforelse
       </tbody>
     </table>
+    </div>
 
     {{-- Ringkasan total semua rapat --}}
     @if($rekap->count() > 0)

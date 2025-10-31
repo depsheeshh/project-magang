@@ -1,6 +1,6 @@
 <footer class="footer text-center py-5 position-relative"
         style="
-          background: linear-gradient(180deg, #020510 0%, #01030a 100%);
+          background: linear-gradient(180deg, #020510 0%, #00186c 100%);
           backdrop-filter: blur(12px);
           border-top: 1px solid rgba(255,255,255,0.08);
           box-shadow: 0 -4px 30px rgba(0,0,0,0.3);

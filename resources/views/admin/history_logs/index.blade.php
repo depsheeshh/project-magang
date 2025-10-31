@@ -15,6 +15,7 @@
 
 <div class="card mt-3">
   <div class="card-body">
+     <div class="table-responsive">
     <table class="table table-striped table-bordered table-hover">
       <thead class="thead-dark">
         <tr>
@@ -94,6 +95,7 @@
         @endforelse
       </tbody>
     </table>
+    </div>
     {{ $logs->links('pagination::bootstrap-5') }}
   </div>
 </div>

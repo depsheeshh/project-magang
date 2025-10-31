@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\InstansiCreatedNotification;
 
 class Instansi extends Model
 {
@@ -26,6 +27,16 @@ class Instansi extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_id');
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($instansi) {
+            // Ambil semua user dengan role admin
+            User::role('admin')->each(function ($admin) use ($instansi) {
+                $admin->notify(new InstansiCreatedNotification($instansi));
+            });
+        });
     }
 }
 

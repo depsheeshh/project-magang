@@ -9,6 +9,9 @@ use App\Models\Bidang;
 use App\Models\Jabatan;
 use App\Models\Kunjungan;
 use App\Models\Tamu;
+use App\Models\Survey;
+use App\Models\Rapat;
+use App\Models\Instansi;
 
 class DashboardController extends Controller
 {
@@ -19,20 +22,26 @@ class DashboardController extends Controller
 
         // Data default
         $totalUsers = $totalPegawai = $totalBidang = $totalJabatan = null;
+        $totalSurvey = $totalRapat = $totalInstansi = null;
+
         $kunjunganMenunggu = $kunjunganTerbaru = $kunjunganSaya = collect();
 
         // Tambahkan default untuk role tamu
         $total = $diterima = $ditolak = 0;
+        $rapatTersedia = $undanganRapat = 0;
 
-         // khusus pegawai
+        // khusus pegawai
         $totalKunjungan = $sedangBertamu = $menunggu = $selesai = $ditolakPegawai = 0;
         $riwayatSingkat = collect();
 
         if ($role === 'admin') {
-            $totalUsers   = User::count();
-            $totalPegawai = Pegawai::count();
-            $totalBidang  = Bidang::count();
-            $totalJabatan = Jabatan::count();
+            $totalUsers    = User::count();
+            $totalPegawai  = Pegawai::count();
+            $totalBidang   = Bidang::count();
+            $totalJabatan  = Jabatan::count();
+            $totalSurvey   = Survey::count();
+            $totalRapat    = Rapat::count();
+            $totalInstansi = Instansi::count();
         }
 
         if ($role === 'frontliner') {
@@ -80,7 +89,6 @@ class DashboardController extends Controller
             }
         }
 
-
         if ($role === 'tamu') {
             $tamu = $user->tamu;
             if ($tamu) {
@@ -91,15 +99,24 @@ class DashboardController extends Controller
                 $ditolak  = Kunjungan::where('tamu_id', $tamu->id)
                                 ->where('status','ditolak')
                                 ->count();
+
+                // Tambahan indikator rapat
+                $undanganRapat = Rapat::whereHas('undangan', function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })->count();
+
             } else {
                 $total = $diterima = $ditolak = 0;
+                $undanganRapat = 0;
             }
         }
 
         return view('dashboard.admin', compact(
             'role',
             'totalUsers','totalPegawai','totalBidang','totalJabatan',
-            'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya','total','diterima','ditolak',
+            'totalSurvey','totalRapat','totalInstansi',
+            'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya',
+            'total','diterima','ditolak','undanganRapat',
             'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat'
         ));
     }

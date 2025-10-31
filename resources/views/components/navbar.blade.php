@@ -2,8 +2,8 @@
 $isAuthPage = Request::is('login') || Request::is('register') || Request::is('password/*');
 @endphp
 
-<nav class="navbar navbar-expand-lg fixed-top shadow-sm"
-     style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08);">
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm navbar-custom"
+     style="background: rgba(24, 48, 106, .18); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08);">
   <div class="container">
     {{-- Brand --}}
     <a class="navbar-brand fw-bold text-white fs-4 d-flex align-items-center" href="{{ url('/') }}">

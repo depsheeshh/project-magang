@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('title','Rapat Hari Ini')
+
 @section('content')
 <div class="container-fluid">
   <h4 class="mb-3">📅 Rapat Hari Ini</h4>

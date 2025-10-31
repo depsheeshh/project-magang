@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Instansi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -44,15 +45,26 @@ class UserController extends Controller
         $validated['name']  = strip_tags($validated['name']);
         $validated['email'] = strip_tags($validated['email']);
 
-        $user = User::create([
+        // Default data user
+        $data = [
             'name'              => $validated['name'],
             'email'             => $validated['email'],
             'password'          => Hash::make($validated['password']),
             'status'            => (int) $validated['status'],
             'email_verified_at' => now(),
             'created_id'        => Auth::id(),
-        ]);
+        ];
 
+        // Jika role = pegawai, set instansi otomatis DKIS
+        if ($validated['role'] === 'pegawai') {
+            $instansi = Instansi::firstOrCreate(
+                ['nama_instansi' => 'DKIS Kota Cirebon'],
+                ['lokasi' => 'Jl. DR. Sudarsono No.40, Kesambi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45134']
+            );
+            $data['instansi_id'] = $instansi->id;
+        }
+
+        $user = User::create($data);
         $user->syncRoles([$validated['role']]);
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan');
@@ -110,6 +122,15 @@ class UserController extends Controller
             }
 
             $data['password'] = Hash::make($request->new_password);
+        }
+
+        // Jika role = pegawai, pastikan instansi tetap DKIS
+        if ($validated['role'] === 'pegawai') {
+            $instansi = Instansi::firstOrCreate(
+                ['nama_instansi' => 'DKIS Kota Cirebon'],
+                ['lokasi' => 'Jl. DR. Sudarsono No.40, Kesambi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45134']
+            );
+            $data['instansi_id'] = $instansi->id;
         }
 
         $user->update($data);

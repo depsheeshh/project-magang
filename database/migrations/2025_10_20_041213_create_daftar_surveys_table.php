@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('daftar_surveys', function (Blueprint $table) {
+        Schema::create('daftar_survey', function (Blueprint $table) {
             $table->id();
             $table->string('link_survey');
             $table->integer('is_active')->default(1);

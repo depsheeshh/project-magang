@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\TamuBaruNotification;
 use App\Models\Survey;
-use Illuminate\Support\Str;
+use App\Models\DaftarSurvey;
 
 class KunjunganController extends Controller
 {
@@ -36,7 +36,7 @@ class KunjunganController extends Controller
             'waktu_masuk' => now(),
         ]);
 
-        // === Kirim notifikasi ===
+        // Kirim notifikasi
         $pegawai = Pegawai::with('user')->find($request->pegawai_id);
         if ($pegawai && $pegawai->user) {
             $pegawai->user->notify(new TamuBaruNotification($tamu, $kunjungan));
@@ -63,7 +63,7 @@ class KunjunganController extends Controller
     }
 
     /**
-     * Checkout kunjungan (via AJAX).
+     * Checkout kunjungan.
      */
     public function checkout(Request $request, $id)
     {
@@ -72,11 +72,11 @@ class KunjunganController extends Controller
 
         // Validasi pemilik kunjungan
         if ($user->hasRole('tamu') && $kunjungan->tamu_id !== $user->tamu->id) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            return abort(403, 'Unauthorized');
         }
 
         if ($kunjungan->status !== 'sedang_bertamu') {
-            return response()->json(['success' => false, 'message' => 'Kunjungan tidak dalam status sedang bertamu'], 400);
+            return back()->with('error','Kunjungan tidak dalam status sedang bertamu');
         }
 
         $kunjungan->update([
@@ -84,10 +84,14 @@ class KunjunganController extends Controller
             'waktu_keluar' => now(),
         ]);
 
-        // ✅ Buat record survey kosong TANPA link
-        Survey::firstOrCreate(
+        // ✅ Buat record survey kosong + generate link unik
+        $survey = Survey::firstOrCreate(
             ['kunjungan_id' => $kunjungan->id, 'user_id' => $user->id],
-            ['rating' => null, 'feedback' => null, 'link' => null]
+            [
+                'rating'   => null,
+                'feedback' => null,
+                'link'     => url('/survey/'.$kunjungan->id.'/'.\Illuminate\Support\Str::uuid())
+            ]
         );
 
         // Bersihkan notifikasi pegawai
@@ -106,11 +110,25 @@ class KunjunganController extends Controller
                 ->delete();
         }
 
-        // ✅ Bersihkan notifikasi tamu juga
+        // Bersihkan notifikasi tamu juga
         $kunjungan->tamu?->user?->notifications()
             ->whereJsonContains('data->kunjungan_id', $kunjungan->id)
             ->delete();
 
-        return response()->json(['success' => true, 'message' => 'Checkout berhasil.']);
+        // ✅ Redirect ke link SKM aktif
+        $surveyLink = DaftarSurvey::where('is_active', true)->first();
+        if ($surveyLink) {
+            return redirect()->away($surveyLink->link_survey);
+        }
+
+        // ✅ Fallback: kalau tidak ada SKM aktif, langsung ke survey internal publik
+        if ($survey && $survey->link) {
+            return redirect()->away($survey->link);
+        }
+
+        // Fallback terakhir
+        return redirect()->route('tamu.kunjungan.status')
+            ->with('info','Checkout berhasil, silakan isi survey pelayanan.');
     }
+
 }
