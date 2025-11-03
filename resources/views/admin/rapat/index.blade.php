@@ -20,7 +20,9 @@
             <th>#</th>
             <th>Judul</th>
             <th>Waktu</th>
+            <th>Jenis Rapat</th>
             <th>Lokasi</th>
+            <th>Ruangan</th>
             <th>Radius</th>
             <th>Jumlah Tamu</th>
             <th>Aksi</th>
@@ -31,20 +33,24 @@
           <tr>
             <td class="text-center">{{ $loop->iteration }}</td>
             <td>
-                <strong>{{ $r->judul }}</strong><br>
-                @if($r->status === 'selesai')
-                    <span class="badge badge-success">Selesai</span>
-                @elseif($r->status === 'berjalan')
-                    <span class="badge badge-primary">Sedang Berjalan</span>
-                @elseif($r->status === 'dibatalkan')
-                    <span class="badge badge-secondary">Dibatalkan</span>
-                @endif
+              <strong>{{ $r->judul }}</strong><br>
+              @if($r->status === 'selesai')
+                <span class="badge badge-success">Selesai</span>
+              @elseif($r->status === 'berjalan')
+                <span class="badge badge-primary">Sedang Berjalan</span>
+              @elseif($r->status === 'dibatalkan')
+                <span class="badge badge-secondary">Dibatalkan</span>
+              @endif
             </td>
             <td>
               {{ \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') }} -
               {{ \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i') }}
             </td>
-            <td>{{ $r->lokasi ?? '-' }}</td>
+            <td class="text-center">
+              <span class="badge badge-info text-uppercase">{{ $r->jenis_rapat }}</span>
+            </td>
+            <td>{{ $r->lokasi }}</td>
+            <td>{{ $r->ruangan->nama_ruangan ?? '-' }}</td>
             <td class="text-center"><span class="badge badge-warning">{{ $r->radius }} m</span></td>
             <td class="text-center"><span class="badge badge-success">{{ $r->jumlah_tamu ?? 0 }}</span></td>
             <td class="text-center">
@@ -57,7 +63,7 @@
             </td>
           </tr>
           @empty
-          <tr><td colspan="7" class="text-center text-muted">Belum ada rapat</td></tr>
+          <tr><td colspan="9" class="text-center text-muted">Belum ada rapat</td></tr>
           @endforelse
         </tbody>
       </table>
@@ -79,7 +85,7 @@
           <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body">
-                    <div class="form-group">
+          <div class="form-group">
             <label>Judul</label>
             <input type="text" name="judul" class="form-control" placeholder="Masukkan judul rapat" required>
           </div>
@@ -87,22 +93,63 @@
           <div class="form-row">
             <div class="form-group col-md-6">
               <label>Waktu Mulai</label>
-              <input type="datetime-local" name="waktu_mulai" class="form-control" required>
+              <input type="datetime-local" name="waktu_mulai"
+                     class="form-control"
+                     min="{{ now()->format('Y-m-d\TH:i') }}" required>
             </div>
             <div class="form-group col-md-6">
               <label>Waktu Selesai</label>
-              <input type="datetime-local" name="waktu_selesai" class="form-control" required>
+              <input type="datetime-local" name="waktu_selesai"
+                     class="form-control"
+                     min="{{ now()->format('Y-m-d\TH:i') }}" required>
             </div>
           </div>
 
-          @include('components.map-picker', [
-            'mapId' => '', // kosong untuk create
-            'lokasi' => old('lokasi'),
-            'latitude' => old('latitude'),
-            'longitude' => old('longitude'),
-            'radius' => old('radius', 100),
-            ])
+          <div class="form-group">
+            <label>Jenis Rapat</label>
+            <select name="jenis_rapat" class="form-control" required>
+              <option value="Internal">Rapat Internal</option>
+              <option value="Eksternal">Rapat Eksternal</option>
+            </select>
+          </div>
 
+          <div class="form-group">
+            <label>Lokasi (Kantor)</label>
+            <select name="lokasi" id="lokasiSelectCreate" class="form-control" required>
+              <option value="">-- Pilih Kantor --</option>
+              @foreach($kantor as $k)
+                <option value="{{ $k->nama_kantor }}"
+                        data-id="{{ $k->id }}"
+                        data-lat="{{ $k->latitude }}"
+                        data-lon="{{ $k->longitude }}">
+                  {{ $k->nama_kantor }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Ruangan</label>
+            <select name="ruangan_id" id="ruanganSelectCreate" class="form-control" required>
+              <option value="">-- Pilih Ruangan --</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Latitude</label>
+              <input type="text" name="latitude" id="latitudeCreate" class="form-control" readonly>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Longitude</label>
+              <input type="text" name="longitude" id="longitudeCreate" class="form-control" readonly>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Radius (meter)</label>
+            <input type="number" name="radius" id="radiusCreate" value="100" class="form-control" readonly>
+          </div>
 
           <div class="form-group">
             <label>Jumlah Tamu</label>
@@ -117,7 +164,7 @@
   </div>
 </div>
 
-<!-- Modal Edit Rapat -->
+<!-- Modal Edit -->
 @foreach($rapat as $r)
 <div class="modal fade" id="editRapatModal{{ $r->id }}" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -139,26 +186,68 @@
               <label>Waktu Mulai</label>
               <input type="datetime-local" name="waktu_mulai"
                      value="{{ \Carbon\Carbon::parse($r->waktu_mulai)->format('Y-m-d\TH:i') }}"
-                     class="form-control" required>
+                     class="form-control"
+                     min="{{ now()->format('Y-m-d\TH:i') }}" required>
             </div>
             <div class="form-group col-md-6">
               <label>Waktu Selesai</label>
               <input type="datetime-local" name="waktu_selesai"
                      value="{{ \Carbon\Carbon::parse($r->waktu_selesai)->format('Y-m-d\TH:i') }}"
-                     class="form-control" required>
+                     class="form-control"
+                     min="{{ now()->format('Y-m-d\TH:i') }}" required>
             </div>
           </div>
 
-          @include('components.map-picker', [
-            'mapId' => $r->id, // unik per rapat
-            'lokasi' => $r->lokasi,
-            'latitude' => $r->latitude,
-            'longitude' => $r->longitude,
-            'radius' => $r->radius,
-            ])
+          <div class="form-group">
+            <label>Jenis Rapat</label>
+            <select name="jenis_rapat" class="form-control" required>
+              <option value="Internal" {{ $r->jenis_rapat == 'Internal' ? 'selected' : '' }}>Rapat Internal</option>
+              <option value="Eksternal" {{ $r->jenis_rapat == 'Eksternal' ? 'selected' : '' }}>Rapat Eksternal</option>
+            </select>
+          </div>
 
+          <div class="form-group">
+            <label>Lokasi (Kantor)</label>
+            <select name="lokasi" id="lokasiSelect{{ $r->id }}" class="form-control" required>
+              <option value="">-- Pilih Kantor --</option>
+              @foreach($kantor as $k)
+                <option value="{{ $k->nama_kantor }}"
+                        data-id="{{ $k->id }}"
+                        data-lat="{{ $k->latitude }}"
+                        data-lon="{{ $k->longitude }}"
+                        {{ $r->lokasi == $k->nama_kantor ? 'selected' : '' }}>
+                  {{ $k->nama_kantor }}
+                </option>
+              @endforeach
+            </select>
+          </div>
 
+          <div class="form-group">
+            <label>Ruangan</label>
+            <select name="ruangan_id" id="ruanganSelect{{ $r->id }}" class="form-control" data-selected="{{ $r->ruangan_id }}">
+              <option value="">-- Pilih Ruangan --</option>
+              {{-- opsi ruangan akan diisi via JS --}}
+            </select>
+          </div>
 
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label>Latitude</label>
+              <input type="text" name="latitude" id="latitude{{ $r->id }}"
+                     value="{{ $r->latitude }}" class="form-control" readonly>
+            </div>
+            <div class="form-group col-md-6">
+              <label>Longitude</label>
+              <input type="text" name="longitude" id="longitude{{ $r->id }}"
+                     value="{{ $r->longitude }}" class="form-control" readonly>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Radius (meter)</label>
+            <input type="number" name="radius" id="radius{{ $r->id }}"
+                   value="{{ $r->radius ?? 100 }}" class="form-control" readonly>
+          </div>
 
           <div class="form-group">
             <label>Jumlah Tamu</label>
@@ -175,63 +264,86 @@
 @endforeach
 @endsection
 
-@push('scripts')
-<!-- Leaflet CSS & JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+@push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  function bindLokasi(selectId, latId, lonId, ruanganSelectId, ruanganData) {
+    const select = document.getElementById(selectId);
+    const latInput = document.getElementById(latId);
+    const lonInput = document.getElementById(lonId);
+    const ruanganSelect = document.getElementById(ruanganSelectId);
 
-  function initMap(mapId, latInputId, lonInputId, radiusInputId, defaultLat = -6.9175, defaultLon = 107.6191) {
-    var latInput = document.getElementById(latInputId);
-    var lonInput = document.getElementById(lonInputId);
-    var radiusInput = document.getElementById(radiusInputId);
+    if (!select) return;
 
-    var lat = parseFloat(latInput?.value) || defaultLat;
-    var lon = parseFloat(lonInput?.value) || defaultLon;
-    var zoom = (latInput?.value && lonInput?.value) ? 16 : 13;
+    select.addEventListener('change', function() {
+      const option = this.options[this.selectedIndex];
+      latInput.value = option.getAttribute('data-lat') || '';
+      lonInput.value = option.getAttribute('data-lon') || '';
 
-    var map = L.map(mapId).setView([lat, lon], zoom);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    var marker, circle;
-
-    // Jika sudah ada koordinat lama → tampilkan marker & circle
-    if (latInput?.value && lonInput?.value) {
-      marker = L.marker([lat, lon]).addTo(map);
-      circle = L.circle([lat, lon], { radius: parseInt(radiusInput.value) || 100, color: 'blue', fillOpacity: 0.2 }).addTo(map);
-    }
-
-    // Event klik peta
-    map.on('click', function(e) {
-      if (marker) map.removeLayer(marker);
-      if (circle) map.removeLayer(circle);
-
-      marker = L.marker(e.latlng).addTo(map);
-      circle = L.circle(e.latlng, { radius: parseInt(radiusInput.value) || 100, color: 'blue', fillOpacity: 0.2 }).addTo(map);
-
-      latInput.value = e.latlng.lat.toFixed(6);
-      lonInput.value = e.latlng.lng.toFixed(6);
-    });
-
-    // Event ubah radius slider
-    radiusInput.addEventListener('input', function() {
-      if (circle && marker) {
-        circle.setRadius(parseInt(this.value));
+      // reset dropdown ruangan
+      if (ruanganSelect) {
+        ruanganSelect.innerHTML = '<option value="">-- Pilih Ruangan --</option>';
+        const kantorId = option.getAttribute('data-id');
+        if (kantorId && ruanganData[kantorId]) {
+          ruanganData[kantorId].forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = r.nama_ruangan;
+            ruanganSelect.appendChild(opt);
+          });
+        }
       }
     });
+
+    // trigger sekali kalau ada value awal
+    if (select.value) {
+      const option = select.options[select.selectedIndex];
+      latInput.value = option.getAttribute('data-lat') || '';
+      lonInput.value = option.getAttribute('data-lon') || '';
+
+      if (ruanganSelect) {
+        ruanganSelect.innerHTML = '<option value="">-- Pilih Ruangan --</option>';
+        const kantorId = option.getAttribute('data-id');
+        if (kantorId && ruanganData[kantorId]) {
+          ruanganData[kantorId].forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            opt.textContent = r.nama_ruangan;
+            // auto select jika ruangan sudah tersimpan
+            if (ruanganSelect.getAttribute('data-selected') == r.id) {
+              opt.selected = true;
+            }
+            ruanganSelect.appendChild(opt);
+          });
+        }
+      }
+    }
   }
 
-  // Auto inisialisasi semua map yang ada
-  document.querySelectorAll("[id^=map]").forEach(function(div) {
-    var mapId = div.id;
-    var suffix = mapId.replace("map", "");
-    initMap(mapId, "latitude"+suffix, "longitude"+suffix, "radius"+suffix);
-  });
+  // Data ruangan dari backend
+  const ruanganData = @json(
+    $kantor->mapWithKeys(fn($k) => [
+      $k->id => $k->ruangan->map(fn($r) => [
+        'id' => $r->id,
+        'nama_ruangan' => $r->nama_ruangan
+      ])
+    ])
+  );
 
+  // untuk create
+  bindLokasi('lokasiSelectCreate', 'latitudeCreate', 'longitudeCreate', 'ruanganSelectCreate', ruanganData);
+
+  // untuk edit (loop semua rapat)
+  @foreach($rapat as $r)
+    bindLokasi(
+      'lokasiSelect{{ $r->id }}',
+      'latitude{{ $r->id }}',
+      'longitude{{ $r->id }}',
+      'ruanganSelect{{ $r->id }}',
+      ruanganData
+    );
+  @endforeach
 });
 </script>
 @endpush

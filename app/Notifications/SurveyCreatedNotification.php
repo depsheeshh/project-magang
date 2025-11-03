@@ -26,9 +26,11 @@ class SurveyCreatedNotification extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'title' => 'Survey Baru',
-            'message' => "Survey '{$this->survey->judul}' baru saja dibuat.",
-            'url' => route('admin.surveys.index'),
+            'event'  => 'survey_baru', // ✅ penting, biar match dengan JS
+            'judul'  => $this->survey->judul ?? 'Survey',
+            'user'   => $this->survey->user->name ?? 'Peserta',
+            'waktu'  => now()->format('d-m-Y H:i'),
+            'url'    => route('admin.surveys.index'),
         ];
     }
 }

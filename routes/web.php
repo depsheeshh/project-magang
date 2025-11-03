@@ -5,6 +5,7 @@ use App\Http\Controllers\TamuController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\LoginController;
@@ -142,6 +143,11 @@ Route::middleware('auth',)->group(function () {
                 Route::delete('rapat/{rapat}/invitation/{invitation}', [RapatController::class, 'destroyInvitation'])
                     ->name('rapat.destroyInvitation');
 
+                 Route::post('rapat/{rapat}/invitation-instansi', [RapatController::class, 'storeInvitationInstansi'])
+                    ->name('rapat.storeInvitationInstansi');
+                Route::post('rapat/{rapat}/invite-all-instansi', [RapatController::class, 'inviteAllInstansi'])
+                    ->name('rapat.inviteAllInstansi');
+
                 // Export kehadiran
                 Route::get('rapat/{rapat}/export-kehadiran', [RapatController::class, 'exportKehadiran'])
                     ->name('rapat.export.csv');
@@ -162,6 +168,10 @@ Route::middleware('auth',)->group(function () {
                     ->name('rapat.undangan.store');
                 Route::delete('rapat/{rapat}/undangan/{invitation}', [RapatController::class, 'destroyInvitation'])
                     ->name('rapat.undangan.destroy');
+
+                Route::post('rapat/{rapat}/invite-all', [RapatController::class, 'inviteAll'])
+                    ->name('rapat.inviteAll');
+
 
                 // ✅ Tambahan menu Survey Tamu
                 Route::get('/surveys', [SurveyController::class, 'index'])
@@ -319,6 +329,9 @@ Route::middleware('auth',)->group(function () {
     Route::patch('/notifikasi/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::delete('/notifikasi/{id}', [NotificationController::class, 'destroy']);
     // Route::delete('/notifikasi/clear', [NotificationController::class, 'clearAll']);
+
+    Route::get('/ruangan/update-dipakai', [RuanganController::class, 'updateDipakai'])
+    ->name('ruangan.updateDipakai');
 
 
     // Logout

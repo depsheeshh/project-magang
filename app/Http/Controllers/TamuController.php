@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
 use App\Notifications\TamuBaruNotification;
+use App\Notifications\UserBaruNotification;
 
 class TamuController extends Controller
 {
@@ -79,6 +80,12 @@ class TamuController extends Controller
             'waktu_masuk' => now(),
             'status'      => 'menunggu',
         ]);
+
+
+        $admins = User::role('admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new UserBaruNotification($user, 'form_tamu'));
+            }
 
         // 🚩 Kirim notifikasi ke pegawai yang dituju
         $pegawai = Pegawai::with('user')->find($validated['pegawai_id']);

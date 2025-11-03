@@ -56,7 +56,7 @@
         @endforeach
       </tbody>
     </table>
-    {{ $pegawai->links() }}
+    {{ $pegawai->links('pagination::bootstrap-5') }}
   </div>
   </div>
 </div>

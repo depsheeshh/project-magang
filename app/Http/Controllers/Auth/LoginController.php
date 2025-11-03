@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
+use App\Notifications\UserBaruNotification;
 
 class LoginController extends Controller
 {
@@ -72,22 +73,32 @@ class LoginController extends Controller
     {
         $googleUser = Socialite::driver('google')->user();
 
-        $user = User::firstOrCreate(
-            ['email' => $googleUser->getEmail()],
-            [
-                'name' => $googleUser->getName(),
-                'password' => bcrypt(Str::random(16)),
-                'email_verified_at' => now(),
-            ]
-        );
+    // update kalau sudah ada, create kalau belum ada
+    $user = User::updateOrCreate(
+        ['email' => $googleUser->getEmail()],
+        [
+            'name'              => $googleUser->getName(),
+            'email_verified_at' => now(),
+            // password hanya diisi saat create baru
+            'password'          => bcrypt(Str::random(16)),
+        ]
+    );
 
-        Auth::login($user);
-
-        // Redirect setelah login via Google
-        if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
-            return redirect()->route('dashboard.index');
+    // 🚩 kalau user baru dibuat, kirim notifikasi ke admin
+    if ($user->wasRecentlyCreated) {
+        $admins = User::role('admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new UserBaruNotification($user, 'google'));
         }
+    }
 
-        return redirect()->route('home');
+    Auth::login($user);
+
+    // Redirect setelah login via Google
+    if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
+        return redirect()->route('dashboard.index');
+    }
+
+    return redirect()->route('home');
     }
 }

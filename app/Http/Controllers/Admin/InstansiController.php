@@ -20,11 +20,17 @@ class InstansiController extends Controller
         $request->validate([
             'nama_instansi' => 'required|string|max:255|unique:instansi,nama_instansi',
             'lokasi'        => 'nullable|string|max:255',
+            'alias'         => 'required|string|max:50',
+            'jenis'         => 'required|string|max:50',
+            'is_active'     => 'boolean',
         ]);
 
         Instansi::create([
             'nama_instansi' => $request->nama_instansi,
             'lokasi'        => $request->lokasi,
+            'alias'         => $request->alias,
+            'jenis'         => $request->jenis,
+            'is_active'     => $request->is_active ?? 1,
             'created_id'    => Auth::id(),
         ]);
 
@@ -37,11 +43,17 @@ class InstansiController extends Controller
         $request->validate([
             'nama_instansi' => 'required|string|max:255|unique:instansi,nama_instansi,'.$instansi->id,
             'lokasi'        => 'nullable|string|max:255',
+            'alias'         => 'required|string|max:50',
+            'jenis'         => 'required|string|max:50',
+            'is_active'     => 'boolean',
         ]);
 
         $instansi->update([
             'nama_instansi' => $request->nama_instansi,
             'lokasi'        => $request->lokasi,
+            'alias'         => $request->alias,
+            'jenis'         => $request->jenis,
+            'is_active'     => $request->is_active ?? 1,
             'updated_id'    => Auth::id(),
         ]);
 

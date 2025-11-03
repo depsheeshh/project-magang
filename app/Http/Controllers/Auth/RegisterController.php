@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\VerificationCodeMail;
+use App\Notifications\UserBaruNotification;
 
 class RegisterController extends Controller
 {
@@ -64,6 +65,12 @@ class RegisterController extends Controller
 
     // Kalau tetap mau login otomatis:
     Auth::login($user);
+
+    // 🚩 Kirim notifikasi ke semua admin
+    $admins = User::role('admin')->get();
+    foreach ($admins as $admin) {
+        $admin->notify(new UserBaruNotification($user, 'register'));
+    }
 
     return redirect()->route('verification.form')
         ->with('status','Registrasi berhasil! Silakan cek email untuk kode verifikasi.');

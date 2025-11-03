@@ -16,44 +16,57 @@
       <table class="table table-striped align-middle">
         <thead class="thead-dark">
             <tr>
-                <th>#</th>
-                <th>Nama Instansi</th>
-                <th>Alamat / Lokasi</th>
-                <th>Sumber</th>
-                <th>Aksi</th>
+            <th>#</th>
+            <th>Nama Instansi</th>
+            <th>Alias</th>
+            <th>Jenis</th>
+            <th>Alamat / Lokasi</th>
+            <th>Status</th>
+            <th>Sumber</th>
+            <th>Aksi</th>
             </tr>
-            </thead>
-            <tbody>
+        </thead>
+        <tbody>
             @forelse($instansi as $i)
-                <tr>
+            <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $i->nama_instansi }}</td>
+                <td>{{ $i->alias }}</td>
+                <td>{{ ucfirst($i->jenis) }}</td>
                 <td>{{ $i->lokasi ?? '-' }}</td>
                 <td>
-                    @if($i->creator && $i->creator->hasRole('admin'))
-                        <span class="badge badge-primary">Admin</span>
-                    @else
-                        <span class="badge badge-success">Peserta</span>
-                    @endif
+                @if($i->is_active)
+                    <span class="badge badge-success">Aktif</span>
+                @else
+                    <span class="badge badge-secondary">Nonaktif</span>
+                @endif
                 </td>
                 <td>
-                    <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editInstansiModal{{ $i->id }}">
+                @if($i->creator && $i->creator->hasRole('admin'))
+                    <span class="badge badge-primary">Admin</span>
+                @else
+                    <span class="badge badge-success">Peserta</span>
+                @endif
+                </td>
+                <td>
+                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editInstansiModal{{ $i->id }}">
                     <i class="fas fa-edit"></i>
-                    </button>
-                    <form action="{{ route('admin.instansi.destroy', $i->id) }}" method="POST" class="d-inline">
+                </button>
+                <form action="{{ route('admin.instansi.destroy', $i->id) }}" method="POST" class="d-inline">
                     @csrf @method('DELETE')
                     <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
-                        <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash"></i>
                     </button>
-                    </form>
+                </form>
                 </td>
-                </tr>
+            </tr>
             @empty
-                <tr><td colspan="5" class="text-center text-muted">Belum ada instansi</td></tr>
+            <tr><td colspan="8" class="text-center text-muted">Belum ada instansi</td></tr>
             @endforelse
-            </tbody>
-      </table>
-      {{ $instansi->links() }}
+        </tbody>
+        </table>
+
+      {{ $instansi->links('pagination::bootstrap-5') }}
     </div>
   </div>
 </div>
@@ -79,6 +92,25 @@
             <label>Alamat / Lokasi</label>
             <input type="text" name="lokasi" class="form-control">
           </div>
+          <div class="form-group mt-2">
+            <label>Alias</label>
+            <input type="text" name="alias" class="form-control" required>
+            </div>
+            <div class="form-group mt-2">
+            <label>Jenis</label>
+            <select name="jenis" class="form-control" required>
+                <option value="instansi">Instansi</option>
+                <option value="kelurahan">Kelurahan</option>
+                <option value="puskesmas">Puskesmas</option>
+            </select>
+            </div>
+            <div class="form-group mt-2">
+            <label>Status</label>
+            <select name="is_active" class="form-control">
+                <option value="1" selected>Aktif</option>
+                <option value="0">Nonaktif</option>
+            </select>
+            </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
@@ -109,6 +141,26 @@
             <label>Alamat / Lokasi</label>
             <input type="text" name="lokasi" class="form-control" value="{{ $i->lokasi }}">
           </div>
+          <div class="form-group mt-2">
+            <label>Alias</label>
+            <input type="text" name="alias" class="form-control" value="{{ $i->alias }}" required>
+            </div>
+            <div class="form-group mt-2">
+            <label>Jenis</label>
+            <select name="jenis" class="form-control" required>
+                <option value="instansi" {{ $i->jenis=='instansi'?'selected':'' }}>Instansi</option>
+                <option value="kelurahan" {{ $i->jenis=='kelurahan'?'selected':'' }}>Kelurahan</option>
+                <option value="puskesmas" {{ $i->jenis=='puskesmas'?'selected':'' }}>Puskesmas</option>
+            </select>
+            </div>
+            <div class="form-group mt-2">
+            <label>Status</label>
+            <select name="is_active" class="form-control">
+                <option value="1" {{ $i->is_active ? 'selected':'' }}>Aktif</option>
+                <option value="0" {{ !$i->is_active ? 'selected':'' }}>Nonaktif</option>
+            </select>
+            </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>

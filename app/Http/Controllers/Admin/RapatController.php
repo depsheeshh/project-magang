@@ -7,6 +7,8 @@ use App\Models\Rapat;
 use App\Models\User;
 use App\Models\RapatUndangan;
 use Illuminate\Support\Str;
+use App\Models\Kantor;
+use App\Models\Instansi;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
@@ -18,31 +20,38 @@ class RapatController extends Controller
 {
     public function index()
     {
-        $rapat = Rapat::latest()->paginate(10);
-        return view('admin.rapat.index', compact('rapat'));
+        $rapat  = Rapat::latest()->paginate(10);
+        $kantor = Kantor::with('ruangan')->get();
+        return view('admin.rapat.index', compact('rapat','kantor'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'judul'         => 'required|string|max:255',
-            'waktu_mulai'   => 'required|date',
+            'ruangan_id'    => 'required|exists:ruangan,id',
+            'waktu_mulai'   => 'required|date|after_or_equal:now',
             'waktu_selesai' => 'required|date|after:waktu_mulai',
-            'lokasi'        => 'nullable|string|max:255',
-            'latitude'      => 'nullable|numeric',
-            'longitude'     => 'nullable|numeric',
-            'radius'        => 'nullable|integer',
+            'jenis_rapat'   => 'required|string',
+            'lokasi'        => 'required|exists:kantor,nama_kantor',
             'jumlah_tamu'   => 'nullable|integer',
-        ]);
+        ], [
+        'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
+        'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
+    ]);
+
+        $kantor = Kantor::where('nama_kantor',$request->lokasi)->first();
 
         Rapat::create([
             'judul'        => $request->judul,
+            'ruangan_id'   => $request->ruangan_id,
+            'jenis_rapat' => $request->jenis_rapat,
             'waktu_mulai'  => $request->waktu_mulai,
             'waktu_selesai'=> $request->waktu_selesai,
-            'lokasi'       => $request->lokasi,
-            'latitude'     => $request->latitude,
-            'longitude'    => $request->longitude,
-            'radius'       => $request->radius ?? 100,
+            'lokasi'       => $kantor->nama_kantor,
+            'latitude'     => $kantor->latitude,
+            'longitude'    => $kantor->longitude,
+            'radius'       => 100,
             'jumlah_tamu'  => $request->jumlah_tamu,
             'created_id'   => Auth::id(),
         ]);
@@ -52,33 +61,57 @@ class RapatController extends Controller
 
     public function show(Rapat $rapat)
     {
-        $rapat->load(['undangan.user','undangan.instansi']);
-        $users = User::orderBy('name')->get();
+    // Generate QR token rapat jika belum ada
+        if (!$rapat->qr_token_hash) {
+            $token = (string) Str::uuid();
+            $rapat->fill([
+                'qr_token'      => $token,
+                'qr_token_hash' => hash('sha256', $token),
+            ])->save();
+        }
 
-        return view('admin.rapat.show', compact('rapat','users'));
+        // Eager load relasi undangan + user + pegawai + instansi
+        $rapat->load([
+            'undangan.user.pegawai.instansi',
+            'undangan.instansi'
+        ]);
+
+        // Semua user (untuk undangan internal)
+        $users = User::with('pegawai.instansi')->orderBy('name')->get();
+
+        // Semua instansi (untuk undangan eksternal)
+        $instansi = Instansi::orderBy('nama_instansi')->get();
+
+        return view('admin.rapat.show', compact('rapat','users','instansi'));
     }
 
     public function update(Request $request, Rapat $rapat)
     {
         $request->validate([
             'judul'         => 'required|string|max:255',
-            'waktu_mulai'   => 'required|date',
+            'ruangan_id' => 'required|exists:ruangan,id',
+            'waktu_mulai'   => 'required|date|after_or_equal:now',
             'waktu_selesai' => 'required|date|after:waktu_mulai',
-            'lokasi'        => 'nullable|string|max:255',
-            'latitude'      => 'nullable|numeric',
-            'longitude'     => 'nullable|numeric',
-            'radius'        => 'nullable|integer',
+            'jenis_rapat'   => 'required|string',
+            'lokasi'        => 'required|exists:kantor,nama_kantor',
             'jumlah_tamu'   => 'nullable|integer',
-        ]);
+        ], [
+        'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
+        'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
+    ]);
+
+        $kantor = Kantor::where('nama_kantor',$request->lokasi)->first();
 
         $rapat->update([
             'judul'        => $request->judul,
+            'ruangan_id'   => $request->ruangan_id,
+            'jenis_rapat' => $request->jenis_rapat,
             'waktu_mulai'  => $request->waktu_mulai,
             'waktu_selesai'=> $request->waktu_selesai,
-            'lokasi'       => $request->lokasi,
-            'latitude'     => $request->latitude,
-            'longitude'    => $request->longitude,
-            'radius'       => $request->radius ?? 100,
+            'lokasi'       => $kantor->nama_kantor,
+            'latitude'     => $kantor->latitude,
+            'longitude'    => $kantor->longitude,
+            'radius'       => 100,
             'jumlah_tamu'  => $request->jumlah_tamu,
             'updated_id'   => Auth::id(),
         ]);
@@ -159,6 +192,78 @@ class RapatController extends Controller
         ->with('success','Undangan berhasil dihapus & notifikasi dibersihkan.');
     }
 
+    public function storeInvitationInstansi(Request $request, Rapat $rapat)
+    {
+        $request->validate([
+            'instansi_id' => 'required|exists:instansi,id',
+        ]);
+
+        // Ambil semua user dari instansi tsb
+        $users = User::where('instansi_id', $request->instansi_id)->get();
+
+        if ($users->isEmpty()) {
+            return back()->with('warning', 'Tidak ada user pada instansi ini.');
+        }
+
+        foreach ($users as $user) {
+            // skip jika sudah ada undangan
+            if ($rapat->undangan()->where('user_id', $user->id)->exists()) {
+                continue;
+            }
+
+            $token = (string) Str::uuid();
+
+            $rapat->undangan()->create([
+                'user_id'            => $user->id,
+                'instansi_id'        => $request->instansi_id,
+                'checkin_token'      => $token,
+                'checkin_token_hash' => hash('sha256', $token),
+                'status_kehadiran'   => 'pending',
+                'created_id'         => Auth::id(),
+            ]);
+
+            // opsional: kirim notifikasi
+            if (method_exists($user, 'notify')) {
+                $user->notify(new RapatInvitationNotification($rapat));
+            }
+        }
+
+        return back()->with('success', 'Undangan instansi berhasil ditambahkan.');
+    }
+
+    public function inviteAllInstansi(Rapat $rapat)
+    {
+        $instansiList = Instansi::all();
+
+        foreach ($instansiList as $instansi) {
+            $users = User::where('instansi_id', $instansi->id)->get();
+
+            foreach ($users as $user) {
+                if ($rapat->undangan()->where('user_id', $user->id)->exists()) {
+                    continue;
+                }
+
+                $token = (string) Str::uuid();
+
+                $rapat->undangan()->create([
+                    'user_id'            => $user->id,
+                    'instansi_id'        => $instansi->id,
+                    'checkin_token'      => $token,
+                    'checkin_token_hash' => hash('sha256', $token),
+                    'status_kehadiran'   => 'pending',
+                    'created_id'         => Auth::id(),
+                ]);
+
+                if (method_exists($user, 'notify')) {
+                    $user->notify(new RapatInvitationNotification($rapat));
+                }
+            }
+        }
+
+        return back()->with('success', 'Semua instansi berhasil diundang.');
+    }
+
+
     public function exportKehadiran(Rapat $rapat)
     {
         $rapat->load(['undangan.user','undangan.instansi']);
@@ -171,7 +276,12 @@ class RapatController extends Controller
 
         $callback = function() use ($rapat) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Nama', 'Instansi Asal', 'Status', 'Checked In At', 'Lat', 'Lon', 'QR Scanned At']);
+            // ✅ Tambahkan kolom Checked Out At
+            fputcsv($handle, [
+                'Nama', 'Instansi Asal', 'Status',
+                'Checked In At', 'Checked Out At',
+                'Lat', 'Lon', 'QR Scanned At'
+            ]);
 
             foreach ($rapat->undangan as $u) {
                 fputcsv($handle, [
@@ -179,6 +289,7 @@ class RapatController extends Controller
                     $u->instansi->nama_instansi ?? '-',
                     $u->status_kehadiran,
                     optional($u->checked_in_at)->format('Y-m-d H:i:s'),
+                    optional($u->checked_out_at)->format('Y-m-d H:i:s'), // ✅ baru
                     $u->checkin_latitude,
                     $u->checkin_longitude,
                     optional($u->qr_scanned_at)->format('Y-m-d H:i:s'),
@@ -189,6 +300,7 @@ class RapatController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
 
     public function exportKehadiranPdf(Rapat $rapat)
     {
@@ -201,11 +313,14 @@ class RapatController extends Controller
         ];
 
         // Render view ke PDF
-        $pdf = Pdf::loadView('admin.rapat.kehadiran_pdf', $data);
+        // Pastikan view `admin.rapat.kehadiran_pdf` menampilkan kolom Checked Out At juga
+        $pdf = Pdf::loadView('admin.rapat.kehadiran_pdf', $data)
+                ->setPaper('a4', 'landscape');
 
         $filename = 'kehadiran_rapat_' . $rapat->id . '.pdf';
         return $pdf->download($filename);
     }
+
 
     public function endRapat(Rapat $rapat)
     {
@@ -266,6 +381,7 @@ class RapatController extends Controller
                 'status'  => ucfirst($r->status),
                 'total'   => $r->undangan->count(),
                 'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'selesai' => $r->undangan->where('status_kehadiran','selesai')->count(),
                 'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
                 'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
             ];
@@ -278,6 +394,7 @@ class RapatController extends Controller
                 'status'     => $request->status,
             ]);
     }
+
 
     public function exportRekapRapatPdf(Request $request)
     {
@@ -306,6 +423,7 @@ class RapatController extends Controller
                 'status'  => ucfirst($r->status),
                 'total'   => $r->undangan->count(),
                 'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'selesai' => $r->undangan->where('status_kehadiran','selesai')->count(),
                 'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
                 'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
             ];
@@ -315,6 +433,44 @@ class RapatController extends Controller
                 ->setPaper('a4', 'landscape');
 
         return $pdf->download('rekap_rapat.pdf');
+    }
+
+    public function inviteAll(Request $request, Rapat $rapat)
+    {
+        $request->validate([
+            'role' => 'nullable|string'
+        ]);
+
+        $query = User::query();
+
+        if ($request->filled('role')) {
+            $query->role($request->role); // pakai spatie/laravel-permission
+        }
+
+        $users = $query->get();
+
+        foreach ($users as $user) {
+            $exists = RapatUndangan::where('rapat_id', $rapat->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (!$exists) {
+                $token = (string) \Illuminate\Support\Str::uuid();
+                RapatUndangan::create([
+                    'rapat_id'           => $rapat->id,
+                    'user_id'            => $user->id,
+                    'checkin_token'      => $token,
+                    'checkin_token_hash' => hash('sha256', $token),
+                    'status_kehadiran'   => 'pending',
+                    'created_id'         => Auth::id(),
+                ]);
+
+                // opsional: kirim notifikasi
+                $user->notify(new RapatInvitationNotification($rapat));
+            }
+        }
+
+        return back()->with('success', 'Undangan massal berhasil ditambahkan.');
     }
 
 }

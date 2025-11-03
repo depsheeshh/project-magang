@@ -10,5 +10,11 @@ Artisan::command('inspire', function () {
 
 Schedule::command('kunjungan:auto-checkout')->everyMinute();
 Schedule::command('rapat:mark-absent')->hourly();
+
+// Jalankan command reminder tiap menit
+Schedule::command('rapat:reminder')->everyMinute();
+// Contoh lain: generate laporan tiap malam jam 23:00
+Schedule::command('rapat:generate-report')->dailyAt('23:00');
+Schedule::command('ruangan:update-dipakai')->everyMinute();
 // Schedule::command('rapat:end-auto')->everyFiveMinutes();
 

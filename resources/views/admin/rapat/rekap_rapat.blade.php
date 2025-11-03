@@ -59,7 +59,9 @@
           <th>Status</th>
           <th>Total Undangan</th>
           <th>Hadir</th>
+          <th>Selesai</th> {{-- ✅ kolom baru --}}
           <th>Tidak Hadir</th>
+          <th>Pending</th>
         </tr>
       </thead>
       <tbody>
@@ -72,10 +74,12 @@
           <td>{{ ucfirst($r['status']) }}</td>
           <td>{{ $r['total'] }}</td>
           <td><span class="badge badge-success">{{ $r['hadir'] }}</span></td>
+          <td><span class="badge badge-secondary">{{ $r['selesai'] ?? 0 }}</span></td> {{-- ✅ --}}
           <td><span class="badge badge-danger">{{ $r['tidak'] }}</span></td>
+          <td><span class="badge badge-warning text-dark">{{ $r['pending'] }}</span></td>
         </tr>
         @empty
-        <tr><td colspan="8" class="text-center">Tidak ada data rapat</td></tr>
+        <tr><td colspan="10" class="text-center">Tidak ada data rapat</td></tr>
         @endforelse
       </tbody>
     </table>
@@ -84,7 +88,7 @@
     {{-- Ringkasan total semua rapat --}}
     @if($rekap->count() > 0)
     <div class="row text-center mt-4">
-      <div class="col-md-3 mb-2">
+      <div class="col-md-2 mb-2">
         <div class="card bg-light">
           <div class="card-body">
             <h6 class="text-muted">Total Rapat</h6>
@@ -92,7 +96,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3 mb-2">
+      <div class="col-md-2 mb-2">
         <div class="card bg-light">
           <div class="card-body">
             <h6 class="text-muted">Total Undangan</h6>
@@ -100,7 +104,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3 mb-2">
+      <div class="col-md-2 mb-2">
         <div class="card bg-light">
           <div class="card-body">
             <h6 class="text-success">Total Hadir</h6>
@@ -108,11 +112,27 @@
           </div>
         </div>
       </div>
-      <div class="col-md-3 mb-2">
+      <div class="col-md-2 mb-2">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h6 class="text-secondary">Total Selesai</h6>
+            <h4 class="text-secondary mb-0">{{ $rekap->sum('selesai') }}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 mb-2">
         <div class="card bg-light">
           <div class="card-body">
             <h6 class="text-danger">Total Tidak Hadir</h6>
             <h4 class="text-danger mb-0">{{ $rekap->sum('tidak') }}</h4>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-2 mb-2">
+        <div class="card bg-light">
+          <div class="card-body">
+            <h6 class="text-warning">Total Pending</h6>
+            <h4 class="text-warning mb-0">{{ $rekap->sum('pending') }}</h4>
           </div>
         </div>
       </div>

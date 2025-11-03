@@ -16,7 +16,6 @@
 
     @page { size: A4 portrait; margin: 100px 40px 80px 40px; }
 
-    /* === HEADER / KOP === */
     header {
       text-align: center;
       border-bottom: 2px solid #000;
@@ -31,16 +30,12 @@
       width: 70px;
       height: 70px;
     }
-    .kop {
-      margin: 0 80px;
-      text-align: center;
-    }
+    .kop { margin: 0 80px; text-align: center; }
     .kop h1 { font-size: 18px; font-weight: bold; margin-bottom: 2px; text-transform: uppercase; }
     .kop h2 { font-size: 14px; margin: 0; text-transform: uppercase; }
     .kop p { font-size: 11px; margin: 1px 0; }
     .garis-tebal { border-bottom: 3px double #000; margin-top: 8px; }
 
-    /* === JUDUL & INFO RAPAT === */
     h2.judul {
       text-align: center;
       margin: 0;
@@ -60,7 +55,6 @@
     }
     .info strong { color: #1e3a8a; }
 
-    /* === TABLE === */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -75,7 +69,6 @@
     th { background-color: #f2f3f5; font-weight: 700; color: #111; }
     tr:nth-child(even) { background-color: #fafafa; }
 
-    /* === STATUS BADGE === */
     .status {
       padding: 4px 10px;
       border-radius: 6px;
@@ -85,10 +78,10 @@
       display: inline-block;
     }
     .hadir { background: #16a34a; }
+    .selesai { background: #6b7280; }   /* abu-abu */
     .tidak_hadir { background: #dc2626; }
     .pending { background: #facc15; color: #111827; }
 
-    /* === TTD === */
     .ttd-wrapper { page-break-inside: avoid; margin-top: 40px; }
     .ttd {
       width: 260px;
@@ -100,7 +93,6 @@
     .ttd .nama { margin-top: 60px; font-weight: bold; text-decoration: underline; }
     .ttd .jabatan { font-size: 11px; }
 
-    /* === FOOTER === */
     footer {
       position: fixed;
       bottom: -20px;
@@ -151,6 +143,7 @@
         <th>Instansi</th>
         <th>Status Kehadiran</th>
         <th>Waktu Check-in</th>
+        <th>Waktu Check-out</th> <!-- ✅ kolom baru -->
       </tr>
     </thead>
     <tbody>
@@ -164,11 +157,12 @@
             {{ ucfirst(str_replace('_',' ',$u->status_kehadiran)) }}
           </span>
         </td>
-        <td>{{ optional($u->checked_in_at)->format('d/m/Y H:i') ?? '-' }}</td>
+        <td>{{ $u->checked_in_at ? $u->checked_in_at->format('d/m/Y H:i') : '-' }}</td>
+        <td>{{ $u->checked_out_at ? $u->checked_out_at->format('d/m/Y H:i') : '-' }}</td> <!-- ✅ tampilkan checkout -->
       </tr>
       @empty
       <tr>
-        <td colspan="5" style="text-align:center;">Tidak ada data kehadiran</td>
+        <td colspan="6" style="text-align:center;">Tidak ada data kehadiran</td>
       </tr>
       @endforelse
     </tbody>

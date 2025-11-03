@@ -619,13 +619,6 @@ class RapatCheckinController extends Controller
             return back()->with('error','Anda belum melakukan check-in.');
         }
 
-        Log::info('Tamu checkout mandiri', [
-            'rapat_id' => $rapat->id,
-            'user_id' => $user->id,
-            'status_before' => $undangan->status_kehadiran,
-            'checked_out_at_before' => $undangan->checked_out_at,
-        ]);
-
         // Update status kehadiran jadi selesai
         $undangan->update([
             'status_kehadiran' => 'selesai',

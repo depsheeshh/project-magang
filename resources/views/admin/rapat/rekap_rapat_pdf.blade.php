@@ -140,7 +140,9 @@
         <th>Status</th>
         <th>Total Undangan</th>
         <th>Hadir</th>
+        <th>Selesai</th> {{-- ✅ kolom baru --}}
         <th>Tidak Hadir</th>
+        <th>Pending</th>
         <th>% Hadir</th>
       </tr>
     </thead>
@@ -158,14 +160,16 @@
         </td>
         <td>{{ $r['total'] }}</td>
         <td>{{ $r['hadir'] }}</td>
+        <td>{{ $r['selesai'] ?? 0 }}</td> {{-- ✅ --}}
         <td>{{ $r['tidak'] }}</td>
+        <td>{{ $r['pending'] }}</td>
         <td>
-          {{ $r['total'] > 0 ? round(($r['hadir'] / $r['total']) * 100, 1) . '%' : '-' }}
+          {{ $r['total'] > 0 ? round((($r['hadir'] + ($r['selesai'] ?? 0)) / $r['total']) * 100, 1) . '%' : '-' }}
         </td>
       </tr>
       @empty
       <tr>
-        <td colspan="9" style="text-align:center;">Tidak ada data rapat</td>
+        <td colspan="11" style="text-align:center;">Tidak ada data rapat</td>
       </tr>
       @endforelse
     </tbody>
@@ -173,7 +177,7 @@
 
   {{-- Ringkasan total --}}
   @if($rekap->count() > 0)
-  <table style="margin-top:20px; font-size:12px; width:50%; border-collapse:collapse;">
+  <table style="margin-top:20px; font-size:12px; width:60%; border-collapse:collapse;">
       <tr>
           <th style="border:1px solid #b5b5b5; padding:6px;">Total Rapat</th>
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->count() }}</td>
@@ -187,8 +191,16 @@
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('hadir') }}</td>
       </tr>
       <tr>
+          <th style="border:1px solid #b5b5b5; padding:6px;">Total Selesai</th>
+          <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('selesai') }}</td>
+      </tr>
+            <tr>
           <th style="border:1px solid #b5b5b5; padding:6px;">Total Tidak Hadir</th>
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('tidak') }}</td>
+      </tr>
+      <tr>
+          <th style="border:1px solid #b5b5b5; padding:6px;">Total Pending</th>
+          <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('pending') }}</td>
       </tr>
   </table>
   @endif
@@ -207,10 +219,10 @@
 
   <footer>
     Halaman <span class="page-number"></span>
-  <br>
-  <span style="font-size:9px; color:#999;">
-    Laporan ini dicetak otomatis dari Sistem Buku Tamu Digital
-  </span>
+    <br>
+    <span style="font-size:9px; color:#999;">
+      Laporan ini dicetak otomatis dari Sistem Buku Tamu Digital
+    </span>
   </footer>
 </body>
 </html>

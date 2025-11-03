@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             BidangSeeder::class,
             JabatanSeeder::class,
             InstansiSeeder::class,
+            KantorSeeder::class,
+            UserPegawaiSeeder::class,
+            RuanganSeeder::class,
         ]);
 
         // Buat user default admin

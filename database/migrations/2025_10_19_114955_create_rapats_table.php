@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('rapat', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('ruangan_id')->nullable();
             $table->string('judul');
             $table->dateTime('waktu_mulai');
             $table->dateTime('waktu_selesai');
@@ -24,6 +25,8 @@ return new class extends Migration
             $table->integer('radius')->default(100); // meter
 
             $table->integer('jumlah_tamu')->nullable();
+            $table->uuid('qr_token')->nullable();
+            $table->string('qr_token_hash')->nullable();
             $table->string('status')->default('berjalan');
 
             // Audit trail
@@ -34,6 +37,8 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
+
+            $table->foreign('ruangan_id')->references('id')->on('ruangan')->onDelete('set null');
         });
 
     }

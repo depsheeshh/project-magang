@@ -15,10 +15,14 @@ class Rapat extends Model
         'waktu_mulai',
         'waktu_selesai',
         'lokasi',
+        'ruangan_id',
         'latitude',
+        'jenis_rapat',
         'longitude',
         'radius',
         'jumlah_tamu',
+        'qr_token',
+        'qr_token_hash',
         'created_id',
         'updated_id',
         'deleted_id',
@@ -34,6 +38,12 @@ class Rapat extends Model
     {
         return $this->hasMany(RapatUndangan::class);
     }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class, 'ruangan_id');
+    }
+
 
     public function creator()
     {

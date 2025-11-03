@@ -198,6 +198,76 @@
         `;
       }
 
+     if (item.event === 'user_baru') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+                data-id="${item.id}" data-url="${item.url}">
+            <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width:38px;height:38px;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">User Baru Ditambahkan</div>
+                <div class="notif-sub small">
+                ${item.nama} (${item.email}) • via ${
+                    item.source === 'form_tamu' ? 'Form Tamu' :
+                    item.source === 'google' ? 'Google' : 'Register'
+                }
+                </div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
+
+
+
+      if (item.event === 'survey_pelayanan') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+                data-id="${item.id}" data-url="/admin/surveys">
+            <div class="notif-icon bg-purple text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width:38px;height:38px;">
+                <i class="fas fa-poll"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">Survey Pelayanan Baru</div>
+                <div class="notif-sub small">
+                ${(item.judul || 'Survey')} oleh ${(item.user || 'Peserta')}
+                </div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
+
+        if (item.event === 'rapat_undangan') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+                data-id="${item.id}" data-url="/pegawai/rapat/${item.rapat_id}">
+            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width:38px;height:38px;">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
+                <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
+
+
       // cek kalau event survey_baru → render khusus
         if (item.event === 'survey_baru') {
         return `
@@ -391,7 +461,9 @@
     // Fallback: kalau URL kosong/undefined (misal rapat dibatalkan), arahkan ke daftar rapat
     if (!url) {
         url = '/tamu/rapat/saya';
-    }
+    } else if (!url || url === 'undefined') {
+            url = '/admin/users';
+        }
 
     fetch(`/notifikasi/${id}/read`, {
       method: 'PATCH',
