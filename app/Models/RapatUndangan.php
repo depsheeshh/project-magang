@@ -14,13 +14,16 @@ class RapatUndangan extends Model
         'rapat_id',
         'user_id',
         'instansi_id',
+        'jabatan',
         'jumlah_peserta',
+        'rapat_undangan_instansi_id',
         'status_kehadiran',
         'checked_in_at',
         'checked_out_at',
         'checkin_latitude',
         'checkin_longitude',
         'checkin_distance',
+        'keterlambatan_menit',
         'checkin_token',
         'checkin_token_hash',
         'qr_scanned_at',
@@ -44,6 +47,17 @@ class RapatUndangan extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function undanganInstansi()
+    {
+        return $this->belongsTo(RapatUndanganInstansi::class, 'rapat_undangan_instansi_id');
+    }
+
+    public function peserta()
+    {
+        return $this->hasMany(RapatUndangan::class, 'rapat_undangan_instansi_id');
+    }
+
 
     public function instansi()
     {

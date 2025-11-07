@@ -1,3 +1,8 @@
+@php
+  $prefix = Auth::user()->hasRole('pegawai') ? 'pegawai' : 'admin';
+@endphp
+
+
 @extends('layouts.admin')
 
 @section('title','Detail Rapat')
@@ -13,7 +18,7 @@
 
     @if($rapat->jenis_rapat === 'Internal')
       {{-- Form undangan untuk pegawai DKIS --}}
-      <form action="{{ route('admin.rapat.storeInvitation', $rapat->id) }}" method="POST">
+      <form action="{{ route($prefix.'.rapat.storeInvitation', $rapat->id) }}" method="POST">
         @csrf
         <div class="form-row">
           <div class="col-md-8">
@@ -38,7 +43,7 @@
 
       <hr>
       {{-- Bulk invite semua pegawai --}}
-      <form action="{{ route('admin.rapat.inviteAll', $rapat->id) }}" method="POST">
+      <form action="{{ route($prefix.'.rapat.inviteAll', $rapat->id) }}" method="POST">
         @csrf
         <input type="hidden" name="role" value="pegawai">
         <button type="submit" class="btn btn-sm btn-success">
@@ -48,15 +53,14 @@
 
     @elseif($rapat->jenis_rapat === 'Eksternal')
         {{-- Form undangan untuk instansi --}}
-        <form action="{{ route('admin.rapat.storeInvitationInstansi', $rapat->id) }}" method="POST">
+        <form action="{{ route($prefix.'.rapat.storeInvitationInstansi', $rapat->id) }}" method="POST">
             @csrf
             <div class="form-row">
             <div class="col-md-8">
                 <select name="instansi_id" class="form-control" required>
                 <option value="">-- Pilih Instansi --</option>
                 @foreach($instansi as $i)
-                    {{-- pastikan instansi belum diundang --}}
-                    @if(!$rapat->undangan->where('instansi_id', $i->id)->count())
+                    @if(!$rapat->undanganInstansi->where('instansi_id', $i->id)->count())
                     <option value="{{ $i->id }}">{{ $i->nama_instansi }}</option>
                     @endif
                 @endforeach
@@ -72,7 +76,7 @@
 
         <hr>
         {{-- Bulk invite semua instansi --}}
-        <form action="{{ route('admin.rapat.inviteAllInstansi', $rapat->id) }}" method="POST">
+        <form action="{{ route($prefix.'.rapat.inviteAllInstansi', $rapat->id) }}" method="POST">
             @csrf
             <button type="submit" class="btn btn-sm btn-success">
             <i class="fas fa-university"></i> Tambahkan Semua Instansi
@@ -103,12 +107,14 @@
 
       <dt class="col-sm-3">Status</dt>
       <dd class="col-sm-9">
-        @if($rapat->status === 'selesai')
-          <span class="badge badge-success">Selesai</span>
+       @if($rapat->status === 'belum_dimulai')
+        <span class="badge badge-warning">Belum Dimulai</span>
         @elseif($rapat->status === 'berjalan')
-          <span class="badge badge-primary">Sedang Berjalan</span>
+        <span class="badge badge-primary">Sedang Berjalan</span>
+        @elseif($rapat->status === 'selesai')
+        <span class="badge badge-success">Selesai</span>
         @elseif($rapat->status === 'dibatalkan')
-          <span class="badge badge-secondary">Dibatalkan</span>
+        <span class="badge badge-secondary">Dibatalkan</span>
         @endif
       </dd>
 
@@ -125,24 +131,52 @@
         Radius: {{ $rapat->radius ?? '-' }} m
       </dd>
 
+
       <dt class="col-sm-3">Jumlah Tamu</dt>
-      <dd class="col-sm-9">{{ $rapat->jumlah_tamu ?? 0 }}</dd>
+      <dd class="col-sm-9">
+            {{ $rapat->jumlah_tamu ?? 0 }}
+            @php
+                $totalKuota = $rapat->undanganInstansi->sum('kuota');
+                $sisaKuota  = max(($rapat->jumlah_tamu ?? 0) - $totalKuota, 0);
+            @endphp
+            / sisa {{ $sisaKuota }}
+        </dd>
 
       <dt class="col-sm-3">QR Code Rapat</dt>
         <dd class="col-sm-9">
-        @if($rapat->qr_token_hash)
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)->generate($rapat->qr_token_hash) !!}
+        @if($rapat->qr_token_hash && $rapat->qr_token)
+            @if($rapat->jenis_rapat === 'Internal')
+                @php
+                $qrUrl = route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token]);
+            @endphp
+            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->margin(2)->generate($qrUrl) !!}
+            <p class="mt-2 text-muted">
+                Pegawai silakan scan QR ini untuk check-in rapat.<br>
+            </p>
+            @elseif($rapat->jenis_rapat === 'Eksternal')
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
+                    route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token])
+                ) !!}
+                <p class="mt-2 text-muted">Tamu eksternal silakan scan QR ini untuk check-in rapat.</p>
+                <a href="{{ route('admin.rapat.export.qrpdf', $rapat->id) }}" class="btn btn-info btn-sm mr-2">
+                    <i class="fas fa-qrcode"></i> Export QR PDF
+                </a>
+
+            @endif
         @else
             <span class="badge badge-warning">QR belum digenerate</span>
         @endif
         </dd>
 
+
+      <dt class="col-sm-3">Deskripsi</dt>
+      <dd class="col-sm-9">{{ $rapat->deskripsi ?? '-' }}</dd>
     </dl>
 
-    @hasanyrole('admin')
+    @hasanyrole(['admin', 'pegawai'])
       <div class="mt-3 d-flex">
         @if($rapat->status === 'berjalan')
-          <form action="{{ route('rapat.end', $rapat->id) }}" method="POST"
+          <form action="{{ route($prefix.'.rapat.end', $rapat->id) }}" method="POST"
             onsubmit="return confirm('Yakin ingin mengakhiri rapat ini sekarang? Semua peserta hadir akan ditandai selesai.')"
             class="d-inline">
             @csrf
@@ -153,10 +187,10 @@
           </form>
         @endif
 
-        <a href="{{ route('admin.rapat.export.csv', $rapat->id) }}" class="btn btn-success btn-sm mr-2">
+        <a href="{{ route($prefix.'.rapat.export.csv', $rapat->id) }}" class="btn btn-success btn-sm mr-2">
           <i class="fas fa-file-csv"></i> Export CSV
         </a>
-        <a href="{{ route('admin.rapat.export.pdf', $rapat->id) }}" class="btn btn-danger btn-sm">
+        <a href="{{ route($prefix.'.rapat.export.pdf', $rapat->id) }}" class="btn btn-danger btn-sm">
           <i class="fas fa-file-pdf"></i> Export PDF
         </a>
       </div>
@@ -223,81 +257,98 @@
 
 {{-- Daftar Undangan --}}
 <div class="card">
-    <div class="card-header">
-        <h4>Daftar Undangan</h4>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead>
-            <tr>
-                <th>#</th>
-                @if($rapat->jenis_rapat === 'Internal')
-                <th>Nama User</th>
-                <th>Instansi Asal</th>
-                @else
-                <th>Nama Instansi</th>
-                <th>Jumlah User</th>
-                @endif
-                <th>Status Kehadiran</th>
-                <th>Waktu Check-in</th>
-                <th>Waktu Check-out</th>
-                <th>Aksi</th>
-            </tr>
-            </thead>
-            <tbody>
+  <div class="card-header">
+    <h4>Daftar Undangan</h4>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            @if($rapat->jenis_rapat === 'Internal')
+              <th>Nama Tamu</th>
+              <th>Instansi Asal</th>
+              <th>Status Kehadiran</th>
+              <th>Check-in</th>
+              <th>Check-out</th>
+              <th>Aksi</th>
+            @else
+              <th>Nama Instansi</th>
+              <th>Kuota</th>
+              <th>Jumlah Hadir</th>
+              <th>Sisa Kuota</th>
+              <th>Aksi</th>
+            @endif
+          </tr>
+        </thead>
+        <tbody>
+          @if($rapat->jenis_rapat === 'Internal')
             @forelse($rapat->undangan as $undangan)
+              <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $undangan->user->name ?? '-' }}</td>
+                <td>{{ $undangan->user->instansi->nama_instansi ?? '-' }}</td>
+                <td>{{ ucfirst($undangan->status_kehadiran) }}</td>
+                <td>{{ $undangan->checked_in_at ?? '-' }}</td>
+                <td>{{ $undangan->checked_out_at ?? '-' }}</td>
+                <td>
+                  <form action="{{ route($prefix.'.rapat.destroyInvitation', [$rapat->id, $undangan->id]) }}" method="POST">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-sm">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            @empty
+              <tr><td colspan="7" class="text-center">Belum ada undangan</td></tr>
+            @endforelse
+                @else
+            @forelse($rapat->undanganInstansi as $undanganInstansi)
                 <tr>
                 <td>{{ $loop->iteration }}</td>
-
-                @if($rapat->jenis_rapat === 'Internal')
-                    <td>{{ $undangan->user->name ?? '-' }}</td>
-                    <td>{{ $undangan->user->pegawai->instansi->nama_instansi ?? '-' }}</td>
-                @else
-                    <td>{{ $undangan->instansi->nama_instansi ?? '-' }}</td>
-                    <td>{{ $undangan->instansi->users->count() ?? 0 }}</td>
-                @endif
-
+                <td>{{ $undanganInstansi->instansi->nama_instansi ?? '-' }}</td>
                 <td>
-                    @if($undangan->status_kehadiran === 'hadir')
-                    <span class="badge badge-success">Hadir</span>
-                    @elseif($undangan->status_kehadiran === 'selesai')
-                    <span class="badge badge-secondary">Selesai</span>
-                    @elseif($undangan->status_kehadiran === 'tidak_hadir')
-                    <span class="badge badge-danger">Tidak Hadir</span>
-                    @else
-                    <span class="badge badge-warning text-dark">Pending</span>
-                    @endif
+                    {{-- Form update kuota --}}
+                    <form action="{{ route($prefix.'.rapat.updateKuotaInstansi', [$rapat->id, $undanganInstansi->id]) }}"
+                        method="POST" class="d-flex align-items-center">
+                    @csrf @method('PATCH')
+                    <input type="number" name="kuota" value="{{ $undanganInstansi->kuota }}"
+                            class="form-control form-control-sm w-50 me-2" min="1">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-save"></i> Simpan
+                    </button>
+                    </form>
                 </td>
-
-                <td>{{ $undangan->checked_in_at ? $undangan->checked_in_at->format('d-m-Y H:i:s') : '-' }}</td>
+                <td>{{ $undanganInstansi->undangan()->where('status_kehadiran','hadir')->count() }}</td>
+                <td>{{ max(0, $undanganInstansi->kuota - $undanganInstansi->jumlah_hadir) }}</td>
                 <td>
-                    @if($undangan->checked_out_at)
-                    {{ $undangan->checked_out_at->format('d-m-Y H:i:s') }}
-                    @else
-                    <span class="text-muted">-</span>
-                    @endif
-                </td>
-                <td>
-                    <form action="{{ route('admin.rapat.destroyInvitation', [$rapat->id, $undangan->id]) }}" method="POST" onsubmit="return confirm('Hapus undangan ini?')">
+                    <a href="{{ route($prefix.'.rapat.detailTamuInstansi', [$rapat->id, $undanganInstansi->id]) }}"
+                        class="btn btn-info btn-sm">
+                        <i class="fas fa-users"></i> Detail Tamu
+                    </a>
+                    <form action="{{ route($prefix.'.rapat.destroyInvitationInstansi', [$rapat->id, $undanganInstansi->id]) }}"
+                        method="POST" onsubmit="return confirm('Hapus undangan instansi ini?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm">
                         <i class="fas fa-trash"></i>
                     </button>
                     </form>
+
                 </td>
                 </tr>
             @empty
-                <tr>
-                <td colspan="7" class="text-center">Belum ada undangan</td>
-                </tr>
+                <tr><td colspan="6" class="text-center">Belum ada instansi diundang</td></tr>
             @endforelse
-            </tbody>
-        </table>
-        </div>
+            @endif
+        </tbody>
+      </table>
     </div>
-    </div>
+  </div>
+</div>
 
 
-<a href="{{ route('admin.rapat.index') }}" class="btn btn-secondary mt-3">Kembali</a>
+
+<a href="{{ route($prefix.'.rapat.index') }}" class="btn btn-secondary mt-3">Kembali</a>
 @endsection

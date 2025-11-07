@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('rapat', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('ruangan_id')->nullable();
             $table->string('judul');
             $table->dateTime('waktu_mulai');
             $table->dateTime('waktu_selesai');
 
             // Lokasi rapat (geo-fencing)
             $table->string('lokasi')->nullable();
+            $table->foreignId('ruangan_id')
+            ->nullable()
+            ->constrained('ruangan')
+            ->nullOnDelete();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->integer('radius')->default(100); // meter
@@ -27,7 +30,7 @@ return new class extends Migration
             $table->integer('jumlah_tamu')->nullable();
             $table->uuid('qr_token')->nullable();
             $table->string('qr_token_hash')->nullable();
-            $table->string('status')->default('berjalan');
+            $table->string('status')->default('belum_dimulai');
 
             // Audit trail
             $table->unsignedBigInteger('created_id')->nullable();
@@ -38,7 +41,6 @@ return new class extends Migration
             $table->timestamp('updated_at')->nullable()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();
 
-            $table->foreign('ruangan_id')->references('id')->on('ruangan')->onDelete('set null');
         });
 
     }

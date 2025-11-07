@@ -107,7 +107,6 @@
 </head>
 
 <body id="page-top">
-  <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
 
   {{-- Navbar --}}
   <x-navbar />

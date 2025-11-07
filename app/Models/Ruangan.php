@@ -34,6 +34,44 @@ class Ruangan extends Model
         return $this->belongsTo(Kantor::class, 'id_kantor');
     }
 
+    public function rapat() {
+        return $this->hasMany(Rapat::class);
+    }
+
+    /**
+     * Cek apakah ruangan tersedia untuk periode tertentu
+     *
+     * @param  \Carbon\Carbon|string  $start
+     * @param  \Carbon\Carbon|string  $end
+     * @param  int|null $excludeRapatId
+     * @return bool
+     */
+    public function isAvailable($start, $end, $excludeRapatId = null)
+    {
+        return !$this->rapat()
+            ->when($excludeRapatId, fn($q) => $q->where('id','!=',$excludeRapatId))
+            ->where('status','!=','selesai')
+            ->where(function($q) use ($start,$end) {
+                $q->whereBetween('waktu_mulai', [$start,$end])
+                  ->orWhereBetween('waktu_selesai', [$start,$end])
+                  ->orWhere(function($q2) use ($start,$end) {
+                      $q2->where('waktu_mulai','<=',$start)
+                         ->where('waktu_selesai','>=',$end);
+                  });
+            })
+            ->exists();
+    }
+
+    // public function getDipakaiAttribute()
+    // {
+    //     return $this->rapat()
+    //         ->where('waktu_mulai', '<=', now())
+    //         ->where('waktu_selesai', '>=', now())
+    //         ->where('status', '!=', 'dibatalkan')
+    //         ->exists();
+    // }
+
+
     /**
      * Relasi ke user yang membuat
      */

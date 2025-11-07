@@ -17,7 +17,8 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->foreignId('instansi_id')->nullable()->constrained('instansi')->onDelete('cascade'); // asal peserta
 
-            $table->integer('jumlah_peserta')->default(1);
+            $table->string('jabatan')->nullable();
+
 
             // Status kehadiran
             $table->enum('status_kehadiran', ['pending','hadir','tidak_hadir','selesai'])->default('pending');
@@ -25,9 +26,11 @@ return new class extends Migration
             // Data check-in
             $table->timestamp('checked_in_at')->nullable();
             $table->timestamp('checked_out_at')->nullable();
+            $table->unsignedBigInteger('checked_in_by')->nullable();
             $table->decimal('checkin_latitude', 10, 7)->nullable();
             $table->decimal('checkin_longitude', 10, 7)->nullable();
             $table->integer('checkin_distance')->nullable();
+            $table->integer('keterlambatan_menit')->nullable();
 
             // QR Code check-in
             $table->string('checkin_token')->nullable()->unique();

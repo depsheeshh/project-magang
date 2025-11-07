@@ -2,14 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class RolePermissionSeeder extends Seeder
 {
-
     /**
      * Run the database seeds.
      */
@@ -18,8 +16,10 @@ class RolePermissionSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $roles = [
-            'admin' => Permission::all()->pluck('name')->toArray(), // full akses
+            // ✅ Admin full akses
+            'admin' => Permission::all()->pluck('name')->toArray(),
 
+            // ✅ Frontliner
             'frontliner' => [
                 'visits.view',
                 'visits.approve',
@@ -27,12 +27,21 @@ class RolePermissionSeeder extends Seeder
                 'visits.checkout',
             ],
 
+            // ✅ Pegawai
             'pegawai' => [
                 'pegawai.visits.view',
                 'pegawai.visits.details',
-                'pegawai.rapat.view'
+                'pegawai.rapat.view',
+
+                // Rapat & Instansi
+                'rapat.view',
+                'rapat.manage',
+                'rapat.invite',
+                'rapat.rekap',
+                'instansi.manage',
             ],
 
+            // ✅ Tamu
             'tamu' => [
                 'tamu.visits.view',
                 'tamu.visits.create',
@@ -42,10 +51,8 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($roles as $roleName => $permissions) {
-            $role = Role::where('name', $roleName)->first();
-            if ($role) {
-                $role->syncPermissions($permissions);
-            }
+            $role = Role::firstOrCreate(['name' => $roleName]);
+            $role->syncPermissions($permissions);
         }
     }
 }

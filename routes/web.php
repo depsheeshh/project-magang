@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\RapatController;
 use App\Http\Controllers\Admin\BidangController;
+use App\Http\Controllers\Admin\KantorController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RapatCheckinController;
 use App\Http\Controllers\Admin\JabatanController;
@@ -25,7 +26,10 @@ use App\Http\Controllers\Admin\SurveyLinkController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\RapatCheckinEksternalController;
+use App\Http\Controllers\Admin\RapatCheckinManualController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\RuanganController as AdminRuanganController;
 use App\Http\Controllers\Tamu\KunjunganController as TamuKunjunganController;
 use App\Http\Controllers\Frontliner\RapatController as FrontlinerRapatController;
 use App\Http\Controllers\Pegawai\KunjunganController as PegawaiKunjunganController;
@@ -58,6 +62,19 @@ Route::prefix('tamu')->name('tamu.')->group(function () {
     Route::get('/get-pegawai/{bidangId}', [TamuController::class, 'getPegawaiByBidang'])
         ->name('getPegawai');
 
+    // Scan QR rapat eksternal
+    Route::get('rapat/scan', fn () => view('tamu.rapat.scan'))->name('rapat.scan');
+
+    // ✅ Rapat eksternal (PUBLIC, tanpa login)
+    Route::get('rapat/{rapat}/checkin/{token}', [RapatCheckinEksternalController::class, 'showForm'])
+        ->name('rapat.checkin.form');
+    Route::post('rapat/{rapat}/checkin/{token}', [RapatCheckinEksternalController::class, 'checkin'])
+        ->name('rapat.checkin');
+    Route::get('rapat/checkin-success', fn () => view('tamu.rapat.checkin_success'))
+        ->name('rapat.checkin.success');
+    // Checkout eksternal (setelah auto login)
+    Route::post('rapat/{rapat}/checkout', [RapatCheckinEksternalController::class, 'checkout'])
+        ->name('rapat.checkout');
 });
 
 Route::middleware(['auth','role:admin|frontliner'])->group(function () {
@@ -132,10 +149,16 @@ Route::middleware('auth',)->group(function () {
                     ->name('rapat.rekap.pdf');
 
                 Route::resource('rapat', RapatController::class)->except(['create','edit']);
+                Route::resource('kantor', KantorController::class)->except(['create','edit','show']);
+                Route::resource('ruangan', AdminRuanganController::class)->except(['create','edit','show']);
+
 
 
                 Route::get('rapat/{rapat}/export-pdf', [RapatController::class, 'exportKehadiranPdf'])
                 ->name('rapat.export.pdf');
+                Route::get('rapat/{rapat}/export/qr-pdf', [RapatController::class, 'exportQrPdf'])
+                ->name('rapat.export.qrpdf');
+
 
                 // Undangan rapat
                 Route::post('rapat/{rapat}/invitation', [RapatController::class, 'storeInvitation'])
@@ -143,17 +166,47 @@ Route::middleware('auth',)->group(function () {
                 Route::delete('rapat/{rapat}/invitation/{invitation}', [RapatController::class, 'destroyInvitation'])
                     ->name('rapat.destroyInvitation');
 
-                 Route::post('rapat/{rapat}/invitation-instansi', [RapatController::class, 'storeInvitationInstansi'])
+                Route::post('rapat/{rapat}/invitation-instansi', [RapatController::class, 'storeInvitationInstansi'])
                     ->name('rapat.storeInvitationInstansi');
                 Route::post('rapat/{rapat}/invite-all-instansi', [RapatController::class, 'inviteAllInstansi'])
                     ->name('rapat.inviteAllInstansi');
+                Route::patch('rapat/{rapat}/invitation-instansi/{undanganInstansi}/kuota',
+                    [RapatController::class, 'updateKuotaInstansi'])
+                    ->name('rapat.updateKuotaInstansi');
+                Route::delete('rapat/{rapat}/invitation-instansi/{undanganInstansi}',
+                [RapatController::class, 'destroyInvitationInstansi'])
+                ->name('rapat.destroyInvitationInstansi');
+
+                // Manajemen undangan (tetap manual karena bukan resource standar)
+                Route::post('rapat/{rapat}/undangan', [RapatController::class, 'storeInvitation'])
+                    ->name('rapat.undangan.store');
+                Route::delete('rapat/{rapat}/undangan/{invitation}', [RapatController::class, 'destroyInvitation'])
+                    ->name('rapat.undangan.destroy');
+                Route::post('rapat/{rapat}/invite-all', [RapatController::class, 'inviteAll'])
+                    ->name('rapat.inviteAll');
+                Route::get('rapat/{rapat}/instansi/{undanganInstansi}/tamu',
+                    [RapatController::class, 'detailTamuInstansi'])
+                    ->name('rapat.detailTamuInstansi');
+                Route::delete('rapat/{rapat}/instansi/{undanganInstansi}/tamu/{undangan}',
+                [RapatController::class, 'destroyTamuInstansi'])
+                ->name('rapat.destroyTamuInstansi');
+                Route::patch('rapat/{rapat}/end', [RapatController::class, 'endRapat'])->name('rapat.end');
+
+                // Checkin manual lewat admin
+                Route::get('rapat/{rapat}/checkin-manual', [RapatCheckinManualController::class, 'index'])
+                    ->name('rapat.peserta.index');
+                Route::post('rapat/{rapat}/peserta', [RapatCheckinManualController::class, 'storePeserta'])
+                    ->name('rapat.peserta.store');
+                Route::put('rapat/{rapat}/peserta/{undangan}', [RapatCheckinManualController::class, 'updatePeserta'])
+                    ->name('rapat.peserta.update');
+                Route::patch('rapat/{rapat}/peserta/{undangan}/checkin', [RapatCheckinManualController::class, 'checkinPeserta'])
+                    ->name('rapat.peserta.checkin');
+                Route::patch('rapat/{rapat}/peserta/{undangan}/checkout', [RapatCheckinManualController::class, 'checkoutPeserta'])
+                    ->name('rapat.peserta.checkout');
 
                 // Export kehadiran
                 Route::get('rapat/{rapat}/export-kehadiran', [RapatController::class, 'exportKehadiran'])
                     ->name('rapat.export.csv');
-
-
-
 
                 // Export PDF
                 Route::get('/laporan/cetak', [LaporanController::class, 'cetakPdf'])
@@ -162,16 +215,6 @@ Route::middleware('auth',)->group(function () {
 
                 Route::resource('/history_logs', HistoryLogController::class)
                     ->only(['index','show']);
-
-                    // Manajemen undangan (tetap manual karena bukan resource standar)
-                Route::post('rapat/{rapat}/undangan', [RapatController::class, 'storeInvitation'])
-                    ->name('rapat.undangan.store');
-                Route::delete('rapat/{rapat}/undangan/{invitation}', [RapatController::class, 'destroyInvitation'])
-                    ->name('rapat.undangan.destroy');
-
-                Route::post('rapat/{rapat}/invite-all', [RapatController::class, 'inviteAll'])
-                    ->name('rapat.inviteAll');
-
 
                 // ✅ Tambahan menu Survey Tamu
                 Route::get('/surveys', [SurveyController::class, 'index'])
@@ -226,31 +269,69 @@ Route::middleware('auth',)->group(function () {
                 ->prefix('pegawai')
                 ->name('pegawai.')
                 ->group(function () {
-                    // ✅ Agenda Rapat Saya
-                    Route::get('/rapat-saya', [RapatCheckinController::class, 'agendaPegawai'])
-                        ->name('rapat.index');
 
-                    Route::get('/rapat/{rapat}', [RapatCheckinController::class, 'showPegawai'])
-                        ->name('rapat.show');
-
-                    // Manual check-in khusus pegawai
-                    Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'pegawaiCheckin'])
-                        ->name('rapat.checkin');
-
-                    // QR check-in khusus pegawai (pakai buffer radius)
-                    Route::middleware('throttle:10,1')->get('/rapat/checkin/{token}', [RapatCheckinController::class, 'pegawaiCheckinByToken'])
-                        ->name('rapat.checkin.token');
-
-                    // Checkout pegawai (kalau belum ada, buat methodnya serupa)
-                    Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'pegawaiCheckout'])
-                        ->name('rapat.checkout');
-
+                    // ✅ Kunjungan (tidak diubah, tetap jalan)
                     Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
                         Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
                         Route::get('/notifikasi', [PegawaiKunjunganController::class, 'notifikasi'])->name('notifikasi');
                         Route::post('/{kunjungan}/konfirmasi', [PegawaiKunjunganController::class, 'konfirmasi'])->name('konfirmasi');
+                    });
+
+                    // ✅ Agenda Rapat Saya (tetap sederhana, tidak bentrok)
+                    Route::get('/rapat-saya', [RapatCheckinController::class, 'agendaPegawai'])->name('rapat.saya');
+                    Route::get('/rapat/scan', fn() => view('pegawai.rapat.scan'))->name('rapat.scan');
+
+                    // Rekap Rapat (role Pegawai)
+                    Route::get('rapat/rekap', [RapatController::class, 'rekapRapat'])->name('rapat.rekap');
+                    Route::get('rapat/rekap/pdf', [RapatController::class, 'exportRekapRapatPdf'])->name('rapat.rekap.pdf');
+                    // ✅ Show detail rapat (khusus pegawai)
+                    Route::get('/rapat/{rapat}/detail', [RapatCheckinController::class, 'showPegawai'])
+                        ->name('rapat.detail');
+
+                    // ✅ Check-in / Checkout
+                    Route::post('/rapat/{rapat}/checkin/{token}', [RapatCheckinController::class, 'checkinByRapatToken'])
+                        ->name('rapat.checkin.token');
+                    Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'pegawaiCheckout'])
+                        ->name('rapat.checkout');
+
+                    // ✅ Rapat (CRUD + checkin manual + end rapat)
+
+                    Route::resource('rapat', RapatController::class)->except(['create','edit']);
+                    Route::get('rapat/{rapat}/export-pdf', [RapatController::class, 'exportKehadiranPdf'])->name('rapat.export.pdf');
+                    Route::get('rapat/{rapat}/export/qr-pdf', [RapatController::class, 'exportQrPdf'])->name('rapat.export.qrpdf');
+                    Route::get('rapat/{rapat}/checkin-manual', [RapatCheckinManualController::class, 'index'])->name('rapat.peserta.index');
+                    Route::post('rapat/{rapat}/peserta', [RapatCheckinManualController::class, 'storePeserta'])->name('rapat.peserta.store');
+                    Route::put('rapat/{rapat}/peserta/{undangan}', [RapatCheckinManualController::class, 'updatePeserta'])->name('rapat.peserta.update');
+                    Route::patch('rapat/{rapat}/peserta/{undangan}/checkin', [RapatCheckinManualController::class, 'checkinPeserta'])->name('rapat.peserta.checkin');
+                    Route::patch('rapat/{rapat}/peserta/{undangan}/checkout', [RapatCheckinManualController::class, 'checkoutPeserta'])->name('rapat.peserta.checkout');
+
+                    // ✅ Undangan rapat internal/eksternal
+                    Route::post('rapat/{rapat}/invitation', [RapatController::class, 'storeInvitation'])->name('rapat.storeInvitation');
+                    Route::delete('rapat/{rapat}/invitation/{invitation}', [RapatController::class, 'destroyInvitation'])->name('rapat.destroyInvitation');
+                    Route::post('rapat/{rapat}/invite-all', [RapatController::class, 'inviteAll'])->name('rapat.inviteAll');
+
+                    Route::post('rapat/{rapat}/invitation-instansi', [RapatController::class, 'storeInvitationInstansi'])->name('rapat.storeInvitationInstansi');
+                    Route::post('rapat/{rapat}/invite-all-instansi', [RapatController::class, 'inviteAllInstansi'])->name('rapat.inviteAllInstansi');
+                    Route::patch('rapat/{rapat}/invitation-instansi/{undanganInstansi}/kuota', [RapatController::class, 'updateKuotaInstansi'])->name('rapat.updateKuotaInstansi');
+                    Route::delete('rapat/{rapat}/invitation-instansi/{undanganInstansi}', [RapatController::class, 'destroyInvitationInstansi'])->name('rapat.destroyInvitationInstansi');
+
+                    Route::get('rapat/{rapat}/instansi/{undanganInstansi}/tamu', [RapatController::class, 'detailTamuInstansi'])->name('rapat.detailTamuInstansi');
+                    Route::delete('rapat/{rapat}/instansi/{undanganInstansi}/tamu/{undangan}', [RapatController::class, 'destroyTamuInstansi'])->name('rapat.destroyTamuInstansi');
+                    Route::patch('rapat/{rapat}/end', [RapatController::class, 'endRapat'])->name('rapat.end');
+                    Route::get('rapat/{rapat}/export-kehadiran', [RapatController::class, 'exportKehadiran'])->name('rapat.export.csv');
+
+                    // ✅ Instansi (CRUD + search)
+                    Route::resource('instansi', InstansiController::class)->except(['create','edit']);
+                    Route::get('instansi/search', [InstansiController::class, 'search'])->name('instansi.search');
+
+                    // ✅ Kantor (CRUD)
+                    Route::resource('kantor', KantorController::class)->except(['create','edit','show']);
+
+                    // ✅ Ruangan (CRUD)
+                    Route::resource('ruangan', AdminRuanganController::class)->except(['create','edit','show']);
+
                 });
-                });
+
 
 
         Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
@@ -268,28 +349,16 @@ Route::middleware('auth',)->group(function () {
                 ->name('kunjungan.survey.store');
 
             // Daftar rapat saya
-            Route::get('/rapat-saya', [RapatCheckinController::class, 'index'])
-                ->name('rapat.saya');
-
-            Route::get('rapat/{rapat}', [RapatCheckinController::class, 'show'])
-            ->name('rapat.show');
-
-
-            // Aksi check-in manual
-            Route::post('/rapat/{rapat}/checkin', [RapatCheckinController::class, 'checkin'])
-                ->name('rapat.checkin');
+             Route::get('/rapat-saya', [RapatCheckinController::class, 'index'])->name('rapat.saya');
+            Route::get('rapat/{rapat}', [RapatCheckinController::class, 'show'])->name('rapat.show');
+            // manual check-in internal tamu (beda dengan eksternal)
 
             // Aksi checkout manual tamu
             Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'tamuCheckout'])
                 ->name('rapat.checkout');
 
             // Aksi check-in via QR token (dibatasi 10x per menit)
-            Route::middleware('throttle:10,1')->get('/checkin/{token}', [RapatCheckinController::class, 'checkinByToken'])
-                ->name('rapat.checkin.token');
-            Route::get('rapat/{rapat}/checkin-form', [RapatCheckinController::class, 'checkinForm'])->name('rapat.checkin.form');
             Route::post('rapat/store-instansi', [RapatCheckinController::class, 'storeInstansi'])->name('rapat.storeInstansi');
-            Route::post('rapat/update-instansi', [RapatCheckinController::class, 'updateInstansi'])
-            ->name('rapat.updateInstansi');
 
 
             // API untuk autocomplete: hanya instansi yang dibuat oleh admin
@@ -320,9 +389,9 @@ Route::middleware('auth',)->group(function () {
             ->middleware(['auth','role:frontliner'])
             ->name('kunjungan.checkout');
 
-            Route::patch('/admin/rapat/{rapat}/end', [RapatController::class, 'endRapat'])
-            ->name('rapat.end')
-            ->middleware(['role:admin']);
+            // Route::patch('/admin/rapat/{rapat}/end', [RapatController::class, 'endRapat'])
+            // ->name('rapat.end')
+            // ->middleware(['role:admin']);
     });
 
     Route::get('/notifikasi', [NotificationController::class, 'index']);

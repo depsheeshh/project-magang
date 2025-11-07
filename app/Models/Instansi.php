@@ -27,6 +27,12 @@ class Instansi extends Model
         return $this->hasMany(RapatUndangan::class);
     }
 
+    public function undanganRapat()
+    {
+        return $this->hasMany(RapatUndanganInstansi::class);
+    }
+
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_id');

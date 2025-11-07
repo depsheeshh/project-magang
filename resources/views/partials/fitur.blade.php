@@ -1,5 +1,5 @@
 <section id="fitur" class="py-5 position-relative overflow-hidden"
-  style="background: linear-gradient(180deg, #081021 0%, #040b18 100%);
+  style="background: linear-gradient(180deg, #0d2456 0%, #040b18 100%);
          color: #e2e8f0;">
 
   <!-- 🔮 Background partikel neon seperti hero -->

@@ -44,6 +44,34 @@ class Rapat extends Model
         return $this->belongsTo(Ruangan::class, 'ruangan_id');
     }
 
+    public function undanganInstansi()
+    {
+        return $this->hasMany(RapatUndanganInstansi::class);
+    }
+
+    public function getStatusLabelAttribute()
+    {
+        if ($this->status === 'dibatalkan') {
+            return 'dibatalkan';
+        }
+
+        $now = now();
+
+        if ($now->lt($this->waktu_mulai)) {
+            return 'belum_dimulai';
+        }
+
+        if ($now->between($this->waktu_mulai, $this->waktu_selesai)) {
+            return 'berjalan';
+        }
+
+        if ($now->gt($this->waktu_selesai)) {
+            return 'selesai';
+        }
+
+        return $this->status; // fallback
+    }
+
 
     public function creator()
     {

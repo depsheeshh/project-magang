@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 
@@ -13,7 +12,7 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-         $permissions = [
+        $permissions = [
             // User Management
             'users.view',
             'users.create',
@@ -82,8 +81,12 @@ class PermissionSeeder extends Seeder
             'surveys.view',
             'surveys.delete',
 
-            // Rapat
+            // ✅ Rapat & Instansi
             'rapat.view',
+            'rapat.manage',   // CRUD rapat
+            'rapat.invite',   // kelola undangan instansi
+            'rapat.rekap',    // akses rekap & export
+            'instansi.manage' // kelola data instansi
         ];
 
         foreach ($permissions as $permission) {

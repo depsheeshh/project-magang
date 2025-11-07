@@ -63,6 +63,9 @@
           <a href="{{ route('tamu.scan') }}" class="btn-cta btn-cta-primary">
             <i class="fas fa-book me-2"></i> Isi Buku Tamu
           </a>
+          <a href="{{ route('tamu.rapat.scan') }}" class="btn-cta btn-cta-energetic">
+            <i class="fas fa-qrcode me-2"></i> Check-in Rapat Eksternal
+        </a>
           <a href="{{ route('login') }}" class="btn-cta btn-cta-outline">
             <i class="fas fa-sign-in-alt me-2"></i> Login
           </a>
@@ -75,7 +78,7 @@
     /* === Layout & Background === */
     .hero-section {
       position: relative;
-      background: linear-gradient(180deg, #02173f, #081021 85%);
+      background: linear-gradient(180deg, #043ca4, #0d2456 85%);
       min-height: 100vh;
       display: flex;
       align-items: center;

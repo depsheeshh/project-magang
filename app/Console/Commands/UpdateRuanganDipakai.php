@@ -27,11 +27,7 @@ class UpdateRuanganDipakai extends Command
             ->filter()
             ->unique();
 
-            $sql = Rapat::where('waktu_mulai', '<=', $now)
-                ->where('waktu_selesai', '>=', $now)
-                ->toSql();
 
-            dd($sql);
 
         // Ambil semua ruangan beserta status sekarang
         $allRuangan = Ruangan::select('id', 'dipakai')->get();

@@ -9,8 +9,7 @@
     <h4>{{ $rapat->judul }}</h4>
   </div>
   <div class="card-body">
-    <p>
-      <strong>Waktu:</strong>
+    <p><strong>Waktu:</strong>
       {{ \Carbon\Carbon::parse($rapat->waktu_mulai)->format('d/m/Y H:i') }}
       s/d
       {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}
@@ -31,39 +30,23 @@
       @endif
     </p>
 
-    {{-- Tombol aksi --}}
+    {{-- Instruksi check-in --}}
     @if($undangan->status_kehadiran === null || $undangan->status_kehadiran === 'pending')
-      <form action="{{ route('pegawai.rapat.checkin',$rapat->id) }}" method="POST">
+      <p class="text-muted">
+        Untuk check-in, silakan <strong>scan QR code rapat</strong> yang ditampilkan oleh admin di lokasi rapat.
+      </p>
+    @elseif($undangan->status_kehadiran === 'hadir')
+      <form action="{{ route('pegawai.rapat.checkout',$rapat->id) }}" method="POST">
         @csrf
-        <input type="hidden" name="latitude" id="latitude">
-        <input type="hidden" name="longitude" id="longitude">
-        <button type="submit" class="btn btn-success">
-          <i class="fas fa-sign-in-alt"></i> Check-in Sekarang
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-sign-out-alt"></i> Check-out
         </button>
       </form>
-    @elseif($undangan->status_kehadiran === 'hadir')
-        <form action="{{ route('pegawai.rapat.checkout',$rapat->id) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-danger">
-                <i class="fas fa-sign-out-alt"></i> Check-out
-            </button>
-        </form>
     @endif
-
 
     <a href="{{ route('pegawai.rapat.index') }}" class="btn btn-secondary mt-3">
       <i class="fas fa-arrow-left"></i> Kembali
     </a>
   </div>
 </div>
-
-{{-- Script ambil lokasi --}}
-<script>
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    document.getElementById('latitude').value = pos.coords.latitude;
-    document.getElementById('longitude').value = pos.coords.longitude;
-  });
-}
-</script>
 @endsection

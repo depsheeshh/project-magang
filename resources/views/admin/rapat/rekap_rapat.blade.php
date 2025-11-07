@@ -1,3 +1,7 @@
+@php
+  $prefix = Auth::user()->hasRole('pegawai') ? 'pegawai' : 'admin';
+@endphp
+
 @extends('layouts.admin')
 
 @section('title','Rekap Rapat')
@@ -8,23 +12,23 @@
   <div class="card-header d-flex justify-content-between align-items-center">
     <h4>Rekap Rapat</h4>
     {{-- Tombol Export PDF --}}
-    <a href="{{ route('admin.rapat.rekap.pdf', request()->all()) }}"
+    <a href="{{ route($prefix.'.rapat.rekap.pdf', request()->all()) }}"
        class="btn btn-danger btn-sm">
       <i class="fas fa-file-pdf"></i> Export PDF
     </a>
   </div>
   <div class="card-body">
     {{-- Form Filter --}}
-    <form method="GET" action="{{ route('admin.rapat.rekap') }}" class="mb-3">
+    <form method="GET" action="{{ route($prefix.'.rapat.rekap') }}" class="mb-3">
       <div class="form-row">
         <div class="col-md-3">
           <label for="start_date">Tanggal Mulai</label>
-          <input type="date" name="start_date" id="start_date"
+          <input type="datetime-local" name="start_date" id="start_date"
                  value="{{ request('start_date') }}" class="form-control">
         </div>
         <div class="col-md-3">
           <label for="end_date">Tanggal Selesai</label>
-          <input type="date" name="end_date" id="end_date"
+          <input type="datetime-local" name="end_date" id="end_date"
                  value="{{ request('end_date') }}" class="form-control">
         </div>
         <div class="col-md-3">
@@ -40,7 +44,7 @@
           <button type="submit" class="btn btn-primary mr-2">
             <i class="fas fa-filter"></i> Filter
           </button>
-          <a href="{{ route('admin.rapat.rekap') }}" class="btn btn-secondary">
+          <a href="{{ route($prefix.'.rapat.rekap') }}" class="btn btn-secondary">
             Reset
           </a>
         </div>
@@ -71,7 +75,19 @@
           <td>{{ $r['judul'] }}</td>
           <td>{{ $r['waktu'] }}</td>
           <td>{{ $r['lokasi'] }}</td>
-          <td>{{ ucfirst($r['status']) }}</td>
+          <td class="text-center">
+                @if($r['status'] === 'Belum_dimulai' || $r['status'] === 'Belum Dimulai')
+                    <span class="badge badge-warning">Belum Dimulai</span>
+                @elseif($r['status'] === 'Berjalan' || $r['status'] === 'berjalan')
+                    <span class="badge badge-primary">Sedang Berjalan</span>
+                @elseif($r['status'] === 'Selesai' || $r['status'] === 'selesai')
+                    <span class="badge badge-success">Selesai</span>
+                @elseif($r['status'] === 'Dibatalkan' || $r['status'] === 'dibatalkan')
+                    <span class="badge badge-secondary">Dibatalkan</span>
+                @else
+                    <span class="badge badge-light">{{ ucfirst($r['status']) }}</span>
+                @endif
+            </td>
           <td>{{ $r['total'] }}</td>
           <td><span class="badge badge-success">{{ $r['hadir'] }}</span></td>
           <td><span class="badge badge-secondary">{{ $r['selesai'] ?? 0 }}</span></td> {{-- ✅ --}}

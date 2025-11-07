@@ -1,5 +1,5 @@
 <section id="tentang" class="py-5 position-relative overflow-hidden"
-  style="background: linear-gradient(180deg, #030814 0%, #01030a 100%);
+  style="background: linear-gradient(180deg, #030814 0%, #021041 100%);
          color: #e2e8f0;">
 
   <!-- Canvas Bintang -->

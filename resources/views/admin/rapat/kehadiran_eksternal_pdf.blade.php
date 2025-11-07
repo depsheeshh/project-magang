@@ -133,40 +133,61 @@
       s/d {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}</p>
     <p><strong>Lokasi :</strong> {{ $rapat->lokasi ?? '-' }}</p>
     <p><strong>Jumlah Undangan :</strong> {{ $rapat->undangan->count() }} orang</p>
+    <p><strong>Jumlah Tamu :</strong> {{ $rapat->jumlah_tamu ?? 0 }}
+   / sisa {{ max(($rapat->jumlah_tamu ?? 0) - $rapat->undanganInstansi->sum('kuota'), 0) }}</p>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>No</th>
-        <th>Nama Peserta</th>
-        <th>Instansi</th>
-        <th>Status Kehadiran</th>
-        <th>Waktu Check-in</th>
-        <th>Waktu Check-out</th> <!-- ✅ kolom baru -->
-      </tr>
-    </thead>
-    <tbody>
-      @forelse($undangan as $u)
+  <h3>Rekap Kuota Instansi</h3>
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>Instansi</th>
+      <th>Kuota</th>
+      <th>Jumlah Hadir</th>
+      <th>Sisa Kuota</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach($undanganInstansi as $ui)
+      @php $sisa = max($ui->kuota - $ui->jumlah_hadir, 0); @endphp
       <tr>
         <td>{{ $loop->iteration }}</td>
-        <td>{{ $u->user->name ?? '-' }}</td>
-        <td>{{ $u->instansi->nama_instansi ?? '-' }}</td>
-        <td>
-          <span class="status {{ $u->status_kehadiran }}">
-            {{ ucfirst(str_replace('_',' ',$u->status_kehadiran)) }}
-          </span>
-        </td>
-        <td>{{ $u->checked_in_at ? $u->checked_in_at->format('d/m/Y H:i') : '-' }}</td>
-        <td>{{ $u->checked_out_at ? $u->checked_out_at->format('d/m/Y H:i') : '-' }}</td> <!-- ✅ tampilkan checkout -->
+        <td>{{ $ui->instansi->nama_instansi }}</td>
+        <td>{{ $ui->kuota }}</td>
+        <td>{{ $ui->jumlah_hadir }}</td>
+        <td>{{ $sisa }}</td>
       </tr>
-      @empty
+    @endforeach
+  </tbody>
+</table>
+
+<h3>Detail Peserta</h3>
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>Nama Peserta</th>
+      <th>Instansi</th>
+      <th>Status Kehadiran</th>
+      <th>Check-in</th>
+      <th>Check-out</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach($undangan as $u)
       <tr>
-        <td colspan="6" style="text-align:center;">Tidak ada data kehadiran</td>
+        <td>{{ $loop->iteration }}</td>
+        <td>{{ $u->nama ?? $u->user->name ?? '-' }}</td>
+        <td>{{ $u->instansi->nama_instansi ?? '-' }}</td>
+        <td>{{ ucfirst($u->status_kehadiran) }}</td>
+        <td>{{ optional($u->checked_in_at)->format('d/m/Y H:i') }}</td>
+        <td>{{ optional($u->checked_out_at)->format('d/m/Y H:i') }}</td>
       </tr>
-      @endforelse
-    </tbody>
-  </table>
+    @endforeach
+  </tbody>
+</table>
+
 
   <div class="ttd-wrapper">
     <div class="ttd">

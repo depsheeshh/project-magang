@@ -1,3 +1,8 @@
+@php
+  $prefix = Auth::user()->hasRole('pegawai') ? 'pegawai' : 'admin';
+@endphp
+
+
 @extends('layouts.admin')
 
 @section('title','Data Rapat')
@@ -16,56 +21,83 @@
     <div class="table-responsive">
       <table class="table table-bordered table-hover align-middle">
         <thead class="thead-dark text-center">
-          <tr>
-            <th>#</th>
-            <th>Judul</th>
-            <th>Waktu</th>
-            <th>Jenis Rapat</th>
-            <th>Lokasi</th>
-            <th>Ruangan</th>
-            <th>Radius</th>
-            <th>Jumlah Tamu</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
+            <tr>
+                <th>#</th>
+                <th>Judul</th>
+                <th>Waktu</th>
+                <th>Jenis Rapat</th>
+                <th>Lokasi</th>
+                <th>Ruangan</th>
+                <th>Radius</th>
+                <th>Info Peserta</th> {{-- kolom generik --}}
+                <th>Aksi</th>
+            </tr>
+            </thead>
         <tbody>
-          @forelse($rapat as $r)
-          <tr>
-            <td class="text-center">{{ $loop->iteration }}</td>
-            <td>
-              <strong>{{ $r->judul }}</strong><br>
-              @if($r->status === 'selesai')
-                <span class="badge badge-success">Selesai</span>
-              @elseif($r->status === 'berjalan')
+            @forelse($rapat as $r)
+            <tr>
+                <td class="text-center">{{ $loop->iteration }}</td>
+                <td>
+                <strong>{{ $r->judul }}</strong><br>
+                @if($r->status === 'belum_dimulai')
+                <span class="badge badge-warning">Belum Dimulai</span>
+                @elseif($r->status === 'berjalan')
                 <span class="badge badge-primary">Sedang Berjalan</span>
-              @elseif($r->status === 'dibatalkan')
+                @elseif($r->status === 'selesai')
+                <span class="badge badge-success">Selesai</span>
+                @elseif($r->status === 'dibatalkan')
                 <span class="badge badge-secondary">Dibatalkan</span>
-              @endif
-            </td>
-            <td>
-              {{ \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') }} -
-              {{ \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i') }}
-            </td>
-            <td class="text-center">
-              <span class="badge badge-info text-uppercase">{{ $r->jenis_rapat }}</span>
-            </td>
-            <td>{{ $r->lokasi }}</td>
-            <td>{{ $r->ruangan->nama_ruangan ?? '-' }}</td>
-            <td class="text-center"><span class="badge badge-warning">{{ $r->radius }} m</span></td>
-            <td class="text-center"><span class="badge badge-success">{{ $r->jumlah_tamu ?? 0 }}</span></td>
-            <td class="text-center">
-              <a href="{{ route('admin.rapat.show',$r->id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
-              <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editRapatModal{{ $r->id }}"><i class="fas fa-edit"></i></button>
-              <form action="{{ route('admin.rapat.destroy',$r->id) }}" method="POST" class="d-inline">
-                @csrf @method('DELETE')
-                <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus rapat ini?')"><i class="fas fa-trash"></i></button>
-              </form>
-            </td>
-          </tr>
-          @empty
-          <tr><td colspan="9" class="text-center text-muted">Belum ada rapat</td></tr>
-          @endforelse
-        </tbody>
+                @endif
+                </td>
+                <td>
+                {{ \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') }} -
+                {{ \Carbon\Carbon::parse($r->waktu_selesai)->format('d/m/Y H:i') }}
+                </td>
+                <td class="text-center">
+                <span class="badge badge-info text-uppercase">{{ $r->jenis_rapat }}</span>
+                </td>
+                <td>{{ $r->lokasi }}</td>
+                <td>{{ $r->ruangan->nama_ruangan ?? '-' }}</td>
+                <td class="text-center"><span class="badge badge-warning">{{ $r->radius }} m</span></td>
+
+                {{-- Kolom Info Peserta --}}
+                <td class="text-center">
+                @if($r->jenis_rapat === 'Internal')
+                    @php
+                    $hadir = $r->undangan->where('status_kehadiran','hadir')->count();
+                    $total = $r->jumlah_tamu ?? 0;
+                    @endphp
+                    <span class="badge badge-success">Tamu: {{ $total }}</span><br>
+                    <span class="badge badge-primary">Hadir: {{ $hadir }}/{{ $total }}</span>
+                @else
+                    @php
+                    $jumlahInstansi = $r->undanganInstansi->count();
+                    $totalKuota = $r->undanganInstansi->sum('kuota');
+                    $totalHadir = $r->undanganInstansi->sum('jumlah_hadir');
+                    @endphp
+                    <span class="badge badge-info">Instansi: {{ $jumlahInstansi }}</span><br>
+                    <span class="badge badge-success">Kuota: {{ $totalKuota }}</span><br>
+                    <span class="badge badge-primary">Hadir: {{ $totalHadir }}/{{ $totalKuota }}</span>
+                @endif
+                </td>
+
+                <td class="text-center">
+                <a href="{{ route($prefix.'.rapat.show', $r->id) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editRapatModal{{ $r->id }}"><i class="fas fa-edit"></i></button>
+                <form action="{{ route($prefix.'.rapat.destroy', $r->id) }}" method="POST" class="d-inline">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus rapat ini?')"><i class="fas fa-trash"></i></button>
+                </form>
+                <!-- Tombol baru Checkin Manual -->
+                <a href="{{ route($prefix.'.rapat.peserta.index', $r->id) }}" class="btn btn-secondary btn-sm" title="Checkin Manual">
+                    <i class="fas fa-users"></i>
+                </a>
+                </td>
+            </tr>
+            @empty
+            <tr><td colspan="9" class="text-center text-muted">Belum ada rapat</td></tr>
+            @endforelse
+            </tbody>
       </table>
       {{ $rapat->links() }}
     </div>
@@ -78,7 +110,7 @@
 <div class="modal fade" id="createRapatModal" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <form action="{{ route('admin.rapat.store') }}" method="POST">
+      <form action="{{ route($prefix.'.rapat.store') }}" method="POST">
         @csrf
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title">Tambah Rapat</h5>
@@ -152,9 +184,13 @@
           </div>
 
           <div class="form-group">
-            <label>Jumlah Tamu</label>
-            <input type="number" name="jumlah_tamu" class="form-control" placeholder="Maksimal tamu">
-          </div>
+            <label>Jumlah Tamu (Maksimal)</label>
+            <input type="number" name="jumlah_tamu" class="form-control" placeholder="Maksimal tamu" min="1">
+            @error('jumlah_tamu')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
@@ -169,7 +205,7 @@
 <div class="modal fade" id="editRapatModal{{ $r->id }}" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <form action="{{ route('admin.rapat.update',$r->id) }}" method="POST">
+      <form action="{{ route($prefix.'.rapat.update', $r->id) }}" method="POST">
         @csrf @method('PUT')
         <div class="modal-header bg-warning text-white">
           <h5 class="modal-title">Edit Rapat</h5>
@@ -250,9 +286,13 @@
           </div>
 
           <div class="form-group">
-            <label>Jumlah Tamu</label>
-            <input type="number" name="jumlah_tamu" value="{{ $r->jumlah_tamu }}" class="form-control">
-          </div>
+            <label>Jumlah Tamu (Maksimal)</label>
+            <input type="number" name="jumlah_tamu" value="{{ $r->jumlah_tamu }}" class="form-control" min="1">
+            @error('jumlah_tamu')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
         </div>
         <div class="modal-footer">
           <button class="btn btn-warning"><i class="fas fa-save"></i> Update</button>

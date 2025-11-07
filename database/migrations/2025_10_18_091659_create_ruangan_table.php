@@ -14,7 +14,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_kantor')->index();
 
             // kapasitas maksimal ruangan
-            $table->integer('kapasitas_maksimal')->default(0);
+            $table->unsignedInteger('kapasitas_maksimal')->default(0);
 
             // status dipakai / tidak
             $table->integer('dipakai')->default(false);

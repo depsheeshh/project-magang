@@ -2,22 +2,31 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Rapat;
 use App\Models\User;
-use App\Models\RapatUndangan;
-use Illuminate\Support\Str;
+use App\Models\Rapat;
 use App\Models\Kantor;
 use App\Models\Instansi;
+use App\Models\Ruangan;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\RapatUndangan;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\RapatUndanganInstansi;
 use App\Notifications\RapatInvitationNotification;
 use App\Notifications\RapatInvitationCancelledNotification;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RapatController extends Controller
 {
+
+    private function routePrefix()
+    {
+        return Auth::user()->hasRole('pegawai') ? 'pegawai' : 'admin';
+    }
+
     public function index()
     {
         $rapat  = Rapat::latest()->paginate(10);
@@ -34,13 +43,27 @@ class RapatController extends Controller
             'waktu_selesai' => 'required|date|after:waktu_mulai',
             'jenis_rapat'   => 'required|string',
             'lokasi'        => 'required|exists:kantor,nama_kantor',
-            'jumlah_tamu'   => 'nullable|integer',
-        ], [
-        'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
-        'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
-    ]);
+            'jumlah_tamu'   => 'nullable|integer|min:1',
+            ], [
+            'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
+            'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
+        ]);
 
         $kantor = Kantor::where('nama_kantor',$request->lokasi)->first();
+        $ruangan = Ruangan::findOrFail($request->ruangan_id);
+
+        if (! $ruangan->isAvailable($request->waktu_mulai, $request->waktu_selesai)) {
+            return back()->withErrors([
+                'ruangan_id' => 'Ruangan sedang dipakai pada periode tersebut, silakan pilih waktu lain.'
+            ])->withInput();
+        }
+
+
+        if ($request->jumlah_tamu !== null && $request->jumlah_tamu > $ruangan->kapasitas_maksimal) {
+            return back()->withErrors([
+                'jumlah_tamu' => 'Jumlah tamu melebihi kapasitas ruangan ('.$ruangan->kapasitas_maksimal.').'
+            ])->withInput();
+        }
 
         Rapat::create([
             'judul'        => $request->judul,
@@ -56,7 +79,7 @@ class RapatController extends Controller
             'created_id'   => Auth::id(),
         ]);
 
-        return redirect()->route('admin.rapat.index')->with('success','Rapat berhasil dibuat');
+        return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil dibuat');
     }
 
     public function show(Rapat $rapat)
@@ -94,13 +117,35 @@ class RapatController extends Controller
             'waktu_selesai' => 'required|date|after:waktu_mulai',
             'jenis_rapat'   => 'required|string',
             'lokasi'        => 'required|exists:kantor,nama_kantor',
-            'jumlah_tamu'   => 'nullable|integer',
-        ], [
-        'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
-        'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
-    ]);
+            'jumlah_tamu'   => 'nullable|integer|min:1',
+            ], [
+            'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
+            'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
+        ]);
+
+        // Cek apakah jumlah undangan sudah melebihi kapasitas baru
+        $jumlahUndangan = $rapat->undangan()->count();
+        if ($request->jumlah_tamu !== null && $request->jumlah_tamu < $jumlahUndangan) {
+            return back()->withErrors([
+                'jumlah_tamu' => 'Jumlah tamu tidak boleh lebih kecil dari undangan yang sudah ada ('.$jumlahUndangan.').'
+            ])->withInput();
+        }
 
         $kantor = Kantor::where('nama_kantor',$request->lokasi)->first();
+        $ruangan = Ruangan::findOrFail($request->ruangan_id);
+
+        if (! $ruangan->isAvailable($request->waktu_mulai, $request->waktu_selesai, $rapat->id)) {
+            return back()->withErrors([
+                'ruangan_id' => 'Ruangan sedang dipakai pada periode tersebut, silakan pilih waktu lain.'
+            ])->withInput();
+        }
+
+
+        if ($request->jumlah_tamu !== null && $request->jumlah_tamu > $ruangan->kapasitas_maksimal) {
+            return back()->withErrors([
+                'jumlah_tamu' => 'Jumlah tamu melebihi kapasitas ruangan ('.$ruangan->kapasitas_maksimal.').'
+            ])->withInput();
+        }
 
         $rapat->update([
             'judul'        => $request->judul,
@@ -116,7 +161,7 @@ class RapatController extends Controller
             'updated_id'   => Auth::id(),
         ]);
 
-        return redirect()->route('admin.rapat.index')->with('success','Rapat berhasil diperbarui');
+        return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil diperbarui');
     }
 
     public function destroy(Rapat $rapat)
@@ -124,43 +169,58 @@ class RapatController extends Controller
         $rapat->update(['deleted_id' => Auth::id()]);
         $rapat->delete();
 
-        return redirect()->route('admin.rapat.index')->with('success','Rapat berhasil dihapus');
+        return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil dihapus');
     }
 
     public function storeInvitation(Request $request, Rapat $rapat)
     {
         $validated = $request->validate([
-        'user_id' => 'required|exists:users,id',
-    ]);
+            'user_id' => 'required|exists:users,id',
+        ]);
 
-    $existing = RapatUndangan::where('rapat_id', $rapat->id)
-        ->where('user_id', $validated['user_id'])
-        ->first();
+        // 🚨 Cek kapasitas
+        $jumlahUndangan = $rapat->undangan()->count();
+        $ruangan = $rapat->ruangan;
 
-    if ($existing) {
-        return redirect()->route('admin.rapat.show', $rapat->id)
-            ->with('warning','User sudah diundang ke rapat ini.');
-    }
+        if ($ruangan && $jumlahUndangan >= $ruangan->kapasitas_maksimal) {
+            return redirect()->route($this->routePrefix().'.rapat.show', $rapat->id)
+                ->with('warning','Jumlah tamu sudah mencapai kapasitas ruangan ('.$ruangan->kapasitas_maksimal.').');
+        }
 
-    $token = (string) Str::uuid();
+        if ($rapat->jumlah_tamu !== null && $jumlahUndangan >= $rapat->jumlah_tamu) {
+            return redirect()->route($this->routePrefix().'.rapat.show', $rapat->id)
+                ->with('warning','Jumlah tamu sudah mencapai batas maksimal ('.$rapat->jumlah_tamu.').');
+        }
 
-    $undangan = RapatUndangan::create([
-        'rapat_id'           => $rapat->id,
-        'user_id'            => $validated['user_id'],
-        'checkin_token'      => $token,
-        'checkin_token_hash' => hash('sha256', $token),
-        'status_kehadiran'   => 'pending',
-        'created_id'         => Auth::id(),
-    ]);
+        // Cek duplikasi
+        $existing = RapatUndangan::where('rapat_id', $rapat->id)
+            ->where('user_id', $validated['user_id'])
+            ->first();
 
-    // 🚨 Kirim notifikasi ke user yang diundang
-    $user = User::find($validated['user_id']);
-    if ($user) {
-        $user->notify(new RapatInvitationNotification($rapat));
-    }
+        if ($existing) {
+            return redirect()->route($this->routePrefix().'.rapat.show', $rapat->id)
+                ->with('warning','User sudah diundang ke rapat ini.');
+        }
 
-    return redirect()->route('admin.rapat.show', $rapat->id)
-        ->with('success','Undangan berhasil ditambahkan & notifikasi terkirim.');
+        $token = (string) Str::uuid();
+
+        $undangan = RapatUndangan::create([
+            'rapat_id'           => $rapat->id,
+            'user_id'            => $validated['user_id'],
+            'checkin_token'      => $token,
+            'checkin_token_hash' => hash('sha256', $token),
+            'status_kehadiran'   => 'pending',
+            'created_id'         => Auth::id(),
+        ]);
+
+        // 🚨 Kirim notifikasi ke user yang diundang
+        $user = User::find($validated['user_id']);
+        if ($user) {
+            $user->notify(new RapatInvitationNotification($rapat));
+        }
+
+        return redirect()->route($this->routePrefix().'.rapat.show', $rapat->id)
+            ->with('success','Undangan berhasil ditambahkan & notifikasi terkirim.');
     }
 
     public function destroyInvitation(Rapat $rapat, RapatUndangan $invitation)
@@ -188,7 +248,7 @@ class RapatController extends Controller
             ->delete();
     }
 
-    return redirect()->route('admin.rapat.show', $rapat->id)
+    return redirect()->route($this->routePrefix().'.rapat.show', $rapat->id)
         ->with('success','Undangan berhasil dihapus & notifikasi dibersihkan.');
     }
 
@@ -196,40 +256,39 @@ class RapatController extends Controller
     {
         $request->validate([
             'instansi_id' => 'required|exists:instansi,id',
+            'kuota'       => 'nullable|integer|min:1', // opsional: admin bisa set kuota
         ]);
 
-        // Ambil semua user dari instansi tsb
-        $users = User::where('instansi_id', $request->instansi_id)->get();
+        $kuotaBaru   = $request->kuota ?? 1;
+        $totalKuota  = $rapat->undanganInstansi()->sum('kuota');
+        $jumlahTamu  = $rapat->jumlah_tamu ?? 0;
+        $ruangan    = $rapat->ruangan;
 
-        if ($users->isEmpty()) {
-            return back()->with('warning', 'Tidak ada user pada instansi ini.');
+        if ($jumlahTamu > 0 && ($totalKuota + $kuotaBaru) > $jumlahTamu) {
+            return back()->withErrors([
+                'kuota' => 'Total kuota instansi melebihi jumlah tamu rapat ('.$jumlahTamu.').'
+            ])->withInput();
         }
 
-        foreach ($users as $user) {
-            // skip jika sudah ada undangan
-            if ($rapat->undangan()->where('user_id', $user->id)->exists()) {
-                continue;
-            }
-
-            $token = (string) Str::uuid();
-
-            $rapat->undangan()->create([
-                'user_id'            => $user->id,
-                'instansi_id'        => $request->instansi_id,
-                'checkin_token'      => $token,
-                'checkin_token_hash' => hash('sha256', $token),
-                'status_kehadiran'   => 'pending',
-                'created_id'         => Auth::id(),
-            ]);
-
-            // opsional: kirim notifikasi
-            if (method_exists($user, 'notify')) {
-                $user->notify(new RapatInvitationNotification($rapat));
-            }
+        if ($ruangan && $totalKuota + ($request->kuota ?? 1) > $ruangan->kapasitas_maksimal) {
+            return back()->with('error','Total kuota instansi melebihi kapasitas ruangan ('.$ruangan->kapasitas_maksimal.').');
         }
 
-        return back()->with('success', 'Undangan instansi berhasil ditambahkan.');
+        // Cek apakah instansi sudah diundang
+        if ($rapat->undanganInstansi()->where('instansi_id', $request->instansi_id)->exists()) {
+            return back()->with('warning', 'Instansi ini sudah diundang.');
+        }
+
+        // Simpan undangan instansi
+        $rapat->undanganInstansi()->create([
+            'instansi_id'   => $request->instansi_id,
+            'kuota'         => $request->kuota ?? 1, // default kuota 1
+            'jumlah_hadir'  => 0,
+        ]);
+
+        return back()->with('success', 'Instansi berhasil ditambahkan ke undangan rapat.');
     }
+
 
     public function inviteAllInstansi(Rapat $rapat)
     {
@@ -239,6 +298,14 @@ class RapatController extends Controller
             $users = User::where('instansi_id', $instansi->id)->get();
 
             foreach ($users as $user) {
+
+                if ($rapat->ruangan && $rapat->undangan()->count() >= $rapat->ruangan->kapasitas_maksimal) {
+                    break; // stop loop karena kapasitas penuh
+                }
+
+                if ($rapat->jumlah_tamu !== null && $rapat->undangan()->count() >= $rapat->jumlah_tamu) {
+                    break 2; // keluar dari 2 loop sekaligus
+                }
                 if ($rapat->undangan()->where('user_id', $user->id)->exists()) {
                     continue;
                 }
@@ -263,6 +330,38 @@ class RapatController extends Controller
         return back()->with('success', 'Semua instansi berhasil diundang.');
     }
 
+    public function updateKuotaInstansi(Request $request, Rapat $rapat, RapatUndanganInstansi $undanganInstansi)
+    {
+        $request->validate([
+            'kuota' => 'required|integer|min:1',
+        ]);
+
+        $jumlahTamu  = $rapat->jumlah_tamu ?? 0;
+        $totalKuota  = $rapat->undanganInstansi()
+            ->where('id','!=',$undanganInstansi->id)
+            ->sum('kuota'); // total kuota instansi lain
+
+        $kuotaBaru = $request->kuota;
+
+        // 🚨 Validasi: total kuota instansi (termasuk kuota baru) tidak boleh melebihi jumlah tamu rapat
+        if ($jumlahTamu > 0 && ($totalKuota + $kuotaBaru) > $jumlahTamu) {
+            return back()->withErrors([
+                'kuota' => 'Total kuota instansi melebihi jumlah tamu rapat ('.$jumlahTamu.').'
+            ])->withInput();
+        }
+
+        $undanganInstansi->update([
+            'kuota' => $request->kuota,
+        ]);
+
+        return back()->with('success', 'Kuota instansi berhasil diperbarui.');
+    }
+
+    public function destroyInvitationInstansi(Rapat $rapat, RapatUndanganInstansi $undanganInstansi)
+    {
+        $undanganInstansi->delete();
+        return back()->with('success', 'Undangan instansi berhasil dihapus.');
+}
 
     public function exportKehadiran(Rapat $rapat)
     {
@@ -304,18 +403,19 @@ class RapatController extends Controller
 
     public function exportKehadiranPdf(Rapat $rapat)
     {
-        $rapat->load(['undangan.user','undangan.instansi']);
+        $rapat->load(['undangan.user','undangan.instansi','undanganInstansi.instansi']);
 
-        // Data yang akan dilempar ke view
         $data = [
-            'rapat' => $rapat,
+            'rapat'    => $rapat,
             'undangan' => $rapat->undangan,
+            'undanganInstansi' => $rapat->undanganInstansi,
         ];
 
-        // Render view ke PDF
-        // Pastikan view `admin.rapat.kehadiran_pdf` menampilkan kolom Checked Out At juga
-        $pdf = Pdf::loadView('admin.rapat.kehadiran_pdf', $data)
-                ->setPaper('a4', 'landscape');
+        $view = $rapat->jenis_rapat === 'Internal'
+            ? 'admin.rapat.kehadiran_internal_pdf'
+            : 'admin.rapat.kehadiran_eksternal_pdf';
+
+        $pdf = Pdf::loadView($view, $data)->setPaper('a4', 'landscape');
 
         $filename = 'kehadiran_rapat_' . $rapat->id . '.pdf';
         return $pdf->download($filename);
@@ -342,7 +442,14 @@ class RapatController extends Controller
                 'checked_out_at'   => now(),
             ]);
 
-        return redirect()->route('admin.rapat.index')
+            // ✅ Semua yang masih pending → otomatis tidak hadir
+        RapatUndangan::where('rapat_id', $rapat->id)
+            ->where('status_kehadiran', 'pending')
+            ->update([
+                'status_kehadiran' => 'tidak_hadir',
+            ]);
+
+        return redirect()->route($this->routePrefix().'.rapat.index')
             ->with('success', 'Rapat berhasil diakhiri. Semua peserta hadir ditandai selesai.');
     }
 
@@ -395,6 +502,33 @@ class RapatController extends Controller
             ]);
     }
 
+    public function detailTamuInstansi(Rapat $rapat, RapatUndanganInstansi $undanganInstansi)
+    {
+        // ambil semua undangan (rapat_undangan) untuk instansi ini
+    $tamuList = RapatUndangan::where('rapat_id', $rapat->id)
+        ->where('instansi_id', $undanganInstansi->instansi_id)
+        ->with('user') // tetap load user untuk nama/email
+        ->get();
+
+    return view('admin.rapat.detail_tamu_instansi', compact('rapat','undanganInstansi','tamuList'));
+    }
+
+    public function destroyTamuInstansi(Rapat $rapat, RapatUndanganInstansi $undanganInstansi, RapatUndangan $undangan)
+    {
+        // pastikan tamu memang dari instansi ini
+        if ($undangan->instansi_id !== $undanganInstansi->instansi_id) {
+            return back()->with('error','Tamu tidak sesuai dengan instansi.');
+        }
+
+        $undangan->delete();
+
+        // sinkronkan jumlah_hadir (opsional, kalau masih pakai kolom cache)
+        // $undanganInstansi->update([
+        //     'jumlah_hadir' => $undanganInstansi->undangan()->where('status_kehadiran','hadir')->count()
+        // ]);
+
+        return back()->with('success','Tamu berhasil dihapus.');
+    }
 
     public function exportRekapRapatPdf(Request $request)
     {
@@ -435,6 +569,24 @@ class RapatController extends Controller
         return $pdf->download('rekap_rapat.pdf');
     }
 
+    public function exportQrPdf(Rapat $rapat)
+    {
+        // generate QR sesuai jenis rapat
+        $qrUrl = $rapat->jenis_rapat === 'Internal'
+            ? route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token])
+            : route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token]);
+
+        $qrCode = base64_encode(QrCode::format('png')->size(250)->generate($qrUrl));
+
+        $pdf = Pdf::loadView('admin.rapat.qr_pdf', [
+            'rapat'  => $rapat,
+            'qrCode' => $qrCode,
+            'qrUrl'  => $qrUrl,
+        ]);
+
+        return $pdf->download('QR_Rapat_'.$rapat->id.'.pdf');
+    }
+
     public function inviteAll(Request $request, Rapat $rapat)
     {
         $request->validate([
@@ -450,12 +602,23 @@ class RapatController extends Controller
         $users = $query->get();
 
         foreach ($users as $user) {
+
+            if ($rapat->ruangan && $rapat->undangan()->count() >= $rapat->ruangan->kapasitas_maksimal) {
+                return back()->with('warning', 'Jumlah tamu sudah mencapai kapasitas ruangan ('.$rapat->ruangan->kapasitas_maksimal.').');
+            }
+
+
+            // 🚨 Stop jika kapasitas penuh
+            if ($rapat->jumlah_tamu !== null && $rapat->undangan()->count() >= $rapat->jumlah_tamu) {
+                return back()->with('warning', 'Jumlah tamu sudah mencapai batas maksimal ('.$rapat->jumlah_tamu.').');
+            }
+
             $exists = RapatUndangan::where('rapat_id', $rapat->id)
                 ->where('user_id', $user->id)
                 ->exists();
 
             if (!$exists) {
-                $token = (string) \Illuminate\Support\Str::uuid();
+                $token = (string) Str::uuid();
                 RapatUndangan::create([
                     'rapat_id'           => $rapat->id,
                     'user_id'            => $user->id,

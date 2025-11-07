@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -33,7 +35,10 @@ class DatabaseSeeder extends Seeder
                 'name'              => 'Admin',
                 'password'          => Hash::make('Admin123!'), // password kompleks
                 'status'            => 1, // Active
-                'email_verified_at' => now(), // langsung verified
+                'instansi_id'       => 18,
+                'email_verified_at' => Carbon::now(),
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ]
         );
         $admin->assignRole('admin');
@@ -45,7 +50,10 @@ class DatabaseSeeder extends Seeder
                 'name'              => 'Frontliner',
                 'password'          => Hash::make('Front123!'),
                 'status'            => 1,
-                'email_verified_at' => now(),
+                'instansi_id'       => 18,
+                'email_verified_at' => Carbon::now(),
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ]
         );
         $frontliner->assignRole('frontliner');
@@ -57,10 +65,30 @@ class DatabaseSeeder extends Seeder
                 'name'              => 'Pegawai',
                 'password'          => Hash::make('Pegawai123!'),
                 'status'            => 1,
-                'email_verified_at' => now(),
+                'instansi_id'       => 18,
+                'email_verified_at' => Carbon::now(),
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ]
         );
         $pegawai->assignRole('pegawai');
+
+        // ✅ Tambahkan juga ke tabel pegawai
+        DB::table('pegawai')->updateOrInsert(
+            ['user_id' => $pegawai->id], // supaya tidak double insert
+            [
+                'bidang_id'  => 3,              // isi default, bisa disesuaikan
+                'jabatan_id' => 4,              // isi default, bisa disesuaikan
+                'nip'        => '02111929344', // contoh NIP unik
+                'telepon'    => '082123456789',   // contoh telepon unik
+                'created_id' => 1,
+                'updated_id' => null,
+                'deleted_id' => null,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'deleted_at' => null,
+            ]
+        );
 
         // User default tamu (Inactive contoh)
         $tamu = User::firstOrCreate(
@@ -69,7 +97,9 @@ class DatabaseSeeder extends Seeder
                 'name'              => 'Tamu',
                 'password'          => Hash::make('Tamu123!'),
                 'status'            => 0, // Inactive
-                'email_verified_at' => now(),
+                'email_verified_at' => Carbon::now(),
+                'created_at'        => Carbon::now(),
+                'updated_at'        => Carbon::now(),
             ]
         );
         $tamu->assignRole('tamu');
