@@ -1,4 +1,4 @@
-<header class="hero-section text-center text-white position-relative overflow-hidden">
+<header class="hero-section text-center text-white position-relative overflow-hidden mt-3">
   <!-- Canvas bintang -->
   <canvas id="heroStarsCanvas"></canvas>
 
@@ -37,6 +37,9 @@
             <a href="{{ route('tamu.scan') }}" class="btn-cta btn-cta-luxury">
               <i class="fas fa-pen me-2"></i> Isi Buku Tamu Pertama
             </a>
+            <a href="{{ route('tamu.rapat.scan') }}" class="btn-cta btn-cta-energetic">
+                <i class="fas fa-qrcode me-2"></i> Check-in Rapat Eksternal
+            </a>
           @elseif(in_array('tamu', $roles))
             <a href="{{ route('dashboard.index') }}" class="btn-cta btn-cta-green">
               <i class="fas fa-home me-2"></i> Ke Dashboard
@@ -46,6 +49,9 @@
             </a>
             <a href="{{ route('tamu.rapat.saya') }}" class="btn-cta btn-cta-animated-luxury">
               <i class="fas fa-handshake me-2"></i> Agenda Rapat Saya
+            </a>
+            <a href="{{ route('tamu.rapat.scan') }}" class="btn-cta btn-cta-energetic">
+                <i class="fas fa-qrcode me-2"></i> Check-in Rapat Eksternal
             </a>
           @elseif(in_array('pegawai', $roles))
             <a href="{{ route('dashboard.index') }}" class="btn-cta btn-cta-green">

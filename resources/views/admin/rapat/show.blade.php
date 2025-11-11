@@ -155,7 +155,7 @@
             </p>
             @elseif($rapat->jenis_rapat === 'Eksternal')
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
-                    route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token])
+                    route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token])
                 ) !!}
                 <p class="mt-2 text-muted">Tamu eksternal silakan scan QR ini untuk check-in rapat.</p>
                 <a href="{{ route('admin.rapat.export.qrpdf', $rapat->id) }}" class="btn btn-info btn-sm mr-2">

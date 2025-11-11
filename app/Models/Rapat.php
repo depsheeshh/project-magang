@@ -4,7 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+/**
+ * @property int $id
+ * @property string $judul
+ * @property \Carbon\Carbon $waktu_mulai
+ * @property \Carbon\Carbon $waktu_selesai
+ * ...
+ */
 class Rapat extends Model
 {
 

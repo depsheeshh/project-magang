@@ -10,19 +10,6 @@ use App\Models\RapatUndangan;
 
 class RapatCheckinController extends Controller
 {
-    // Halaman daftar rapat user
-    public function index(Request $request)
-    {
-        $user = $request->user();
-
-        $rapatSaya = Rapat::whereHas('undangan', fn($q) => $q->where('user_id', $user->id))
-            ->with(['undangan' => fn($q) => $q->where('user_id', $user->id)->with('user.instansi')])
-            ->orderBy('waktu_mulai','desc')
-            ->get();
-
-        return view('tamu.rapat.index', compact('rapatSaya'));
-    }
-
     // 🔎 Helper validasi waktu rapat
     private function validateWaktu(Rapat $rapat): string|bool
     {

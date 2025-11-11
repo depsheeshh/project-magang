@@ -25,6 +25,7 @@ class RapatUndangan extends Model
         'checkin_distance',
         'keterlambatan_menit',
         'checkin_token',
+        'checkin_verified_at',
         'checkin_token_hash',
         'qr_scanned_at',
         'created_id',

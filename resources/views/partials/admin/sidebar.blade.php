@@ -173,7 +173,12 @@
         <li class="{{ request()->is('frontliner/rapat') ? 'active' : '' }}">
         <a class="nav-link" href="{{ route('frontliner.rapat.index') }}">
             <i class="fas fa-calendar-check"></i>
-            <span>Rapat Hari Ini</span>
+            <span>Daftar Rapat</span>
+        </a>
+        </li>
+        <li class="{{ request()->is('frontliner/rapat/hari-ini') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('frontliner.rapat.today') }}">
+            <i class="fas fa-calendar-day"></i> <span>Rapat Hari Ini</span>
         </a>
         </li>
       @endrole
@@ -195,7 +200,7 @@
     </li>
 
     <li class="{{ request()->is('pegawai/rapat-saya*') ? 'active' : '' }}">
-      <a class="nav-link" href="{{ route('pegawai.rapat.saya') }}">
+      <a class="nav-link" href="{{ route('pegawai.agenda.rapat') }}">
         <i class="fas fa-calendar-alt"></i> <span>Agenda Rapat Saya</span>
       </a>
     </li>

@@ -66,15 +66,28 @@ Route::prefix('tamu')->name('tamu.')->group(function () {
     Route::get('rapat/scan', fn () => view('tamu.rapat.scan'))->name('rapat.scan');
 
     // ✅ Rapat eksternal (PUBLIC, tanpa login)
+
+    // Route verifikasi email check-in (HARUS di atas {token})
+    Route::get('rapat/{rapat}/checkin/verify', [RapatCheckinEksternalController::class, 'verifyCheckin'])
+        ->name('rapat.checkin.verify');
+
+    // Form check-in via QR
     Route::get('rapat/{rapat}/checkin/{token}', [RapatCheckinEksternalController::class, 'showForm'])
         ->name('rapat.checkin.form');
     Route::post('rapat/{rapat}/checkin/{token}', [RapatCheckinEksternalController::class, 'checkin'])
         ->name('rapat.checkin');
+
+    // Halaman pending (setelah submit form, sebelum verifikasi email)
+    Route::get('rapat/checkin-pending', fn () => view('tamu.rapat.checkin_pending'))
+        ->name('rapat.checkin.pending');
+
+    // Halaman sukses (setelah verifikasi email berhasil)
     Route::get('rapat/checkin-success', fn () => view('tamu.rapat.checkin_success'))
         ->name('rapat.checkin.success');
-    // Checkout eksternal (setelah auto login)
-    Route::post('rapat/{rapat}/checkout', [RapatCheckinEksternalController::class, 'checkout'])
-        ->name('rapat.checkout');
+
+    // Halaman gagal (link verifikasi invalid/expired)
+    Route::get('rapat/checkin-failed', fn () => view('tamu.rapat.checkin_failed'))
+        ->name('rapat.checkin.failed');
 });
 
 Route::middleware(['auth','role:admin|frontliner'])->group(function () {
@@ -261,6 +274,8 @@ Route::middleware('auth',)->group(function () {
 
                 Route::get('/rapat', [FrontlinerRapatController::class, 'index'])
                     ->name('rapat.index');
+                Route::get('/rapat/hari-ini', [FrontlinerRapatController::class, 'today'])
+                    ->name('rapat.today');
                 Route::get('/rapat/{rapat}', [FrontlinerRapatController::class, 'show'])
                     ->name('rapat.show');
 
@@ -278,7 +293,7 @@ Route::middleware('auth',)->group(function () {
                     });
 
                     // ✅ Agenda Rapat Saya (tetap sederhana, tidak bentrok)
-                    Route::get('/rapat-saya', [RapatCheckinController::class, 'agendaPegawai'])->name('rapat.saya');
+                    Route::get('/rapat-saya', [RapatCheckinController::class, 'agendaPegawai'])->name('agenda.rapat');
                     Route::get('/rapat/scan', fn() => view('pegawai.rapat.scan'))->name('rapat.scan');
 
                     // Rekap Rapat (role Pegawai)
@@ -348,23 +363,16 @@ Route::middleware('auth',)->group(function () {
             Route::post('/kunjungan/{id}/survey', [SurveyController::class, 'store'])
                 ->name('kunjungan.survey.store');
 
-            // Daftar rapat saya
-             Route::get('/rapat-saya', [RapatCheckinController::class, 'index'])->name('rapat.saya');
-            Route::get('rapat/{rapat}', [RapatCheckinController::class, 'show'])->name('rapat.show');
-            // manual check-in internal tamu (beda dengan eksternal)
-
-            // Aksi checkout manual tamu
-            Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'tamuCheckout'])
+            // Agenda rapat tamu (rapat eksternal yang sudah diikuti)
+            Route::get('/rapat-saya', [RapatCheckinEksternalController::class, 'index'])->name('rapat.saya');
+            Route::get('/rapat/{rapat}', [RapatCheckinEksternalController::class, 'show'])->name('rapat.show');
+                // Checkout eksternal (setelah auto login)
+            Route::post('rapat/{rapat}/checkout', [RapatCheckinEksternalController::class, 'checkout'])
                 ->name('rapat.checkout');
-
-            // Aksi check-in via QR token (dibatasi 10x per menit)
-            Route::post('rapat/store-instansi', [RapatCheckinController::class, 'storeInstansi'])->name('rapat.storeInstansi');
-
 
             // API untuk autocomplete: hanya instansi yang dibuat oleh admin
             Route::get('api/instansi/admin', [InstansiLookupController::class, 'listAdminInstansi'])
                 ->name('api.instansi.admin');
-
         });
         // Untuk tamu: cek status kunjungan terakhir
         Route::middleware(['auth','role:tamu'])->get('/api/tamu/notifikasi', [TamuController::class, 'checkNotification']);

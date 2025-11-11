@@ -2,20 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Carbon\Carbon;
-use App\Models\Rapat;
 use App\Models\User;
+use App\Models\Rapat;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\RapatUndangan;
-use App\Models\RapatUndanganInstansi;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CheckinVerificationMail;
+use App\Models\RapatUndanganInstansi;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Exception;
 
 class RapatCheckinEksternalController extends Controller
 {
+    // Halaman daftar rapat user
+    public function index(Request $request)
+    {
+        $user = $request->user();
+
+        $rapatSaya = Rapat::whereHas('undangan', fn($q) => $q->where('user_id', $user->id))
+            ->with(['undangan' => fn($q) => $q->where('user_id', $user->id)->with('user.instansi')])
+            ->orderBy('waktu_mulai','desc')
+            ->get();
+
+        return view('tamu.rapat.index', compact('rapatSaya'));
+    }
     private function validateWaktu(Rapat $rapat): string|bool
     {
         if (!$rapat->waktu_mulai || !$rapat->waktu_selesai) return 'Waktu rapat belum ditentukan.';
@@ -46,7 +61,8 @@ class RapatCheckinEksternalController extends Controller
     public function showForm(Rapat $rapat, $token)
     {
         if ($rapat->qr_token_hash !== hash('sha256', $token)) {
-            return redirect()->route('home')->with('error','QR code rapat tidak valid.');
+            return redirect()->route('tamu.rapat.checkin.failed')
+                ->with('error','QR code rapat tidak valid.');
         }
 
         $instansiList = $rapat->undanganInstansi()->with('instansi')->get();
@@ -75,7 +91,6 @@ class RapatCheckinEksternalController extends Controller
                 'longitude'   => 'required|numeric|between:-180,180',
             ]);
 
-            // cek kuota instansi
             $undanganInstansi = RapatUndanganInstansi::where('rapat_id',$rapat->id)
                 ->where('instansi_id',$data['instansi_id'])
                 ->first();
@@ -88,27 +103,26 @@ class RapatCheckinEksternalController extends Controller
                 return back()->with('error','Kuota instansi Anda sudah penuh.')->withInput();
             }
 
-            // cari / buat user
             $user = User::where('email', $data['email'])->first();
             if (!$user) {
                 $user = User::create([
                     'name'              => $data['nama'],
                     'email'             => $data['email'],
                     'instansi_id'       => $data['instansi_id'],
-                    'password'          => Hash::make('Password123!'),
+                    'password'          => Hash::make('Password123!'), // tetap default
                     'email_verified_at' => now(),
                 ]);
                 $user->assignRole('tamu');
             } else {
-                    $user->update([
-                        'name'        => $data['nama'],
-                        'instansi_id' => $data['instansi_id'],
-                    ]);
-                }
+                $user->update([
+                    'name'        => $data['nama'],
+                    'instansi_id' => $data['instansi_id'],
+                ]);
+                $user->assignRole('tamu');
+            }
 
             Auth::login($user);
 
-            // cek apakah sudah pernah check-in
             $sudahCheckin = RapatUndangan::where('rapat_id',$rapat->id)
                 ->where('user_id',$user->id)
                 ->where('status_kehadiran','hadir')
@@ -118,7 +132,6 @@ class RapatCheckinEksternalController extends Controller
                 return back()->with('error','Anda sudah melakukan check-in sebelumnya.');
             }
 
-            // validasi radius
             $distance = $this->calculateDistance(
                 $data['latitude'], $data['longitude'],
                 $rapat->latitude, $rapat->longitude
@@ -129,32 +142,104 @@ class RapatCheckinEksternalController extends Controller
                 return back()->with('error',"Anda di luar radius, jarak sekitar {$km} km.")->withInput();
             }
 
-            // hitung keterlambatan
             $delayMinutes = now()->greaterThan($rapat->waktu_mulai)
                 ? now()->diffInMinutes($rapat->waktu_mulai)
                 : 0;
 
-            // simpan undangan peserta
-            RapatUndangan::create([
+            $tokenVerif = Str::random(64);
+
+            $undangan = RapatUndangan::create([
                 'rapat_id'                   => $rapat->id,
                 'rapat_undangan_instansi_id' => $undanganInstansi->id,
                 'user_id'                    => $user->id,
                 'jabatan'                    => $data['jabatan'],
                 'instansi_id'                => $data['instansi_id'],
-                'status_kehadiran'           => 'hadir',
-                'checked_in_at'              => now(),
+                'email'                      => $data['email'],
+                'status_kehadiran'           => 'pending',
+                'checkin_token_hash'         => hash('sha256',$tokenVerif),
                 'checkin_latitude'           => $data['latitude'],
                 'checkin_longitude'          => $data['longitude'],
                 'checkin_distance'           => $distance,
-                'delay_minutes'              => $delayMinutes,
+                'keterlambatan_menit'        => $delayMinutes,
+                'created_id'                 => $user->id,
             ]);
 
+            Mail::to($data['email'])->send(new CheckinVerificationMail($rapat, $undangan, $tokenVerif));
 
-            return redirect()->route('tamu.rapat.checkin.success')
-                ->with('success','Check-in berhasil. Selamat mengikuti rapat.');
+            return redirect()->route('tamu.rapat.checkin.pending')
+                ->with('success','Check-in berhasil disubmit. Silakan verifikasi melalui email untuk menyelesaikan check-in.');
         } catch (Exception $e) {
             return back()->with('error','Terjadi kesalahan: '.$e->getMessage())->withInput();
         }
+    }
+
+
+    public function verifyCheckin(Request $request, $rapatId)
+    {
+        Log::info('VerifyCheckin invoked', [
+            'rapat_param' => $rapatId,
+            'token_query' => $request->query('token'),
+            'full_url'    => $request->fullUrl(),
+        ]);
+
+        // Cari rapat manual (hindari gagal binding)
+        $rapat = Rapat::find($rapatId);
+        if (!$rapat) {
+            Log::warning('VerifyCheckin: Rapat not found', ['rapat_param' => $rapatId]);
+            return redirect()->route('tamu.rapat.checkin.failed')
+                ->with('error','Rapat tidak ditemukan.');
+        }
+
+        // Ambil token dari query
+        $token = (string) $request->query('token', '');
+        if ($token === '') {
+            Log::warning('VerifyCheckin: Empty token', ['rapat_id' => $rapat->id]);
+            return redirect()->route('tamu.rapat.checkin.failed')
+                ->with('error','Token verifikasi tidak ditemukan.');
+        }
+
+        $tokenHash = hash('sha256', $token);
+
+        // Cari undangan berdasarkan rapat + token
+        $undangan = RapatUndangan::where('rapat_id', $rapat->id)
+            ->where('checkin_token_hash', $tokenHash)
+            ->first();
+
+        if (!$undangan) {
+            Log::warning('VerifyCheckin: Undangan not found by token', [
+                'rapat_id'   => $rapat->id,
+                'token_hash' => $tokenHash,
+            ]);
+            return redirect()->route('tamu.rapat.checkin.failed')
+                ->with('error','Link verifikasi tidak valid atau sudah digunakan.');
+        }
+
+        // Cek apakah sudah diverifikasi sebelumnya
+        if ($undangan->checkin_verified_at) {
+            Log::info('VerifyCheckin: Token already used', [
+                'undangan_id' => $undangan->id,
+                'rapat_id'    => $rapat->id,
+            ]);
+            return redirect()->route('tamu.rapat.checkin.failed')
+                ->with('error','Link verifikasi sudah pernah digunakan.');
+        }
+
+        // Update status kehadiran
+        $undangan->update([
+            'status_kehadiran'    => 'hadir',
+            'checked_in_at'       => now(),
+            'checkin_verified_at' => now(),
+            'updated_id'          => optional(Auth::user())->id,
+        ]);
+
+        Log::info('VerifyCheckin: Success', [
+            'undangan_id' => $undangan->id,
+            'rapat_id'    => $rapat->id,
+            'user_id'     => $undangan->user_id,
+        ]);
+
+        return redirect()->route('tamu.rapat.checkin.success')
+            ->with('success','Check-in berhasil diverifikasi. Selamat mengikuti rapat.');
     }
 
     public function checkout(Request $request, Rapat $rapat)
@@ -172,14 +257,40 @@ class RapatCheckinEksternalController extends Controller
             }
 
             $undangan->update([
-                'status_kehadiran'=>'selesai',
-                'checked_out_at'=>now(),
-                'updated_id'=>$user->id,
+                'status_kehadiran' => 'selesai',
+                'checked_out_at'   => now(),
+                'updated_id'       => $user->id,
             ]);
 
-            return redirect()->route('tamu.rapat.saya')->with('success','Checkout berhasil.');
+            return redirect()->route('tamu.rapat.saya')
+                ->with('success','Checkout berhasil.');
         } catch (Exception $e) {
             return back()->with('error','Terjadi kesalahan: '.$e->getMessage());
         }
     }
+    public function show(Rapat $rapat)
+    {
+        $user = Auth::user();
+
+        // Ambil undangan untuk user tamu ini
+    $undangan = $rapat->undangan()
+        ->where('user_id', $user->id)
+        ->with('user.instansi')
+        ->first();
+
+    if (!$undangan) {
+        return redirect()->route('tamu.rapat.saya')
+            ->with('error','Data undangan rapat tidak ditemukan.');
+    }
+
+    // Ambil daftar instansi undangan rapat eksternal (opsional untuk ditampilkan)
+    $instansiList = $rapat->undanganInstansi()->with('instansi')->get();
+
+    // Validasi waktu rapat (opsional, bisa ditampilkan di view)
+    $validWaktu = $this->validateWaktu($rapat);
+
+    return view('tamu.rapat.checkin', compact('rapat','undangan','instansiList','validWaktu'));
+    }
+
+
 }

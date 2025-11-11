@@ -1,40 +1,169 @@
 <!DOCTYPE html>
-<html>
-<head><title>Test GPS</title></head>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cek Lokasi & Koordinat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2d9d5c53a.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #052e16, #065f46, #7f1d1d);
+      color: #f0fdf4;
+      font-family: "Poppins", sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 22px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.5);
+      animation: fadeUp 1s ease;
+    }
+
+    .card-glass h2 {
+      color: #86efac;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.6px;
+    }
+
+    .btn-lokasi {
+      background: linear-gradient(135deg, #16a34a, #dc2626);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      padding: 0.9rem 2rem;
+      border-radius: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(34,197,94,0.4);
+    }
+
+    .btn-lokasi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(220,38,38,0.5);
+    }
+
+    .coords {
+      margin-top: 1.5rem;
+      background: rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: left;
+    }
+
+    .coords i {
+      color: #f87171;
+      margin-right: 8px;
+    }
+
+    #map {
+      height: 200px;
+      border-radius: 12px;
+      margin-top: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
 <body>
-<button onclick="getLocation()">Cek Lokasi</button>
-<p id="demo"></p>
 
-<script>
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition, showError);
-  } else {
-    document.getElementById("demo").innerHTML = "Geolocation tidak didukung di browser ini.";
-  }
-}
+  <div class="card-glass">
+    <h2><i class="fas fa-location-arrow text-danger"></i> Cek Lokasi & Koordinat</h2>
 
-function showPosition(position) {
-  document.getElementById("demo").innerHTML =
-    "Latitude: " + position.coords.latitude +
-    "<br>Longitude: " + position.coords.longitude;
-}
+    <p class="mb-4 text-light opacity-75">
+      Klik tombol di bawah untuk mendapatkan lokasi GPS Anda dan lihat posisi di peta secara real-time.
+    </p>
 
-function showError(error) {
-  switch(error.code) {
-    case error.PERMISSION_DENIED:
-      alert("Izin lokasi ditolak.");
-      break;
-    case error.POSITION_UNAVAILABLE:
-      alert("Informasi lokasi tidak tersedia.");
-      break;
-    case error.TIMEOUT:
-      alert("Permintaan lokasi timeout.");
-      break;
-    default:
-      alert("Terjadi kesalahan tak diketahui.");
-  }
-}
-</script>
+    <button class="btn-lokasi" onclick="getLocation()">
+      <i class="fas fa-crosshairs me-2"></i> Dapatkan Lokasi Saya
+    </button>
+
+    <div id="result" class="coords mt-4 d-none">
+      <p><i class="fas fa-globe-asia"></i> <strong>Latitude:</strong> <span id="lat">-</span></p>
+      <p><i class="fas fa-location-arrow"></i> <strong>Longitude:</strong> <span id="lon">-</span></p>
+      <div id="map"></div>
+    </div>
+
+    <p id="status" class="status text-warning mt-3"></p>
+  </div>
+
+  <script>
+    let map, marker;
+
+    function getLocation() {
+      const status = document.getElementById("status");
+      const result = document.getElementById("result");
+      status.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Sedang mengambil lokasi Anda...";
+      result.classList.add("d-none");
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+      } else {
+        status.innerHTML = "❌ Browser Anda tidak mendukung geolokasi.";
+      }
+    }
+
+    function showPosition(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      document.getElementById("lat").textContent = lat;
+      document.getElementById("lon").textContent = lon;
+      document.getElementById("result").classList.remove("d-none");
+      document.getElementById("status").innerHTML = "<i class='fas fa-check-circle text-success'></i> Lokasi berhasil didapatkan!";
+
+      // Inisialisasi peta Leaflet
+      if (!map) {
+        map = L.map('map').setView([lat, lon], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        marker = L.marker([lat, lon]).addTo(map)
+          .bindPopup("Lokasi Anda Saat Ini").openPopup();
+      } else {
+        map.setView([lat, lon], 16);
+        marker.setLatLng([lat, lon]);
+      }
+    }
+
+    function showError(error) {
+      const status = document.getElementById("status");
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          status.innerHTML = "❌ Izin lokasi ditolak.";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          status.innerHTML = "⚠️ Informasi lokasi tidak tersedia.";
+          break;
+        case error.TIMEOUT:
+          status.innerHTML = "⌛ Permintaan lokasi timeout.";
+          break;
+        default:
+          status.innerHTML = "❗ Terjadi kesalahan tak diketahui.";
+      }
+    }
+  </script>
 </body>
 </html>

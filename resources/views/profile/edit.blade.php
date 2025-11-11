@@ -140,7 +140,7 @@ h5.text-section {
         <h5 class="text-section"><i class="fas fa-user-friends me-2"></i> Data Tamu</h5>
         <div class="form-floating mb-3">
           <input type="text" name="instansi" value="{{ old('instansi',$user->tamu->instansi ?? '') }}" class="form-control" id="instansi">
-          <label for="instansi">Instansi</label>
+          <label for="instansi">Instansi Tamu</label>
         </div>
         <div class="form-floating mb-3">
           <input type="text" name="no_hp" value="{{ old('no_hp',$user->tamu->no_hp ?? '') }}" class="form-control" id="no_hp">

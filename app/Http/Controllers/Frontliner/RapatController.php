@@ -9,23 +9,46 @@ use Carbon\Carbon;
 
 class RapatController extends Controller
 {
-    // Daftar rapat hari ini
+    // ✅ Daftar semua rapat (internal & eksternal)
     public function index()
     {
-        $today = Carbon::today();
-
-        $rapat = Rapat::with(['undangan.user','undangan.instansi'])
-            ->whereDate('waktu_mulai', $today)
-            ->orderBy('waktu_mulai')
-            ->get();
+        $rapat = Rapat::with([
+                'ruangan',
+                'undangan.user.pegawai.instansi',
+                'undanganInstansi.instansi'
+            ])
+            ->orderByDesc('waktu_mulai')
+            ->paginate(10);
 
         return view('frontliner.rapat.index', compact('rapat'));
     }
 
-    // Detail rapat + status kehadiran tamu
+    // ✅ Daftar rapat hari ini (opsional filter)
+    public function today()
+    {
+        $today = Carbon::today();
+
+        $rapat = Rapat::with([
+                'ruangan',
+                'undangan.user.pegawai.instansi',
+                'undanganInstansi.instansi'
+            ])
+            ->whereDate('waktu_mulai', $today)
+            ->orderBy('waktu_mulai')
+            ->get();
+
+        return view('frontliner.rapat.today', compact('rapat'));
+    }
+
+    // ✅ Detail rapat + status kehadiran peserta
     public function show(Rapat $rapat)
     {
-        $rapat->load(['undangan.user','undangan.instansi']);
+        $rapat->load([
+            'ruangan',
+            'undangan.user.pegawai.instansi',
+            'undanganInstansi.instansi'
+        ]);
+
         return view('frontliner.rapat.show', compact('rapat'));
     }
 }

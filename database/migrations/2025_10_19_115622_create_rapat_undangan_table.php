@@ -21,7 +21,7 @@ return new class extends Migration
 
 
             // Status kehadiran
-            $table->enum('status_kehadiran', ['pending','hadir','tidak_hadir','selesai'])->default('pending');
+            $table->enum('status_kehadiran', ['pending','pending_verification','hadir','tidak_hadir','selesai'])->default('pending');
 
             // Data check-in
             $table->timestamp('checked_in_at')->nullable();
@@ -35,6 +35,7 @@ return new class extends Migration
             // QR Code check-in
             $table->string('checkin_token')->nullable()->unique();
             $table->string('checkin_token_hash')->nullable();
+            $table->timestamp('checkin_verified_at')->nullable();
             $table->timestamp('qr_scanned_at')->nullable();
 
             // Audit trail

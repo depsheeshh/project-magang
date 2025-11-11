@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title','Semua Rapat')
+@section('title','Rapat Hari Ini')
 
 @section('content')
 <div class="container-fluid">
-  <h4 class="mb-3">📋 Semua Rapat</h4>
+  <h4 class="mb-3">📅 Rapat Hari Ini</h4>
 
   <div class="card shadow-sm">
     <div class="card-body table-responsive">
@@ -26,16 +26,14 @@
           @forelse($rapat as $r)
           <tr>
             <td><strong>{{ $r->judul }}</strong></td>
-            <td class="text-center">
-              <span class="badge bg-info text-uppercase">{{ $r->jenis_rapat }}</span>
-            </td>
+            <td><span class="badge bg-info text-uppercase">{{ $r->jenis_rapat }}</span></td>
             <td>
               {{ \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') }}
               –
               {{ \Carbon\Carbon::parse($r->waktu_selesai)->format('H:i') }}
             </td>
             <td>{{ $r->lokasi }}</td>
-            <td class="text-center">
+            <td>
               @if($r->status === 'belum_dimulai')
                 <span class="badge bg-warning text-dark">Belum Dimulai</span>
               @elseif($r->status === 'berjalan')
@@ -67,7 +65,7 @@
           <tr>
             <td colspan="9" class="text-center text-muted">
               <i class="fas fa-calendar-times fa-2x mb-2"></i><br>
-              Belum ada rapat yang tercatat
+              Tidak ada rapat hari ini
             </td>
           </tr>
           @endforelse

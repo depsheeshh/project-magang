@@ -192,7 +192,7 @@ body {
           </div>
           <div class="row g-4 mb-3">
             <div class="col-md-6">
-              <label class="form-label"><i class="bi bi-building"></i> Instansi / Perusahaan</label>
+              <label class="form-label"><i class="bi bi-building"></i> Instansi / Perusahaan / SKPD</label>
               <input type="text" name="instansi" class="form-control form-control-lg" required>
             </div>
             <div class="col-md-6">

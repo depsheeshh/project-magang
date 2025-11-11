@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title','Detail & Check-in Rapat')
-@section('page-title','Detail & Check-in Rapat')
+@section('title','Detail Rapat Eksternal')
+@section('page-title','Detail Rapat Eksternal')
 
 @section('content')
 <div class="container mt-4">
@@ -32,7 +32,7 @@
         <strong>Instansi:</strong> {{ $undangan->user->instansi->nama_instansi ?? '-' }} <br>
         <strong>Status Kehadiran:</strong>
         @if($undangan->status_kehadiran === 'pending' || $undangan->status_kehadiran === null)
-            <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Belum Check-in</span>
+            <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Menunggu verifikasi (cek email)</span>
         @elseif($undangan->status_kehadiran === 'hadir')
             <span class="badge bg-success"><i class="fas fa-check-circle"></i> Sudah Check-in</span>
             <small class="text-muted d-block">
@@ -51,16 +51,7 @@
   </div>
 
   {{-- Tombol aksi --}}
-  @if($undangan->status_kehadiran === 'pending' || $undangan->status_kehadiran === null)
-    <form id="checkinForm" action="{{ route('tamu.rapat.checkin', $rapat->id) }}" method="POST">
-      @csrf
-      <input type="hidden" name="latitude">
-      <input type="hidden" name="longitude">
-      <button type="button" class="btn btn-success" onclick="doCheckin()">
-        <i class="fas fa-sign-in-alt"></i> Lakukan Check-in
-      </button>
-    </form>
-  @elseif($undangan->status_kehadiran === 'hadir')
+  @if($undangan->status_kehadiran === 'hadir')
     <form action="{{ route('tamu.rapat.checkout', $rapat->id) }}" method="POST">
       @csrf
       <button type="submit" class="btn btn-danger">
@@ -74,22 +65,3 @@
   </a>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-function doCheckin() {
-  if (!navigator.geolocation) {
-    alert('Perangkat tidak mendukung geolokasi.');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(function(pos){
-    const form = document.getElementById('checkinForm');
-    form.latitude.value = pos.coords.latitude.toFixed(6);
-    form.longitude.value = pos.coords.longitude.toFixed(6);
-    form.submit();
-  }, function(err){
-    alert('Gagal mengambil lokasi: ' + err.message);
-  }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
-}
-</script>
-@endpush
