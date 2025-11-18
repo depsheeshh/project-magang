@@ -30,13 +30,17 @@ function onScanSuccess(decodedText, decodedResult) {
         return;
     }
 
+    // Ambil hanya path dari decodedText
+    let urlObj = new URL(decodedText, window.location.origin);
+    let pathOnly = urlObj.pathname; // contoh: /pegawai/rapat/3/checkin/abc123
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(pos) {
             document.getElementById('lat').value = pos.coords.latitude;
             document.getElementById('lon').value = pos.coords.longitude;
 
             let form = document.getElementById('checkinForm');
-            form.action = decodedText; // gunakan URL dari QR
+            form.action = window.location.origin + pathOnly; // pakai domain aktif browser
             form.submit();
         }, function(err) {
             alert("Gagal mendapatkan lokasi: " + err.message);
@@ -51,7 +55,7 @@ function onScanError(errorMessage) {
 }
 
 let html5QrcodeScanner = new Html5QrcodeScanner(
-    "reader", { fps: 15, qrbox: 250 } // fps lebih rendah untuk stabilitas
+    "reader", { fps: 15, qrbox: 250 }
 );
 html5QrcodeScanner.render(onScanSuccess, onScanError);
 </script>

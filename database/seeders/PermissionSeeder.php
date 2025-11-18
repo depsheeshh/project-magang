@@ -86,7 +86,11 @@ class PermissionSeeder extends Seeder
             'rapat.manage',   // CRUD rapat
             'rapat.invite',   // kelola undangan instansi
             'rapat.rekap',    // akses rekap & export
-            'instansi.manage' // kelola data instansi
+            'instansi.manage', // kelola data instansi
+
+            'tamu.view',
+            'kunjungan.view'
+
         ];
 
         foreach ($permissions as $permission) {

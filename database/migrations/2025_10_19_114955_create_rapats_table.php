@@ -28,6 +28,7 @@ return new class extends Migration
             $table->integer('radius')->default(100); // meter
 
             $table->integer('jumlah_tamu')->nullable();
+            $table->integer('jumlah_instansi')->nullable();
             $table->uuid('qr_token')->nullable();
             $table->string('qr_token_hash')->nullable();
             $table->string('status')->default('belum_dimulai');

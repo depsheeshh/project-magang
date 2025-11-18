@@ -1,11 +1,11 @@
-@extends('layouts.app')
+@extends('layouts.scan-layout')
 
 @section('title', 'Scan QR Rapat Eksternal')
 
 @section('content')
 <style>
   body {
-    background: linear-gradient(180deg, #020617, #0f172a);
+    background: linear-gradient(180deg, #0726b0, #0f172a);
     min-height: 100vh;
     color: #e2e8f0;
   }
@@ -153,12 +153,18 @@ document.addEventListener("DOMContentLoaded", function() {
   const resultElem = document.getElementById("scan-result");
 
   function onScanSuccess(decodedText, decodedResult) {
+    // Ambil hanya path dari QR
+    let urlObj = new URL(decodedText, window.location.origin);
+    let pathOnly = urlObj.pathname + urlObj.search; // jaga-jaga kalau ada query string
+
     resultElem.innerHTML = `
       <p><strong>QR Terdeteksi:</strong> ${decodedText}</p>
       <p class="text-info">Mengarahkan ke halaman...</p>
     `;
+
     setTimeout(() => {
-      window.location.href = decodedText;
+      // Pakai domain aktif browser + path dari QR
+      window.location.href = window.location.origin + pathOnly;
     }, 1200);
   }
 
@@ -180,4 +186,5 @@ document.addEventListener("DOMContentLoaded", function() {
   html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 });
 </script>
+
 @endsection

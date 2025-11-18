@@ -22,6 +22,7 @@ use Illuminate\Support\ServiceProvider;
 use App\Observers\RapatUndanganObserver;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Blade;
 
 
 class AppServiceProvider extends ServiceProvider
@@ -57,6 +58,9 @@ class AppServiceProvider extends ServiceProvider
         Ruangan::observe(BaseObserver::class);
         Validator::replacer('Password', function ($message, $attribute, $rule, $parameters) {
         return "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol.";
+    });
+    Blade::directive('activeIfRoute', function ($expression) {
+        return "<?php echo request()->routeIs($expression) ? 'active' : ''; ?>";
     });
     }
 }

@@ -4,9 +4,7 @@
   <meta charset="utf-8">
   <title>QR Code Rapat DKIS</title>
   <style>
-    @page {
-      margin: 40px;
-    }
+    @page { margin: 40px; }
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
       background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
@@ -20,10 +18,7 @@
       padding-bottom: 10px;
       margin-bottom: 25px;
     }
-    .header img {
-      height: 60px;
-      margin-bottom: 5px;
-    }
+    .header img { height: 60px; margin-bottom: 5px; }
     .header h2 {
       margin: 0;
       font-size: 20px;
@@ -31,10 +26,7 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    .header small {
-      color: #64748b;
-      font-size: 11px;
-    }
+    .header small { color: #64748b; font-size: 11px; }
     .details {
       margin-bottom: 30px;
       background: #f1f5f9;
@@ -42,13 +34,8 @@
       padding: 15px 20px;
       box-shadow: inset 0 0 6px rgba(0,0,0,0.08);
     }
-    .details p {
-      margin: 5px 0;
-      font-size: 13px;
-    }
-    .details strong {
-      color: #0f172a;
-    }
+    .details p { margin: 5px 0; font-size: 13px; }
+    .details strong { color: #0f172a; }
     .qr-container {
       text-align: center;
       margin: 30px 0;
@@ -85,9 +72,7 @@
       margin-bottom: 10px;
       padding-left: 5px;
     }
-    ol.steps li strong {
-      color: #0f766e;
-    }
+    ol.steps li strong { color: #0f766e; }
     .footer {
       text-align: center;
       margin-top: 40px;
@@ -116,6 +101,29 @@
     <img src="data:image/png;base64,{{ $qrCode }}" alt="QR Code Check-in">
     <p>Scan QR ini untuk melakukan <strong>Check-in Kehadiran</strong></p>
   </div>
+
+  @if($rapat->surveys->isNotEmpty())
+    @php
+      $survey = $rapat->surveys->first();
+      $jumlahRespon = $survey->respon->count();
+      $surveyUrl = route('survey.rapat.form', $survey->slug);
+      $surveyQr = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')->size(250)->generate($surveyUrl));
+    @endphp
+
+    <h3 class="section-title">Survey Rapat</h3>
+    <div class="qr-container">
+      <img src="data:image/png;base64,{{ $surveyQr }}" alt="QR Code Survey">
+      <p>Scan QR ini untuk mengisi <strong>Survey Rapat</strong></p>
+    </div>
+
+    <div class="details">
+      <p><strong>Judul Survey:</strong> {{ $survey->judul }}</p>
+      <p><strong>Tipe:</strong> {{ ucfirst($survey->tipe) }}</p>
+      <p><strong>Jumlah Responden:</strong> {{ $jumlahRespon }}</p>
+      <p><strong>Link Akses:</strong> {{ $surveyUrl }}</p>
+      <p><strong>Deskripsi:</strong> {{ $survey->deskripsi ?? '-' }}</p>
+    </div>
+  @endif
 
   <h3 class="section-title">Langkah-langkah Check-in</h3>
   <ol class="steps">

@@ -27,6 +27,7 @@ class Rapat extends Model
         'longitude',
         'radius',
         'jumlah_tamu',
+        'jumlah_instansi',
         'qr_token',
         'qr_token_hash',
         'created_id',
@@ -48,6 +49,11 @@ class Rapat extends Model
     public function ruangan()
     {
         return $this->belongsTo(Ruangan::class, 'ruangan_id');
+    }
+
+    public function surveys()
+    {
+        return $this->belongsToMany(SurveyRapat::class, 'rapat_survey', 'rapat_id', 'survey_id');
     }
 
     public function undanganInstansi()

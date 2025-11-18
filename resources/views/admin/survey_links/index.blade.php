@@ -25,7 +25,7 @@
   <div class="card">
     <div class="card-body table-responsive">
       <table class="table table-bordered table-striped">
-        <thead class="table-dark">
+        <thead>
           <tr>
             <th>#</th>
             <th>Link Survey</th>

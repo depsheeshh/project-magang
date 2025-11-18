@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Models\Rapat;
 use App\Models\Kantor;
-use App\Models\Instansi;
 use App\Models\Ruangan;
+use App\Models\Instansi;
+use App\Models\SurveyRapat;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Models\RapatUndangan;
@@ -15,9 +16,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\RapatUndanganInstansi;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Notifications\RapatInvitationNotification;
 use App\Notifications\RapatInvitationCancelledNotification;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class RapatController extends Controller
 {
@@ -31,7 +32,8 @@ class RapatController extends Controller
     {
         $rapat  = Rapat::latest()->paginate(10);
         $kantor = Kantor::with('ruangan')->get();
-        return view('admin.rapat.index', compact('rapat','kantor'));
+        $surveys = SurveyRapat::select('id','judul','tipe')->orderBy('created_at','desc')->get();
+        return view('admin.rapat.index', compact('rapat','kantor','surveys'));
     }
 
     public function store(Request $request)
@@ -43,7 +45,9 @@ class RapatController extends Controller
             'waktu_selesai' => 'required|date|after:waktu_mulai',
             'jenis_rapat'   => 'required|string',
             'lokasi'        => 'required|exists:kantor,nama_kantor',
+            'survey_id'     => 'nullable|exists:survey_rapat,id',
             'jumlah_tamu'   => 'nullable|integer|min:1',
+            'jumlah_instansi' => 'nullable|integer|min:1',
             ], [
             'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
             'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
@@ -65,10 +69,10 @@ class RapatController extends Controller
             ])->withInput();
         }
 
-        Rapat::create([
+        $rapat = Rapat::create([
             'judul'        => $request->judul,
             'ruangan_id'   => $request->ruangan_id,
-            'jenis_rapat' => $request->jenis_rapat,
+            'jenis_rapat'  => $request->jenis_rapat,
             'waktu_mulai'  => $request->waktu_mulai,
             'waktu_selesai'=> $request->waktu_selesai,
             'lokasi'       => $kantor->nama_kantor,
@@ -76,15 +80,31 @@ class RapatController extends Controller
             'longitude'    => $kantor->longitude,
             'radius'       => 100,
             'jumlah_tamu'  => $request->jumlah_tamu,
+            'jumlah_instansi' => $request->jumlah_instansi,
             'created_id'   => Auth::id(),
         ]);
+
+        if ($request->filled('survey_id')) {
+            $rapat->surveys()->sync([$request->survey_id]);
+        }
+
+        if ($request->has('buat_survey_baru')) {
+            $surveyBaru = SurveyRapat::create([
+                'judul'     => 'Survey untuk ' . $rapat->judul,
+                'slug'      => Str::slug('survey-' . $rapat->judul . '-' . uniqid()),
+                'tipe'      => $rapat->jenis_rapat === 'Eksternal' ? 'eksternal' : 'internal',
+                'deskripsi' => 'Survey otomatis untuk rapat ' . $rapat->judul,
+            ]);
+
+            $rapat->surveys()->sync([$surveyBaru->id]);
+        }
 
         return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil dibuat');
     }
 
     public function show(Rapat $rapat)
     {
-    // Generate QR token rapat jika belum ada
+        // Generate QR token rapat jika belum ada
         if (!$rapat->qr_token_hash) {
             $token = (string) Str::uuid();
             $rapat->fill([
@@ -96,17 +116,29 @@ class RapatController extends Controller
         // Eager load relasi undangan + user + pegawai + instansi
         $rapat->load([
             'undangan.user.pegawai.instansi',
-            'undangan.instansi'
+            'undangan.instansi',
+            'surveys'
         ]);
 
-        // Semua user (untuk undangan internal)
-        $users = User::with('pegawai.instansi')->orderBy('name')->get();
+        // Ambil semua user pegawai yang belum diundang
+        $undanganPegawaiIds = $rapat->undangan()->pluck('user_id');
+        $users = User::role('pegawai')
+            ->with('pegawai.instansi')
+            ->whereNotIn('id', $undanganPegawaiIds)
+            ->orderBy('name')
+            ->get();
 
-        // Semua instansi (untuk undangan eksternal)
-        $instansi = Instansi::orderBy('nama_instansi')->get();
+        // Ambil semua instansi yang belum diundang
+        $undanganInstansiIds = $rapat->undanganInstansi()->pluck('instansi_id');
+        $instansi = Instansi::whereNotIn('id', $undanganInstansiIds)
+            ->orderBy('nama_instansi')
+            ->get();
+
+        $surveys = SurveyRapat::select('id','judul','tipe')->orderBy('created_at','desc')->get();
 
         return view('admin.rapat.show', compact('rapat','users','instansi'));
     }
+
 
     public function update(Request $request, Rapat $rapat)
     {
@@ -118,6 +150,7 @@ class RapatController extends Controller
             'jenis_rapat'   => 'required|string',
             'lokasi'        => 'required|exists:kantor,nama_kantor',
             'jumlah_tamu'   => 'nullable|integer|min:1',
+            'jumlah_instansi' => 'nullable|integer|min:1',
             ], [
             'waktu_mulai.after_or_equal' => 'Waktu mulai rapat minimal sekarang.',
             'waktu_selesai.after'        => 'Waktu selesai harus setelah waktu mulai.',
@@ -158,8 +191,13 @@ class RapatController extends Controller
             'longitude'    => $kantor->longitude,
             'radius'       => 100,
             'jumlah_tamu'  => $request->jumlah_tamu,
+            'jumlah_instansi' => $request->jumlah_instansi,
             'updated_id'   => Auth::id(),
         ]);
+
+        if ($request->filled('survey_id')) {
+            $rapat->surveys()->sync([$request->survey_id]);
+        }
 
         return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil diperbarui');
     }
@@ -279,6 +317,13 @@ class RapatController extends Controller
             return back()->with('warning', 'Instansi ini sudah diundang.');
         }
 
+        if ($rapat->jumlah_instansi !== null &&
+            $rapat->undanganInstansi()->count() >= $rapat->jumlah_instansi) {
+            return back()->with('warning','⚠️ Jumlah instansi maksimal sudah tercapai. Tidak bisa menambah instansi lagi.');
+        }
+
+
+
         // Simpan undangan instansi
         $rapat->undanganInstansi()->create([
             'instansi_id'   => $request->instansi_id,
@@ -292,43 +337,40 @@ class RapatController extends Controller
 
     public function inviteAllInstansi(Rapat $rapat)
     {
-        $instansiList = Instansi::all();
+        $maxInstansi = $rapat->jumlah_instansi; // batas maksimal
+        $currentCount = $rapat->undanganInstansi()->count();
+
+        // Hitung slot tersisa
+        $remainingSlots = $maxInstansi !== null ? max($maxInstansi - $currentCount, 0) : null;
+
+        $addedCount = 0;
+
+        // Ambil semua instansi yang belum diundang
+        $instansiList = Instansi::whereNotIn('id', $rapat->undanganInstansi()->pluck('instansi_id'))->get();
 
         foreach ($instansiList as $instansi) {
-            $users = User::where('instansi_id', $instansi->id)->get();
-
-            foreach ($users as $user) {
-
-                if ($rapat->ruangan && $rapat->undangan()->count() >= $rapat->ruangan->kapasitas_maksimal) {
-                    break; // stop loop karena kapasitas penuh
-                }
-
-                if ($rapat->jumlah_tamu !== null && $rapat->undangan()->count() >= $rapat->jumlah_tamu) {
-                    break 2; // keluar dari 2 loop sekaligus
-                }
-                if ($rapat->undangan()->where('user_id', $user->id)->exists()) {
-                    continue;
-                }
-
-                $token = (string) Str::uuid();
-
-                $rapat->undangan()->create([
-                    'user_id'            => $user->id,
-                    'instansi_id'        => $instansi->id,
-                    'checkin_token'      => $token,
-                    'checkin_token_hash' => hash('sha256', $token),
-                    'status_kehadiran'   => 'pending',
-                    'created_id'         => Auth::id(),
-                ]);
-
-                if (method_exists($user, 'notify')) {
-                    $user->notify(new RapatInvitationNotification($rapat));
-                }
+            // Kalau ada batas maksimal dan slot tersisa sudah habis → stop loop
+            if ($remainingSlots !== null && $addedCount >= $remainingSlots) {
+                break;
             }
+
+            $rapat->undanganInstansi()->create([
+                'instansi_id' => $instansi->id,
+                'kuota'       => 0, // default kuota
+                'created_id'  => Auth::id(),
+            ]);
+
+            $addedCount++;
         }
 
-        return back()->with('success', 'Semua instansi berhasil diundang.');
+        if ($remainingSlots !== null && $addedCount >= $remainingSlots) {
+            return back()->with('success', "Instansi berhasil ditambahkan sesuai maksimal jumlah instansi ({$maxInstansi}).");
+        }
+
+        return back()->with('success', "Semua instansi berhasil diundang ({$addedCount} instansi ditambahkan).");
     }
+
+
 
     public function updateKuotaInstansi(Request $request, Rapat $rapat, RapatUndanganInstansi $undanganInstansi)
     {

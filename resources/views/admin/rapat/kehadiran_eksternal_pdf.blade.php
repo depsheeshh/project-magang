@@ -194,6 +194,7 @@
       <p>Cirebon, {{ now()->translatedFormat('d F Y') }}</p>
       <p class="jabatan">Kepala Dinas Komunikasi, Informatika dan Statistik</p>
       <p class="nama">________________________</p>
+      <p class="nama">Ma'ruf Nuryasa., A.P.,M.M.</p>
     </div>
   </div>
 

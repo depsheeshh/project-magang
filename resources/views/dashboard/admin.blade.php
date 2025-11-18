@@ -95,6 +95,17 @@ body.dark-mode .badge {
     </div>
   </div>
 
+  {{-- Tamu --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-info"><i class="fas fa-user-friends"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Total Tamu</h4></div>
+        <div class="card-body">{{ $totalTamu }}</div>
+      </div>
+    </div>
+  </div>
+
   {{-- Survey --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
@@ -187,7 +198,19 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
+
+  {{-- Rapat --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-secondary"><i class="fas fa-handshake"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Daftar Rapat</h4></div>
+        <div class="card-body">{{ $totalRapat }}</div>
+      </div>
+    </div>
+  </div>
 </div>
+
 
 {{-- Daftar kunjungan menunggu --}}
 <div class="card mt-4">
@@ -231,52 +254,44 @@ body.dark-mode .badge {
 
 {{-- Dashboard untuk Pegawai --}}
 @if($role === 'pegawai')
+{{-- Baris 1: Statistik Kunjungan --}}
 <div class="row">
-
-  {{-- Ringkasan cepat --}}
-  <div class="col-md-3 mb-3">
+  @foreach([
+    ['label' => 'Total Kunjungan', 'icon' => 'users', 'bg' => 'primary', 'value' => $totalKunjungan ?? 0],
+    ['label' => 'Selesai', 'icon' => 'check-circle', 'bg' => 'success', 'value' => $selesai ?? 0],
+    ['label' => 'Sedang Bertamu', 'icon' => 'user-clock', 'bg' => 'warning', 'value' => $sedangBertamu ?? 0],
+    ['label' => 'Ditolak', 'icon' => 'times-circle', 'bg' => 'danger', 'value' => $ditolakPegawai ?? 0],
+  ] as $stat)
+  <div class="col-sm-6 col-md-3 mb-3">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-primary"><i class="fas fa-users"></i></div>
+      <div class="card-icon bg-{{ $stat['bg'] }}"><i class="fas fa-{{ $stat['icon'] }}"></i></div>
       <div class="card-wrap">
-        <div class="card-header"><h4>Total Kunjungan</h4></div>
-        <div class="card-body">{{ $totalKunjungan ?? 0 }}</div>
+        <div class="card-header"><h4>{{ $stat['label'] }}</h4></div>
+        <div class="card-body">{{ $stat['value'] }}</div>
       </div>
     </div>
   </div>
+  @endforeach
+</div>
 
-  <div class="col-md-3 mb-3">
+{{-- Baris 2: Data Rapat (full-width) --}}
+<div class="row">
+  <div class="col-12 mb-3">
     <div class="card card-statistic-1">
-      <div class="card-icon bg-success"><i class="fas fa-check-circle"></i></div>
+      <div class="card-icon bg-secondary"><i class="fas fa-handshake"></i></div>
       <div class="card-wrap">
-        <div class="card-header"><h4>Selesai</h4></div>
-        <div class="card-body">{{ $selesai ?? 0 }}</div>
+        <div class="card-header"><h4>Data Rapat</h4></div>
+        <div class="card-body">{{ $totalRapatPegawai ?? 0 }}</div>
       </div>
     </div>
   </div>
+</div>
 
-  <div class="col-md-3 mb-3">
-    <div class="card card-statistic-1">
-      <div class="card-icon bg-warning"><i class="fas fa-user-clock"></i></div>
-      <div class="card-wrap">
-        <div class="card-header"><h4>Sedang Bertamu</h4></div>
-        <div class="card-body">{{ $sedangBertamu ?? 0 }}</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-3 mb-3">
-    <div class="card card-statistic-1">
-      <div class="card-icon bg-danger"><i class="fas fa-times-circle"></i></div>
-      <div class="card-wrap">
-        <div class="card-header"><h4>Ditolak</h4></div>
-        <div class="card-body">{{ $ditolakPegawai ?? 0 }}</div>
-      </div>
-    </div>
-  </div>
-
-  {{-- Kunjungan terbaru --}}
-  <div class="col-md-6">
-    <div class="card shadow-sm">
+{{-- Baris 3: Kunjungan Terbaru & Riwayat Singkat (di bawah Data Rapat) --}}
+<div class="row">
+  {{-- Kunjungan Terbaru --}}
+  <div class="col-sm-12 col-md-6 mb-3">
+    <div class="card shadow-sm h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Kunjungan Terbaru</h4>
         <a href="{{ route('pegawai.kunjungan.notifikasi') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
@@ -310,9 +325,9 @@ body.dark-mode .badge {
     </div>
   </div>
 
-  {{-- Riwayat singkat --}}
-  <div class="col-md-6">
-    <div class="card shadow-sm">
+  {{-- Riwayat Singkat --}}
+  <div class="col-sm-12 col-md-6 mb-3">
+    <div class="card shadow-sm h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Riwayat Singkat</h4>
         <a href="{{ route('pegawai.kunjungan.riwayat') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
@@ -339,10 +354,8 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
-
 </div>
 @endif
-
 
 
 {{-- Dashboard untuk Tamu --}}

@@ -10,6 +10,15 @@
 
 @section('content')
 
+@if(session('warning'))
+  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+    {{ session('warning') }}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+@endif
+
 <div class="card mb-3">
   <div class="card-header">
     <h5>Tambah Undangan</h5>
@@ -132,14 +141,60 @@
       </dd>
 
 
-      <dt class="col-sm-3">Jumlah Tamu</dt>
-      <dd class="col-sm-9">
-            {{ $rapat->jumlah_tamu ?? 0 }}
+      @php
+        // total tamu maksimal yang diizinkan
+        $maxTamu = $rapat->jumlah_tamu ?? 0;
+
+        // jumlah pegawai yang sudah check-in
+        $jumlahCheckin = $rapat->undangan->whereNotNull('checked_in_at')->count();
+
+        // sisa kuota = max tamu - sudah checkin
+        $sisaKuota = max($maxTamu - $jumlahCheckin, 0);
+    @endphp
+
+    <dt class="col-sm-3">Jumlah Tamu</dt>
+    <dd class="col-sm-9">
+        {{ $maxTamu }} / sisa {{ $sisaKuota }}
+
+        @if($sisaKuota === 0 && $maxTamu > 0)
+            <span class="badge badge-danger ml-2">Kuota Penuh</span>
+        @endif
+    </dd>
+
+        @if($rapat->jenis_rapat === 'Eksternal')
+        <dt class="col-sm-3">Jumlah Instansi Maksimal</dt>
+        <dd class="col-sm-9">{{ $rapat->jumlah_instansi ?? '-' }}</dd>
+        @endif
+
+
+        <dt class="col-sm-3">Survey Rapat</dt>
+        <dd class="col-sm-9">
+        @if($rapat->surveys->isNotEmpty())
             @php
-                $totalKuota = $rapat->undanganInstansi->sum('kuota');
-                $sisaKuota  = max(($rapat->jumlah_tamu ?? 0) - $totalKuota, 0);
+            $survey = $rapat->surveys->first();
+            $jumlahRespon = $survey->respon->count();
             @endphp
-            / sisa {{ $sisaKuota }}
+
+            <p><strong>{{ $survey->judul }}</strong></p>
+            <div class="mb-2">
+            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
+                route('survey.rapat.form', $survey->slug)
+            ) !!}
+            </div>
+            <p class="mt-2">
+            <a href="{{ route('survey.rapat.form', $survey->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-link"></i> Buka Survey
+            </a>
+            </p>
+            <span class="badge badge-info mt-2">
+            {{ $jumlahRespon }} responden telah mengisi
+            </span>
+            <small class="text-muted d-block mt-1">
+            Survey ini dipakai untuk rapat <strong>{{ ucfirst($rapat->jenis_rapat) }}</strong> berjudul <em>{{ $rapat->judul }}</em>.
+            </small>
+        @else
+            <span class="text-muted">Belum ada survey rapat terhubung.</span>
+        @endif
         </dd>
 
       <dt class="col-sm-3">QR Code Rapat</dt>
@@ -153,6 +208,9 @@
             <p class="mt-2 text-muted">
                 Pegawai silakan scan QR ini untuk check-in rapat.<br>
             </p>
+            <a href="{{ route('admin.rapat.export.qrpdf', $rapat->id) }}" class="btn btn-info btn-sm mr-2">
+                    <i class="fas fa-qrcode"></i> Export QR PDF
+                </a>
             @elseif($rapat->jenis_rapat === 'Eksternal')
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
                     route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token])
@@ -167,10 +225,6 @@
             <span class="badge badge-warning">QR belum digenerate</span>
         @endif
         </dd>
-
-
-      <dt class="col-sm-3">Deskripsi</dt>
-      <dd class="col-sm-9">{{ $rapat->deskripsi ?? '-' }}</dd>
     </dl>
 
     @hasanyrole(['admin', 'pegawai'])

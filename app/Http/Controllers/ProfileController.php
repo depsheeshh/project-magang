@@ -4,53 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Instansi;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit()
     {
         $user = Auth::user();
-        return view('profile.edit', compact('user'));
+        $instansi = Instansi::all();
+        return view('profile.edit', compact('user','instansi'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -58,12 +23,12 @@ class ProfileController extends Controller
         $rules = [
             'name'  => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'profile_photo' => 'nullable|image|mimes:jpg,jpeg,png|max:3048',
         ];
 
-        // Tambahan validasi sesuai role
         if ($user->hasRole('tamu')) {
-            $rules['instansi'] = 'nullable|string|max:255';
-            $rules['telepon']  = 'nullable|string|max:20';
+            $rules['instansi'] = 'required|string|max:255';
+            $rules['no_hp']    = 'nullable|string|max:20|regex:/^[0-9\+\-\s]+$/';
             $rules['alamat']   = 'nullable|string|max:255';
         }
 
@@ -76,21 +41,31 @@ class ProfileController extends Controller
         // Sanitasi input
         $data['name']  = strip_tags($data['name']);
         $data['email'] = strip_tags($data['email']);
-
         $data['updated_id'] = Auth::id();
+
+        // ✅ Upload foto profil
+        if ($request->hasFile('profile_photo')) {
+            // hapus foto lama jika ada
+            if ($user->profile_photo) {
+                Storage::disk('public')->delete($user->profile_photo);
+            }
+            $path = $request->file('profile_photo')->store('profile_photos','public');
+            $data['profile_photo'] = $path;
+        }
 
         $user->update($data);
 
-        // Update relasi pegawai/tamu jika ada
+        // Update relasi tamu
         if ($user->hasRole('tamu') && $user->tamu) {
             $user->tamu->update([
-                'instansi' => strip_tags($request->instansi),
-                'telepon'  => strip_tags($request->telepon),
-                'alamat'   => strip_tags($request->alamat),
+                'instansi'   => strip_tags($request->instansi),
+                'no_hp'      => strip_tags($request->no_hp),
+                'alamat'     => strip_tags($request->alamat),
                 'updated_id' => Auth::id(),
             ]);
         }
 
+        // Update relasi pegawai
         if ($user->hasRole('pegawai') && $user->pegawai) {
             $user->pegawai->update([
                 'telepon'    => strip_tags($request->telepon),
@@ -101,11 +76,22 @@ class ProfileController extends Controller
         return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function resetPhoto()
     {
-        //
+        $user = Auth::user();
+
+        // hapus file lama jika ada
+        if ($user->profile_photo) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo);
+        }
+
+        // kosongkan kolom profile_photo
+        $user->update([
+            'profile_photo' => null,
+            'updated_id'    => Auth::id(),
+        ]);
+
+        return redirect()->route('profile')->with('success','Foto profil berhasil direset ke default.');
     }
+
 }

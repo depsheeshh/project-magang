@@ -97,9 +97,13 @@ class RapatCheckinController extends Controller
         $validWaktu = $this->validateWaktu($rapat);
         if ($validWaktu !== true) return back()->with('error',$validWaktu);
 
+        // ✅ Validate dengan aturan ketat untuk koordinat
         $request->validate([
             'latitude'  => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
+        ], [
+            'latitude.required'  => 'Lokasi tidak dapat dideteksi, cek permission GPS.',
+            'longitude.required' => 'Lokasi tidak dapat dideteksi, cek permission GPS.',
         ]);
 
         $buffer   = $user->hasRole('pegawai') ? 20 : 0;
@@ -114,6 +118,11 @@ class RapatCheckinController extends Controller
             return back()->with('error',"❌ Anda di luar radius, jarak sekitar {$km} km (radius diizinkan {$allowed} km).");
         }
 
+        // ✅ Cek apakah sudah pernah check-in
+        if ($undangan->status_kehadiran === 'hadir' || $undangan->status_kehadiran === 'selesai') {
+            return back()->with('warning','Anda sudah melakukan check-in sebelumnya.');
+        }
+
         $undangan->update([
             'status_kehadiran'  => 'hadir',
             'checked_in_at'     => now(),
@@ -124,33 +133,13 @@ class RapatCheckinController extends Controller
             'instansi_id'       => $user->instansi_id,
         ]);
 
-        return back()->with('success','Check-in berhasil, status Anda tercatat hadir.');
+        return redirect()->route('pegawai.agenda.rapat')
+            ->with('success','✅ Check-in berhasil, status Anda tercatat hadir.');
     }
 
     // =========================
     // Pegawai: checkout
     // =========================
-
-
-
-    // ✅ Checkout tamu
-    public function tamuCheckout(Request $request, Rapat $rapat)
-    {
-        $user = $request->user();
-        $undangan = $rapat->undangan()->where('user_id',$user->id)->firstOrFail();
-
-        if ($undangan->status_kehadiran !== 'hadir') {
-            return back()->with('error','Anda belum melakukan check-in.');
-        }
-
-        $undangan->update([
-            'status_kehadiran'=>'selesai',
-            'checked_out_at'=>now(),
-            'updated_id'=>$user->id,
-        ]);
-
-        return redirect()->route('tamu.rapat.saya')->with('success','Checkout berhasil.');
-    }
 
     // ✅ Checkout pegawai
     public function pegawaiCheckout(Request $request, Rapat $rapat)
@@ -168,6 +157,6 @@ class RapatCheckinController extends Controller
             'updated_id'=>$user->id,
         ]);
 
-        return redirect()->route('pegawai.rapat.index')->with('success','Checkout berhasil.');
+        return redirect()->route('pegawai.agenda.rapat')->with('success','Checkout berhasil.');
     }
 }

@@ -44,7 +44,7 @@
       </form>
     @endif
 
-    <a href="{{ route('pegawai.rapat.index') }}" class="btn btn-secondary mt-3">
+    <a href="{{ route('pegawai.agenda.rapat') }}" class="btn btn-secondary mt-3">
       <i class="fas fa-arrow-left"></i> Kembali
     </a>
   </div>

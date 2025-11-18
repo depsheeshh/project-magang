@@ -64,19 +64,19 @@
                 <td class="text-center">
                 @if($r->jenis_rapat === 'Internal')
                     @php
-                    $hadir = $r->undangan->where('status_kehadiran','hadir')->count();
-                    $total = $r->jumlah_tamu ?? 0;
+                        $hadir = $r->undangan->where('status_kehadiran','hadir')->count();
+                        $total = $r->jumlah_tamu ?? 0;
                     @endphp
-                    <span class="badge badge-success">Tamu: {{ $total }}</span><br>
+                    <span class="badge badge-success">Tamu Maks: {{ $total }}</span><br>
                     <span class="badge badge-primary">Hadir: {{ $hadir }}/{{ $total }}</span>
                 @else
                     @php
-                    $jumlahInstansi = $r->undanganInstansi->count();
-                    $totalKuota = $r->undanganInstansi->sum('kuota');
-                    $totalHadir = $r->undanganInstansi->sum('jumlah_hadir');
+                        $jumlahInstansi = $r->undanganInstansi->count();
+                        $totalKuota     = $r->undanganInstansi->sum('kuota');
+                        $totalHadir     = $r->undanganInstansi->sum('jumlah_hadir');
                     @endphp
-                    <span class="badge badge-info">Instansi: {{ $jumlahInstansi }}</span><br>
-                    <span class="badge badge-success">Kuota: {{ $totalKuota }}</span><br>
+                    <span class="badge badge-info">Instansi: {{ $jumlahInstansi }}/{{ $r->jumlah_instansi ?? '-' }}</span><br>
+                    <span class="badge badge-success">Kuota Tamu: {{ $totalKuota }}/{{ $r->jumlah_tamu ?? '-' }}</span><br>
                     <span class="badge badge-primary">Hadir: {{ $totalHadir }}/{{ $totalKuota }}</span>
                 @endif
                 </td>
@@ -139,7 +139,7 @@
 
           <div class="form-group">
             <label>Jenis Rapat</label>
-            <select name="jenis_rapat" class="form-control" required>
+            <select name="jenis_rapat" id="jenisRapatCreate" class="form-control" required>
               <option value="Internal">Rapat Internal</option>
               <option value="Eksternal">Rapat Eksternal</option>
             </select>
@@ -191,6 +191,32 @@
             @enderror
         </div>
 
+        <div class="form-group" id="jumlahInstansiWrapperCreate" style="display:none;">
+            <label>Jumlah Instansi (Maksimal)</label>
+            <input type="number" name="jumlah_instansi" class="form-control" placeholder="Maksimal instansi" min="1">
+            @error('jumlah_instansi')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label>Survey Rapat</label>
+            <select name="survey_id" id="surveySelectCreate" class="form-control">
+                <option value="">-- Pilih Survey --</option>
+                {{-- opsi diisi via AJAX --}}
+            </select>
+            @error('survey_id')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <div class="form-check mt-2">
+            <input type="checkbox" name="buat_survey_baru" class="form-check-input" id="buatSurveyBaruCreate">
+            <label class="form-check-label" for="buatSurveyBaruCreate">
+                Buat Survey Rapat Baru
+            </label>
+        </div>
+
         </div>
         <div class="modal-footer">
           <button class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
@@ -236,11 +262,11 @@
 
           <div class="form-group">
             <label>Jenis Rapat</label>
-            <select name="jenis_rapat" class="form-control" required>
-              <option value="Internal" {{ $r->jenis_rapat == 'Internal' ? 'selected' : '' }}>Rapat Internal</option>
-              <option value="Eksternal" {{ $r->jenis_rapat == 'Eksternal' ? 'selected' : '' }}>Rapat Eksternal</option>
+            <select name="jenis_rapat" id="jenisRapat{{ $r->id }}" class="form-control" required>
+                <option value="internal" {{ $r->jenis_rapat == 'internal' ? 'selected' : '' }}>Rapat Internal</option>
+                <option value="eksternal" {{ $r->jenis_rapat == 'eksternal' ? 'selected' : '' }}>Rapat Eksternal</option>
             </select>
-          </div>
+            </div>
 
           <div class="form-group">
             <label>Lokasi (Kantor)</label>
@@ -292,6 +318,41 @@
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
+
+        <div class="form-group" id="jumlahInstansiWrapper{{ $r->id }}" style="{{ $r->jenis_rapat == 'Eksternal' ? '' : 'display:none;' }}">
+            <label>Jumlah Instansi (Maksimal)</label>
+            <input type="number" name="jumlah_instansi" value="{{ $r->jumlah_instansi }}" class="form-control" min="1">
+            @error('jumlah_instansi')
+                <small class="text-danger">{{ $message }}</small>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label>Survey Rapat</label>
+            <select name="survey_id" id="surveySelect{{ $r->id }}" class="form-control">
+                <option value="">-- Pilih Survey --</option>
+                {{-- opsi diisi via AJAX --}}
+            </select>
+        </div>
+
+        <div class="form-check mt-2">
+            <input type="checkbox" name="buat_survey_baru" class="form-check-input" id="buatSurveyBaru{{ $r->id }}">
+            <label class="form-check-label" for="buatSurveyBaru{{ $r->id }}">
+                Buat Survey Rapat Baru
+            </label>
+        </div>
+
+        @if($r->surveys->isNotEmpty())
+            <div class="form-group text-center">
+                <label>QR Code Survey</label><br>
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(route('admin.survey-rapat.show', $r->surveys->first()->slug)) !!}
+                <p class="mt-2">
+                <a href="{{ route('admin.survey-rapat.show', $r->surveys->first()->slug) }}" target="_blank">
+                    Buka Survey
+                </a>
+                </p>
+            </div>
+            @endif
 
         </div>
         <div class="modal-footer">
@@ -385,6 +446,125 @@ document.addEventListener("DOMContentLoaded", function() {
     );
   @endforeach
 });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Untuk create
+        const jenisCreate = document.querySelector('select[name="jenis_rapat"]');
+        const instansiWrapperCreate = document.getElementById('jumlahInstansiWrapperCreate');
+
+        jenisCreate.addEventListener('change', function() {
+            if (this.value === 'Eksternal') {
+            instansiWrapperCreate.style.display = 'block';
+            } else {
+            instansiWrapperCreate.style.display = 'none';
+            }
+        });
+
+        // Untuk edit (loop semua rapat)
+        @foreach($rapat as $r)
+            const jenisSelect{{ $r->id }} = document.querySelector('#editRapatModal{{ $r->id }} select[name="jenis_rapat"]');
+            const instansiWrapper{{ $r->id }} = document.getElementById('jumlahInstansiWrapper{{ $r->id }}');
+
+            jenisSelect{{ $r->id }}.addEventListener('change', function() {
+            if (this.value === 'Eksternal') {
+                instansiWrapper{{ $r->id }}.style.display = 'block';
+            } else {
+                instansiWrapper{{ $r->id }}.style.display = 'none';
+            }
+            });
+        @endforeach
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+    function bindSurveyDropdown(jenisSelectId, surveySelectId, selectedSurveyId = null) {
+        const jenisSelect = document.getElementById(jenisSelectId);
+        const surveySelect = document.getElementById(surveySelectId);
+
+        if (!jenisSelect || !surveySelect) return;
+
+        function loadSurveys() {
+        const tipe = jenisSelect.value.toLowerCase(); // internal / eksternal
+        surveySelect.innerHTML = '<option value="">-- Pilih Survey --</option>';
+
+        if (!tipe) return;
+
+        // ✅ gunakan base URL + tipe
+        fetch(`/admin/survey-rapat/by-tipe/${tipe}`)
+            .then(res => res.json())
+            .then(data => {
+            data.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.judul;
+                if (selectedSurveyId && selectedSurveyId == s.id) {
+                opt.selected = true;
+                }
+                surveySelect.appendChild(opt);
+            });
+            });
+        }
+
+        jenisSelect.addEventListener('change', loadSurveys);
+        loadSurveys(); // initial load
+    }
+
+    // untuk create
+    bindSurveyDropdown('jenisRapatCreate', 'surveySelectCreate');
+
+    // untuk edit
+    @foreach($rapat as $r)
+        bindSurveyDropdown('jenisRapat{{ $r->id }}', 'surveySelect{{ $r->id }}', {{ $r->surveys->first()->id ?? 'null' }});
+    @endforeach
+    });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create modal toggle
+    const createCheckbox = document.getElementById('buatSurveyBaruCreate');
+    const createSelect   = document.getElementById('surveySelectCreate');
+
+    function toggleCreateSurveySelect() {
+      if (!createCheckbox || !createSelect) return;
+      if (createCheckbox.checked) {
+        createSelect.value = '';
+        createSelect.setAttribute('disabled', 'disabled');
+        createSelect.classList.add('bg-light');
+      } else {
+        createSelect.removeAttribute('disabled');
+        createSelect.classList.remove('bg-light');
+      }
+    }
+    if (createCheckbox) {
+      toggleCreateSurveySelect();
+      createCheckbox.addEventListener('change', toggleCreateSurveySelect);
+    }
+
+    // Edit modals toggle (loop per rapat)
+    @foreach($rapat as $r)
+      (function() {
+        const cb = document.getElementById('buatSurveyBaru{{ $r->id }}');
+        const sel = document.getElementById('surveySelect{{ $r->id }}');
+        function toggleEditSurveySelect() {
+          if (!cb || !sel) return;
+          if (cb.checked) {
+            sel.value = '';
+            sel.setAttribute('disabled', 'disabled');
+            sel.classList.add('bg-light');
+          } else {
+            sel.removeAttribute('disabled');
+            sel.classList.remove('bg-light');
+          }
+        }
+        if (cb) {
+          // Ensure correct state when modal opens
+          toggleEditSurveySelect();
+          cb.addEventListener('change', toggleEditSurveySelect);
+        }
+      })();
+    @endforeach
+  });
 </script>
 @endpush
 

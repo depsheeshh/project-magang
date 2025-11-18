@@ -7,10 +7,11 @@
     /* 🌟 Base Style */
     body {
       font-family: DejaVu Sans, sans-serif;
-      background: #f9fafc;
+      background: #ffffff;
       color: #1f2937;
       font-size: 13px;
       margin: 40px;
+      line-height: 1.6;
     }
 
     h1, h2, h3 {
@@ -37,7 +38,19 @@
       margin: 10px auto 25px;
     }
 
-    /* 🌟 Table Styling */
+    /* 🌟 Info Box */
+    .info-box {
+      background: #e8f0ff;
+      border-left: 4px solid #2563eb;
+      border-radius: 6px;
+      padding: 8px 15px;
+      margin-bottom: 25px;
+      color: #1f2937;
+      font-size: 12.5px;
+    }
+    .info-box strong { color: #1e40af; }
+
+    /* 🌟 Table */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -62,15 +75,9 @@
       letter-spacing: 0.5px;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: #f3f4f6;
-    }
+    tbody tr:nth-child(even) { background-color: #f3f4f6; }
+    tbody tr:hover { background-color: #e0f2fe; }
 
-    tbody tr:hover {
-      background-color: #e0f2fe;
-    }
-
-    /* 🌟 Rating Badge */
     .rating-badge {
       display: inline-block;
       background-color: #2563eb;
@@ -90,6 +97,20 @@
       color: #374151;
     }
 
+    /* 🌟 Tanda Tangan */
+    .ttd-wrapper {
+      margin-top: 40px;
+    }
+    .ttd {
+      width: 260px;
+      float: right;
+      text-align: center;
+      font-size: 12px;
+    }
+    .ttd p { margin: 3px 0; }
+    .ttd .nama { margin-top: 60px; font-weight: bold; text-decoration: underline; }
+    .ttd .jabatan { font-size: 11px; }
+
     /* 🌟 Footer */
     footer {
       position: fixed;
@@ -97,35 +118,30 @@
       left: 0;
       right: 0;
       text-align: center;
-      font-size: 11px;
-      color: #6b7280;
+      font-size: 10.5px;
+      color: #6c7280;
       border-top: 1px solid #cbd5e1;
-      padding-top: 5px;
+      padding-top: 6px;
+      line-height: 1.4;
     }
 
-    /* 🌟 Info Box (optional, jika ingin tambahan header info) */
-    .info-box {
-      background: #e8f0ff;
-      border-left: 4px solid #2563eb;
-      border-radius: 6px;
-      padding: 8px 15px;
-      margin-bottom: 20px;
-      color: #1f2937;
+    .page-number:after {
+      content: counter(page) " / " counter(pages);
     }
-    .info-box strong { color: #1e40af; }
 
   </style>
 </head>
 <body>
+
   <h2>Rekap Survey {{ ucfirst($periode) }}</h2>
   <div class="subtitle">
     Laporan hasil kepuasan pengunjung berdasarkan periode {{ strtolower($periode) }}
   </div>
+
   <div class="header-line"></div>
 
-  {{-- Optional Header Info --}}
   <div class="info-box">
-    <p><strong>Instansi :</strong> Dinas Komunikasi dan Informatika Kota Cirebon</p>
+    <p><strong>Instansi :</strong> Dinas Komunikasi, Informatika dan Statistik Kota Cirebon</p>
     <p><strong>Periode :</strong> {{ ucfirst($periode) }}</p>
   </div>
 
@@ -164,8 +180,22 @@
     Dicetak pada: {{ now()->format('d M Y, H:i') }}
   </div>
 
+  <!-- 🌟 Bagian Tanda Tangan (Sama seperti Rekap Rapat) -->
+  <div class="ttd-wrapper">
+    <div class="ttd">
+      <p>Cirebon, {{ now()->translatedFormat('d F Y') }}</p>
+      <p class="jabatan">Kepala Dinas Komunikasi, Informatika dan Statistik</p>
+      <p class="nama">________________________</p>
+      <p class="nama">Ma'ruf Nuryasa., A.P.,M.M.</p>
+    </div>
+  </div>
+
   <footer>
-    &copy; {{ date('Y') }} Sistem Informasi Kunjungan — Universitas Catur Insan Cendekia
+    Halaman <span class="page-number"></span><br>
+    <span style="font-size:9px; color:#888;">
+      Laporan ini dicetak otomatis dari Sistem Buku Tamu Digital — DKIS Kota Cirebon
+    </span>
   </footer>
+
 </body>
 </html>

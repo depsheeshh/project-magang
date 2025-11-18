@@ -204,9 +204,6 @@ class RapatCheckinManualController extends Controller
                 ->where('instansi_id', $undangan->instansi_id)
                 ->first();
 
-            if ($undanganInstansi && $undanganInstansi->jumlah_hadir > 0) {
-                $undanganInstansi->decrement('jumlah_hadir');
-            }
 
             return back()->with('success','Peserta berhasil di-checkout.');
         } catch (\Exception $e) {

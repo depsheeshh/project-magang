@@ -29,13 +29,13 @@
         </a>
         <ul class="dropdown-menu">
             <li class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('admin.users.index') }}">Daftar User</a>
+            <a class="nav-link" href="{{ route('admin.users.index') }}"><i class="fa-solid fa-user-group"></i> Daftar User</a>
             </li>
             <li class="{{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('admin.roles.index') }}">Daftar Role</a>
+            <a class="nav-link" href="{{ route('admin.roles.index') }}"><i class="fa-solid fa-user-shield"></i> Daftar Role</a>
             </li>
             <li class="{{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('admin.permissions.index') }}">Daftar Permission</a>
+            <a class="nav-link" href="{{ route('admin.permissions.index') }}"><i class="fa-solid fa-key"></i> Daftar Permission</a>
             </li>
         </ul>
         </li>
@@ -80,12 +80,38 @@
             </li>
         @endcanany
 
+        {{-- Menu Tamu --}}
+        @canany(['tamu.view','kunjungan.view'])
+        <li class="menu-header">Tamu</li>
+            <li class="dropdown {{ request()->routeIs('admin.tamu.*') || request()->routeIs('admin.kunjungan.*') ? 'active' : '' }}">
+            <a href="#" class="nav-link has-dropdown">
+                <i class="fas fa-user-check"></i> <span>Kelola Tamu</span>
+            </a>
+            <ul class="dropdown-menu">
+                @can('tamu.view')
+                <li class="{{ request()->routeIs('admin.tamu.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('admin.tamu.index') }}">
+                    <i class="fas fa-user-friends"></i> Data Tamu
+                </a>
+                </li>
+                @endcan
+                {{-- @can('kunjungan.view')
+                <li class="{{ request()->routeIs('admin.kunjungan.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('admin.kunjungan.index') }}">
+                    <i class="fas fa-calendar-check"></i> Kunjungan Tamu
+                </a>
+                </li>
+                @endcan --}}
+            </ul>
+            </li>
+            @endcanany
+
 
         <li class="menu-header">Fitur</li>
 
         {{-- Menu Survey --}}
         @can('surveys.view')
-            <li class="dropdown {{ request()->routeIs('admin.surveys.*') || request()->routeIs('admin.survey_links.*') ? 'active' : '' }}">
+            <li class="dropdown {{ request()->routeIs('admin.surveys.*') || request()->routeIs('admin.survey_links.*') || request()->routeIs('admin.survey-rapat.*') ? 'active' : '' }}">
             <a href="#" class="nav-link has-dropdown">
                 <i class="fas fa-comment-dots"></i> <span>Survey</span>
             </a>
@@ -105,9 +131,16 @@
                     <i class="fas fa-chart-bar"></i> Rekap Survey
                 </a>
                 </li>
+                {{-- 🔥 Tambahan Survey Rapat --}}
+                <li class="{{ request()->routeIs('admin.survey-rapat.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('admin.survey-rapat.index') }}">
+                    <i class="fas fa-poll"></i> Survey Rapat
+                </a>
+                </li>
             </ul>
             </li>
-        @endcan
+            @endcan
+
 
 
         {{-- Menu Rapat --}}
@@ -185,60 +218,72 @@
 
       {{-- Menu khusus Pegawai --}}
   @role('pegawai')
-    <li class="menu-header">Pegawai</li>
+  <li class="menu-header">Pegawai</li>
 
-    <li class="{{ request()->routeIs('pegawai.kunjungan.notifikasi') ? 'active' : '' }}">
-      <a class="nav-link" href="{{ route('pegawai.kunjungan.notifikasi') }}">
-        <i class="fas fa-bell"></i> <span>Notifikasi Tamu</span>
-      </a>
-    </li>
+  <li class="@activeIfRoute('pegawai.kunjungan.notifikasi')">
+    <a class="nav-link" href="{{ route('pegawai.kunjungan.notifikasi') }}">
+      <i class="fas fa-bell"></i> <span>Notifikasi Tamu</span>
+    </a>
+  </li>
 
-    <li class="{{ request()->routeIs('pegawai.kunjungan.riwayat') ? 'active' : '' }}">
-      <a class="nav-link" href="{{ route('pegawai.kunjungan.riwayat') }}">
-        <i class="fas fa-history"></i> <span>Riwayat Kunjungan</span>
-      </a>
-    </li>
+  <li class="@activeIfRoute('pegawai.kunjungan.riwayat')">
+    <a class="nav-link" href="{{ route('pegawai.kunjungan.riwayat') }}">
+      <i class="fas fa-history"></i> <span>Riwayat Kunjungan</span>
+    </a>
+  </li>
 
-    <li class="{{ request()->is('pegawai/rapat-saya*') ? 'active' : '' }}">
-      <a class="nav-link" href="{{ route('pegawai.agenda.rapat') }}">
-        <i class="fas fa-calendar-alt"></i> <span>Agenda Rapat Saya</span>
-      </a>
-    </li>
+  <li class="@activeIfRoute(
+    'pegawai.agenda.rapat',
+    'pegawai.rapat.scan',
+    'pegawai.rapat.detail',
+    'pegawai.rapat.checkin.token',
+    'pegawai.rapat.checkout'
+  )">
+    <a class="nav-link" href="{{ route('pegawai.agenda.rapat') }}">
+      <i class="fas fa-calendar-alt"></i> <span>Agenda Rapat Saya</span>
+    </a>
+  </li>
 
-    <li class="menu-header">Rapat</li>
-    <li class="dropdown {{ request()->routeIs('pegawai.rapat.*') || request()->routeIs('pegawai.instansi.*') || request()->routeIs('pegawai.kantor.*') || request()->routeIs('pegawai.ruangan.*') ? 'active' : '' }}">
-      <a href="#" class="nav-link has-dropdown">
-        <i class="fas fa-handshake"></i> <span>Rapat</span>
-      </a>
-      <ul class="dropdown-menu">
-        <li class="{{ request()->routeIs('pegawai.rapat.index') ? 'active' : '' }}">
-          <a class="nav-link" href="{{ route('pegawai.rapat.index') }}">
-            <i class="fas fa-list"></i> Manajemen Rapat
-          </a>
-        </li>
-        <li class="{{ request()->routeIs('pegawai.instansi.*') ? 'active' : '' }}">
-          <a class="nav-link" href="{{ route('pegawai.instansi.index') }}">
-            <i class="fas fa-building"></i> Data Instansi
-          </a>
-        </li>
-        <li class="{{ request()->routeIs('pegawai.kantor.*') ? 'active' : '' }}">
-          <a class="nav-link" href="{{ route('pegawai.kantor.index') }}">
-            <i class="fas fa-city"></i> Data Kantor
-          </a>
-        </li>
-        <li class="{{ request()->routeIs('pegawai.ruangan.*') ? 'active' : '' }}">
-          <a class="nav-link" href="{{ route('pegawai.ruangan.index') }}">
-            <i class="fas fa-door-open"></i> Data Ruangan
-          </a>
-        </li>
-        <li class="{{ request()->routeIs('pegawai.rapat.rekap') ? 'active' : '' }}">
-          <a class="nav-link" href="{{ route('pegawai.rapat.rekap') }}">
-            <i class="fas fa-chart-bar"></i> Rekap Rapat
-          </a>
-        </li>
-      </ul>
-    </li>
-  @endrole
+  <li class="menu-header">Rapat</li>
+  <li class="dropdown @activeIfRoute(
+    'pegawai.rapat.index',
+    'pegawai.rapat.rekap',
+    'pegawai.instansi.*',
+    'pegawai.kantor.*',
+    'pegawai.ruangan.*'
+  )">
+    <a href="#" class="nav-link has-dropdown">
+      <i class="fas fa-handshake"></i> <span>Rapat</span>
+    </a>
+    <ul class="dropdown-menu">
+      <li class="@activeIfRoute('pegawai.rapat.index')">
+        <a class="nav-link" href="{{ route('pegawai.rapat.index') }}">
+          <i class="fas fa-list"></i> Manajemen Rapat
+        </a>
+      </li>
+      <li class="@activeIfRoute('pegawai.instansi.*')">
+        <a class="nav-link" href="{{ route('pegawai.instansi.index') }}">
+          <i class="fas fa-building"></i> Data Instansi
+        </a>
+      </li>
+      <li class="@activeIfRoute('pegawai.kantor.*')">
+        <a class="nav-link" href="{{ route('pegawai.kantor.index') }}">
+          <i class="fas fa-city"></i> Data Kantor
+        </a>
+      </li>
+      <li class="@activeIfRoute('pegawai.ruangan.*')">
+        <a class="nav-link" href="{{ route('pegawai.ruangan.index') }}">
+          <i class="fas fa-door-open"></i> Data Ruangan
+        </a>
+      </li>
+      <li class="@activeIfRoute('pegawai.rapat.rekap')">
+        <a class="nav-link" href="{{ route('pegawai.rapat.rekap') }}">
+          <i class="fas fa-chart-bar"></i> Rekap Rapat
+        </a>
+      </li>
+    </ul>
+  </li>
+@endrole
 
 
       {{-- Menu khusus Tamu --}}

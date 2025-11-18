@@ -82,9 +82,11 @@
     <li class="nav-item dropdown">
       <a href="#" data-toggle="dropdown"
          class="nav-link dropdown-toggle nav-link-lg nav-link-user d-flex align-items-center">
-        <img alt="image"
-             src="{{ Auth::user()->avatar_url ?? asset('admin/assets/img/avatar/avatar-1.png') }}"
-             class="rounded-circle mr-2" width="35" height="35">
+        <img alt="Foto Profil"
+            src="{{ Auth::user()->profile_photo
+                    ? asset('storage/'.Auth::user()->profile_photo)
+                    : asset('admin/assets/img/avatar/avatar-1.png') }}"
+            class="rounded-circle mr-2" width="35" height="35" style="object-fit:cover;">
         <span class="d-none d-lg-inline font-weight-bold">
           {{ Auth::user()->name }}
           <small class="text-muted">({{ Auth::user()->roles->pluck('name')->implode(', ') }})</small>

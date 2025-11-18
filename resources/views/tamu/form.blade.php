@@ -166,7 +166,7 @@ body {
 }
 </style>
 
-<div class="container py-5">
+<div class="container py-5 mt-5">
   <div class="card shadow-lg border-0">
     <div class="card-header">
       <h5 class="fw-bold mb-0">Form Buku Tamu</h5>
@@ -182,24 +182,43 @@ body {
         <div class="form-step active">
           <div class="row g-4 mb-3">
             <div class="col-md-6">
-              <label class="form-label"><i class="bi bi-person"></i> Nama Lengkap</label>
-              <input type="text" name="name" class="form-control form-control-lg" required>
+                <label class="form-label"><i class="bi bi-person"></i> Nama Lengkap</label>
+                <input type="text" name="name" class="form-control form-control-lg" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label"><i class="bi bi-envelope"></i> Email</label>
-              <input type="email" name="email" class="form-control form-control-lg" required>
+                <label class="form-label"><i class="bi bi-envelope"></i> Email</label>
+                <input type="email" name="email" class="form-control form-control-lg" required>
             </div>
-          </div>
-          <div class="row g-4 mb-3">
+            </div>
+
+            <div class="row g-4 mb-3">
             <div class="col-md-6">
-              <label class="form-label"><i class="bi bi-building"></i> Instansi / Perusahaan / SKPD</label>
-              <input type="text" name="instansi" class="form-control form-control-lg" required>
+                <label class="form-label"><i class="bi bi-building"></i> Instansi / Perusahaan / SKPD</label>
+                <select id="instansi_select" class="form-select form-select-lg" required>
+                    <option value="">-- Pilih Instansi --</option>
+                    @foreach($instansi as $i)
+                        <option value="{{ $i->nama_instansi }}">{{ $i->nama_instansi }}</option>
+                    @endforeach
+                    <option value="lainnya">Lainnya</option>
+                </select>
+                {{-- hidden field untuk submit ke tabel tamu --}}
+                <input type="hidden" name="instansi" id="instansi_hidden">
             </div>
+
+
             <div class="col-md-6">
-              <label class="form-label"><i class="bi bi-phone"></i> No HP</label>
-              <input type="tel" name="no_hp" class="form-control form-control-lg" required>
+                    <label class="form-label"><i class="bi bi-phone"></i> No HP</label>
+                    <input type="tel" name="no_hp" class="form-control form-control-lg" required>
+                </div>
             </div>
-          </div>
+
+            <div class="row g-4 mb-3">
+                <div class="col-md-6 d-none" id="instansi_lainnya_wrapper">
+                <label class="form-label"><i class="bi bi-pencil"></i> Instansi Lainnya</label>
+                <input type="text" id="instansi_lainnya" class="form-control form-control-lg"
+                    placeholder="Masukkan nama instansi Anda">
+            </div>
+            </div>
         </div>
 
         {{-- STEP 2 --}}
@@ -301,4 +320,27 @@ nextBtn.addEventListener("click", () => { if (currentStep < steps.length - 1) cu
 prevBtn.addEventListener("click", () => { if (currentStep > 0) currentStep--; showStep(currentStep); });
 showStep(currentStep);
 </script>
+<script>
+const select = document.getElementById('instansi_select');
+const wrapper = document.getElementById('instansi_lainnya_wrapper');
+const inputLainnya = document.getElementById('instansi_lainnya');
+const hiddenField = document.getElementById('instansi_hidden');
+
+select.addEventListener('change', function() {
+    if (this.value === 'lainnya') {
+        wrapper.classList.remove('d-none');
+        inputLainnya.setAttribute('required','required');
+        hiddenField.value = ''; // kosong dulu
+    } else {
+        wrapper.classList.add('d-none');
+        inputLainnya.removeAttribute('required');
+        hiddenField.value = this.value; // isi nama instansi dari dropdown
+    }
+});
+
+inputLainnya.addEventListener('input', function() {
+    hiddenField.value = this.value; // isi manual ke hidden field
+});
+</script>
+
 @endsection

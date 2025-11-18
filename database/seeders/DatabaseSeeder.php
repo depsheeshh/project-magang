@@ -103,5 +103,17 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $tamu->assignRole('tamu');
+        DB::table('tamu')->updateOrInsert(
+        ['user_id' => $tamu->id],
+        [
+            'nama'       => $tamu->name,
+            'email'      => $tamu->email,
+            'instansi'   => null,
+            'no_hp'      => null,
+            'alamat'     => null,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]
+    );
     }
 }

@@ -20,12 +20,16 @@ use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\InstansiLookupController;
+use App\Http\Controllers\Admin\AdminTamuController;
+use App\Http\Controllers\SurveyRapatFormController;
 use App\Http\Controllers\Admin\HistoryLogController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\SurveyLinkController;
+use App\Http\Controllers\Admin\SurveyRapatController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Admin\AdminKunjunganController;
 use App\Http\Controllers\RapatCheckinEksternalController;
 use App\Http\Controllers\Admin\RapatCheckinManualController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -101,6 +105,7 @@ Route::post('/survey/{kunjungan}/{token}', [SurveyController::class, 'submit'])
     ->name('survey.submit');
 Route::view('/survey/thanks', 'survey.thanks')->name('survey.thanks');
 
+
 // Guest routes
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -136,6 +141,8 @@ Route::middleware('auth',)->group(function () {
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/reset-photo', [ProfileController::class, 'resetPhoto'])->name('profile.resetPhoto');
+
 
 
         // Admin resource management
@@ -151,10 +158,22 @@ Route::middleware('auth',)->group(function () {
                 Route::resource('/pegawai', PegawaiController::class);
                 Route::resource('/bidang', BidangController::class);
                 Route::resource('/jabatan', JabatanController::class);
+                Route::get('/tamu', [AdminTamuController::class, 'index'])->name('tamu.index');
+                Route::put('/tamu/{user}', [AdminTamuController::class, 'update'])->name('tamu.update');
+                Route::get('/kunjungan', [AdminKunjunganController::class, 'index'])->name('kunjungan.index');
                 // CRUD rapat
                 // Resource instansi
                 Route::resource('instansi', InstansiController::class)->except(['create','edit']);
                 Route::get('instansi/search', [InstansiController::class, 'search'])->name('instansi.search');
+
+                Route::resource('survey-rapat', SurveyRapatController::class)
+                    ->names('survey-rapat')
+                    ->except(['create','edit']);
+                // routes/web.php
+                Route::get('/survey-rapat/by-tipe/{tipe}', [SurveyRapatController::class, 'getByTipe'])
+                    ->name('survey-rapat.by-tipe');
+
+
 
                 Route::get('rapat/rekap', [RapatController::class, 'rekapRapat'])
                     ->name('rapat.rekap');
@@ -414,3 +433,8 @@ Route::middleware('auth',)->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
+
+Route::get('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'form'])
+    ->name('survey.rapat.form');
+Route::post('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'submit'])
+    ->name('survey.rapat.submit');

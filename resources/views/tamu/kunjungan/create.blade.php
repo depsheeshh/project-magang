@@ -5,8 +5,10 @@
 
 @push('style')
 <style>
-/* 🌙 Card Container (Dark Mode Default) */
-.card-visit {
+/* ======================================
+   CARD PROFILE (Dark Mode Default)
+   ====================================== */
+.card-profile {
   border: none;
   border-radius: 18px;
   background: linear-gradient(145deg, #1b1b2f, #1e2743);
@@ -15,62 +17,84 @@
   overflow: hidden;
   transition: all 0.3s ease;
 }
-.card-visit:hover {
+.card-profile:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 30px rgba(0, 150, 255, 0.25);
 }
 
-/* Header */
-.card-visit .card-header {
+/* ======================================
+   HEADER (Match dengan card-visit)
+   ====================================== */
+.card-header-profile {
   background: linear-gradient(90deg, #0077ff, #00b4ff);
   color: #fff;
-  font-weight: 600;
+  padding: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   border: none;
-  text-align: center;
-  padding: 1.2rem;
-  box-shadow: 0 3px 10px rgba(0, 132, 255, 0.3);
+  box-shadow: 0 3px 10px rgba(0,132,255,0.3);
+}
+.card-header-profile i {
+  font-size: 2.3rem;
+}
+.card-header-profile h5 {
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.4px;
 }
 
-/* Custom Radio Card (Dark Mode Default) */
-.custom-radio-card {
-  position: relative;
+/* ======================================
+   INPUT FIELDS — Dark Mode Default
+   ====================================== */
+.form-control,
+textarea.form-control,
+select.form-control {
+  background: rgba(20, 30, 55, 0.85);
   border: 1px solid rgba(0, 150, 255, 0.2);
-  border-radius: 15px;
-  padding: 15px;
-  background: rgba(25, 35, 60, 0.85);
-  color: #e8f1ff;
+  color: #e0e8ff;
+  border-radius: 12px;
   transition: all 0.3s ease;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  width: 260px;
 }
-.custom-radio-card:hover {
-  transform: translateY(-3px);
+.form-control:focus,
+textarea.form-control:focus,
+select.form-control:focus {
   border-color: #00bfff;
-  box-shadow: 0 0 25px rgba(0,170,255,0.3);
+  background: rgba(25, 35, 60, 0.95);
+  color: #e0e8ff;
+  box-shadow: 0 0 10px rgba(0,180,255,0.3);
 }
-.custom-radio-card input[type="radio"] { display: none; }
-.custom-radio-card input[type="radio"]:checked + .radio-content {
+label {
+  color: #d0ddff;
+}
+
+/* Floating Label Adjust */
+.form-floating > label {
+  color: #c8d9ff !important;
+}
+
+/* ======================================
+   SECTION TITLE (Match card-visit)
+   ====================================== */
+.text-section {
   border-left: 4px solid #00bfff;
   padding-left: 10px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #d0ddff;
 }
-.custom-radio-card input[type="radio"]:checked + .radio-content .radio-icon {
-  color: #00bfff;
-  text-shadow: 0 0 8px rgba(0,180,255,0.5);
-}
-.radio-content { display: flex; align-items: flex-start; gap: 12px; }
-.radio-icon { font-size: 26px; color: #8ab4f8; transition: color 0.3s ease; }
-.radio-title { font-weight: 600; font-size: 15px; color: #dce6ff; }
-.radio-desc { font-size: 13px; color: #a7b8d8; opacity: 0.85; }
 
-/* Tombol */
+/* ======================================
+   BUTTON SIMPAN (Match card-visit)
+   ====================================== */
 .btn-save {
   background: linear-gradient(135deg, #00aaff, #0077ff);
   border: none;
-  border-radius: 12px;
   color: #fff;
   font-weight: 600;
-  padding: 10px 25px;
+  border-radius: 12px;
+  padding: 12px 26px;
   box-shadow: 0 0 15px rgba(0, 157, 255, 0.3);
   transition: all 0.3s ease;
 }
@@ -79,56 +103,48 @@
   box-shadow: 0 0 25px rgba(0, 180, 255, 0.5);
 }
 
-/* Input Field (Dark Mode Default) */
-.form-control {
-  background: rgba(20, 30, 55, 0.85);
-  border: 1px solid rgba(0, 150, 255, 0.2);
-  color: #e0e8ff;
-  border-radius: 10px;
+/* Fade Animation */
+.card-body {
+  animation: fadeInUp 0.6s ease;
 }
-.form-control:focus {
-  border-color: #00bfff;
-  box-shadow: 0 0 10px rgba(0,180,255,0.3);
-  background: rgba(25, 35, 60, 0.95);
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* === Light Mode Overrides === */
-body:not(.dark-mode) .card-visit {
+/* ======================================
+   LIGHT MODE OVERRIDE
+   ====================================== */
+body:not(.dark-mode) .card-profile {
   background: #ffffff;
   color: #212529;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
-body:not(.dark-mode) .card-visit label {
-  color: #212529;
+body:not(.dark-mode) .card-header-profile {
+  background: linear-gradient(90deg, #4da3ff, #74d4ff);
+  color: #fff;
 }
-body:not(.dark-mode) .card-visit .form-control {
+body:not(.dark-mode) label {
+  color: #212529 !important;
+}
+body:not(.dark-mode) .form-control,
+body:not(.dark-mode) textarea.form-control,
+body:not(.dark-mode) select.form-control {
   background: #fff;
   border: 1px solid #ced4da;
   color: #212529;
 }
-body:not(.dark-mode) .card-visit .form-control:focus {
-  background: #fff;
-  color: #212529;
+body:not(.dark-mode) .form-control:focus {
   border-color: #00bfff;
   box-shadow: 0 0 0 0.2rem rgba(0,180,255,0.25);
 }
-body:not(.dark-mode) .card-visit .custom-radio-card {
-  background: #f8f9fa;
+body:not(.dark-mode) .text-section {
   color: #212529;
-  border: 1px solid #dee2e6;
+  border-left-color: #00bfff;
 }
-body:not(.dark-mode) .card-visit .custom-radio-card:hover {
-  border-color: #00bfff;
-  box-shadow: 0 0 15px rgba(0,170,255,0.2);
+body:not(.dark-mode) .btn-save {
+  background: linear-gradient(135deg, #2db7ff, #0077ff);
 }
-body:not(.dark-mode) .card-visit .radio-title {
-  color: #212529;
-}
-body:not(.dark-mode) .card-visit .radio-desc {
-  color: #6c757d;
-}
-
-
 </style>
 @endpush
 

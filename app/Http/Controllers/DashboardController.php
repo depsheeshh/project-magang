@@ -22,17 +22,18 @@ class DashboardController extends Controller
 
         // Data default
         $totalUsers = $totalPegawai = $totalBidang = $totalJabatan = null;
-        $totalSurvey = $totalRapat = $totalInstansi = null;
+        $totalSurvey = $totalRapat = $totalInstansi = $totalTamu = null;
 
         $kunjunganMenunggu = $kunjunganTerbaru = $kunjunganSaya = collect();
 
-        // Tambahkan default untuk role tamu
+        // Default untuk role tamu
         $total = $diterima = $ditolak = 0;
-        $rapatTersedia = $undanganRapat = 0;
+        $undanganRapat = 0;
 
         // khusus pegawai
         $totalKunjungan = $sedangBertamu = $menunggu = $selesai = $ditolakPegawai = 0;
         $riwayatSingkat = collect();
+        $totalRapatPegawai = 0;
 
         if ($role === 'admin') {
             $totalUsers    = User::count();
@@ -42,6 +43,7 @@ class DashboardController extends Controller
             $totalSurvey   = Survey::count();
             $totalRapat    = Rapat::count();
             $totalInstansi = Instansi::count();
+            $totalTamu     = User::role('tamu')->count(); // ✅ indikator total tamu
         }
 
         if ($role === 'frontliner') {
@@ -56,6 +58,8 @@ class DashboardController extends Controller
             $ditolak       = Kunjungan::where('status','ditolak')->count();
             $sedangBertamu = Kunjungan::where('status','sedang_bertamu')->count();
             $selesai       = Kunjungan::where('status','selesai')->count();
+
+            $totalRapat    = Rapat::count(); // ✅ indikator daftar rapat
         }
 
         if ($role === 'pegawai') {
@@ -86,6 +90,11 @@ class DashboardController extends Controller
                     ->latest()
                     ->take(5)
                     ->get();
+
+                // ✅ indikator rapat pegawai (rapat yang diundang)
+                $totalRapatPegawai = Rapat::whereHas('undangan', function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })->count();
             }
         }
 
@@ -114,10 +123,11 @@ class DashboardController extends Controller
         return view('dashboard.admin', compact(
             'role',
             'totalUsers','totalPegawai','totalBidang','totalJabatan',
-            'totalSurvey','totalRapat','totalInstansi',
+            'totalSurvey','totalRapat','totalInstansi','totalTamu',
             'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya',
             'total','diterima','ditolak','undanganRapat',
-            'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat'
+            'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat',
+            'totalRapatPegawai'
         ));
     }
 }

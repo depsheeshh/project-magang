@@ -19,7 +19,8 @@ class TamuController extends Controller
     public function create()
     {
         $bidang = Bidang::all();
-        return view('tamu.form', compact('bidang'));
+        $instansi = \App\Models\Instansi::all(); // ambil instansi untuk dropdown
+        return view('tamu.form', compact('bidang','instansi'));
     }
 
     public function store(Request $request)
@@ -27,13 +28,14 @@ class TamuController extends Controller
         $validated = $request->validate([
             'name'       => 'required|string|max:150',
             'email'      => 'required|email|max:255',
-            'instansi'   => 'required|string|max:150',
+            'instansi'   => 'required|string|max:150', // hasil hidden field dari form
             'no_hp'      => 'required|string|max:20|regex:/^[0-9\+\-\s]+$/',
             'alamat'     => 'required|string',
             'keperluan'  => 'required|string|max:255',
             'pegawai_id' => 'required|exists:pegawai,id',
         ]);
 
+        // cari user berdasarkan email
         $user = User::where('email', $validated['email'])->first();
         $isNew = false;
 
@@ -46,6 +48,7 @@ class TamuController extends Controller
             $user->assignRole('tamu');
             $isNew = true;
 
+            // generate kode verifikasi
             $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
             $user->update([
                 'verification_code'       => $code,
@@ -62,17 +65,19 @@ class TamuController extends Controller
             }
         }
 
+        // simpan data tamu
         $tamu = Tamu::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'nama'     => $validated['name'],
                 'email'    => $validated['email'],
-                'instansi' => $validated['instansi'],
+                'instansi' => $validated['instansi'], // string nama instansi (dropdown/manual)
                 'no_hp'    => $validated['no_hp'],
                 'alamat'   => $validated['alamat'],
             ]
         );
 
+        // simpan kunjungan
         $kunjungan = Kunjungan::create([
             'tamu_id'     => $tamu->id,
             'pegawai_id'  => $validated['pegawai_id'],
@@ -81,24 +86,25 @@ class TamuController extends Controller
             'status'      => 'menunggu',
         ]);
 
-
+        // notifikasi ke admin
         $admins = User::role('admin')->get();
-            foreach ($admins as $admin) {
-                $admin->notify(new UserBaruNotification($user, 'form_tamu'));
-            }
+        foreach ($admins as $admin) {
+            $admin->notify(new UserBaruNotification($user, 'form_tamu'));
+        }
 
-        // 🚩 Kirim notifikasi ke pegawai yang dituju
+        // notifikasi ke pegawai tujuan
         $pegawai = Pegawai::with('user')->find($validated['pegawai_id']);
         if ($pegawai && $pegawai->user) {
             $pegawai->user->notify(new TamuBaruNotification($tamu, $kunjungan));
         }
 
-        // Kirim juga ke semua frontliner
+        // notifikasi ke frontliner
         $frontliners = User::role('frontliner')->get();
         foreach ($frontliners as $f) {
             $f->notify(new TamuBaruNotification($tamu, $kunjungan));
         }
 
+        // redirect sesuai kondisi user baru / lama
         if ($isNew) {
             Auth::login($user);
             session(['after_tamu_form' => true]);

@@ -52,6 +52,12 @@ class Kunjungan extends Model
         return $this->belongsTo(Pegawai::class, 'pegawai_id');
     }
 
+    public function user()
+    {
+        return $this->tamu ? $this->tamu->user() : null;
+    }
+
+
     /**
      * Relasi ke User (frontliner yang melayani)
      */

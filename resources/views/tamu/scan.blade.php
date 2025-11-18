@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.scan-layout')
 
 @section('title', 'Scan QR Code')
 
@@ -6,7 +6,7 @@
 <style>
 /* ==== GLOBAL THEME ==== */
 body {
-  background: radial-gradient(circle at 20% 20%, #0d1117, #0b1220 60%, #0a0e1a);
+  background: radial-gradient(circle at 20% 20%, #1f4b8d, #082257 60%, #0a0e1a);
   color: #e2e8f0;
   font-family: 'Poppins', sans-serif;
   overflow-x: hidden;

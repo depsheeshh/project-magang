@@ -5,7 +5,11 @@
 @section('content')
 <style>
 body {
-  background: linear-gradient(135deg, #0d1b2a, #000814 60%, #001d3d);
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #0654a8 0%, #032b5e 40%, #000204 80%, #000000 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
   color: #e0e6f1;
   font-family: 'Poppins', sans-serif;
 }
