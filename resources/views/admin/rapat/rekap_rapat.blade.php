@@ -40,6 +40,14 @@
             <option value="dibatalkan" {{ request('status')=='dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
           </select>
         </div>
+        <div class="col-md-3">
+        <label for="jenis_rapat">Jenis Rapat</label>
+            <select name="jenis_rapat" id="jenis_rapat" class="form-control">
+                <option value="">Semua</option>
+                <option value="Internal" {{ request('jenis_rapat')=='Internal' ? 'selected' : '' }}>Internal</option>
+                <option value="Eksternal" {{ request('jenis_rapat')=='Eksternal' ? 'selected' : '' }}>Eksternal</option>
+            </select>
+        </div>
         <div class="col-md-3 d-flex align-items-end">
           <button type="submit" class="btn btn-primary mr-2">
             <i class="fas fa-filter"></i> Filter
@@ -61,9 +69,10 @@
           <th>Waktu</th>
           <th>Lokasi</th>
           <th>Status</th>
+          <th>Survey</th>
           <th>Total Undangan</th>
           <th>Hadir</th>
-          <th>Selesai</th> {{-- ✅ kolom baru --}}
+          <th>Selesai</th>
           <th>Tidak Hadir</th>
           <th>Pending</th>
         </tr>
@@ -87,6 +96,13 @@
                 @else
                     <span class="badge badge-light">{{ ucfirst($r['status']) }}</span>
                 @endif
+            </td>
+            <td>
+            @if($r['survey_total'] > 0)
+                <span class="badge badge-info">{{ $r['survey_filled'] }}/{{ $r['survey_total'] }}</span>
+            @else
+                <span class="text-muted">-</span>
+            @endif
             </td>
           <td>{{ $r['total'] }}</td>
           <td><span class="badge badge-success">{{ $r['hadir'] }}</span></td>

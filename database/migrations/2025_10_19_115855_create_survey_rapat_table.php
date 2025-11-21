@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('survey_rapat', function (Blueprint $table) {
             $table->id();
             $table->string('judul');
-            $table->enum('tipe', ['internal', 'eksternal']);
+            $table->enum('tipe', ['Internal', 'Eksternal']);
             $table->text('deskripsi')->nullable();
             $table->string('slug')->unique();
             // Audit trail

@@ -143,6 +143,7 @@
       <th>Jabatan</th>
       <th>Instansi</th>
       <th>Status Kehadiran</th>
+      <th>Status Survey</th>
       <th>Check-in</th>
       <th>Check-out</th>
     </tr>
@@ -155,6 +156,13 @@
         <td>{{ $u->jabatan ?? '-' }}</td>
         <td>{{ $u->instansi->nama_instansi ?? '-' }}</td>
         <td>{{ ucfirst($u->status_kehadiran) }}</td>
+        <td>
+            @if($u->status_survey === 'sudah_isi')
+                <span class="status selesai">Sudah Isi</span>
+            @else
+                <span class="status pending">Belum Isi</span>
+            @endif
+        </td>
         <td>{{ optional($u->checked_in_at)->format('d/m/Y H:i') }}</td>
         <td>{{ optional($u->checked_out_at)->format('d/m/Y H:i') }}</td>
       </tr>

@@ -263,8 +263,8 @@
           <div class="form-group">
             <label>Jenis Rapat</label>
             <select name="jenis_rapat" id="jenisRapat{{ $r->id }}" class="form-control" required>
-                <option value="internal" {{ $r->jenis_rapat == 'internal' ? 'selected' : '' }}>Rapat Internal</option>
-                <option value="eksternal" {{ $r->jenis_rapat == 'eksternal' ? 'selected' : '' }}>Rapat Eksternal</option>
+                <option value="Internal" {{ $r->jenis_rapat == 'Internal' ? 'selected' : '' }}>Rapat Internal</option>
+                <option value="Eksternal" {{ $r->jenis_rapat == 'Eksternal' ? 'selected' : '' }}>Rapat Eksternal</option>
             </select>
             </div>
 
@@ -342,17 +342,24 @@
             </label>
         </div>
 
-        @if($r->surveys->isNotEmpty())
+        {{-- QR Survey jika rapat sudah punya survey --}}
+        @if($r->survey)
             <div class="form-group text-center">
                 <label>QR Code Survey</label><br>
-                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(route('admin.survey-rapat.show', $r->surveys->first()->slug)) !!}
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(
+                    $r->jenis_rapat === 'Internal'
+                        ? route('pegawai.survey.rapat.form.internal', $r->survey->slug)
+                        : route('tamu.survey.rapat.form.eksternal', $r->survey->slug)
+                ) !!}
                 <p class="mt-2">
-                <a href="{{ route('admin.survey-rapat.show', $r->surveys->first()->slug) }}" target="_blank">
-                    Buka Survey
-                </a>
+                    <a href="{{ $r->jenis_rapat === 'Internal'
+                        ? route('pegawai.survey.rapat.form.internal', $r->survey->slug)
+                        : route('tamu.survey.rapat.form.eksternal', $r->survey->slug) }}" target="_blank">
+                        Buka Survey
+                    </a>
                 </p>
             </div>
-            @endif
+        @endif
 
         </div>
         <div class="modal-footer">
@@ -485,25 +492,24 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!jenisSelect || !surveySelect) return;
 
         function loadSurveys() {
-        const tipe = jenisSelect.value.toLowerCase(); // internal / eksternal
-        surveySelect.innerHTML = '<option value="">-- Pilih Survey --</option>';
+            const tipe = jenisSelect.value.toLowerCase(); // internal / eksternal
+            surveySelect.innerHTML = '<option value="">-- Pilih Survey --</option>';
 
-        if (!tipe) return;
+            if (!tipe) return;
 
-        // ✅ gunakan base URL + tipe
-        fetch(`/admin/survey-rapat/by-tipe/${tipe}`)
-            .then(res => res.json())
-            .then(data => {
-            data.forEach(s => {
-                const opt = document.createElement('option');
-                opt.value = s.id;
-                opt.textContent = s.judul;
-                if (selectedSurveyId && selectedSurveyId == s.id) {
-                opt.selected = true;
-                }
-                surveySelect.appendChild(opt);
-            });
-            });
+            fetch(`/admin/survey-rapat/by-tipe/${tipe}`)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.judul;
+                        if (selectedSurveyId && selectedSurveyId == s.id) {
+                            opt.selected = true;
+                        }
+                        surveySelect.appendChild(opt);
+                    });
+                });
         }
 
         jenisSelect.addEventListener('change', loadSurveys);
@@ -515,8 +521,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // untuk edit
     @foreach($rapat as $r)
-        bindSurveyDropdown('jenisRapat{{ $r->id }}', 'surveySelect{{ $r->id }}', {{ $r->surveys->first()->id ?? 'null' }});
+        bindSurveyDropdown('jenisRapat{{ $r->id }}', 'surveySelect{{ $r->id }}', {{ $r->survey->id ?? 'null' }});
     @endforeach
+
     });
 </script>
 <script>

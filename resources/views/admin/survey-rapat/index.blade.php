@@ -29,14 +29,14 @@
             <td>{{ $loop->iteration }}</td>
             <td>{{ $s->judul }}</td>
             <td>
-              @if($s->tipe === 'internal')
+              @if($s->tipe === 'Internal')
                 <span class="badge badge-info">Internal</span>
               @else
                 <span class="badge badge-success">Eksternal</span>
               @endif
             </td>
             <td>
-              @if($s->tipe === 'internal')
+              @if($s->tipe === 'Internal')
                 {{-- daftar pegawai --}}
                 <ul class="list-unstyled mb-0">
                   @forelse($s->respon as $r)
@@ -57,13 +57,13 @@
               @endif
             </td>
             <td>
-                <a href="{{ route('admin.survey-rapat.show', $s->id) }}" class="btn btn-info btn-sm">
+                <a href="{{ route('admin.survey-rapat.show', $s->slug) }}" class="btn btn-info btn-sm">
                     <i class="fas fa-eye"></i>
                 </a>
-              <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editSurveyModal{{ $s->id }}">
+              <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editSurveyModal{{ $s->slug }}">
                 <i class="fas fa-edit"></i>
               </button>
-              <form action="{{ route('admin.survey-rapat.destroy', $s->id) }}" method="POST" class="d-inline">
+              <form action="{{ route('admin.survey-rapat.destroy', $s->slug) }}" method="POST" class="d-inline">
                 @csrf @method('DELETE')
                 <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus?')">
                   <i class="fas fa-trash"></i>
@@ -101,8 +101,8 @@
         <div class="form-group mt-2">
             <label>Tipe</label>
             <select name="tipe" class="form-control" required>
-            <option value="internal">Internal</option>
-            <option value="eksternal">Eksternal</option>
+            <option value="Internal">Internal</option>
+            <option value="Eksternal">Eksternal</option>
             </select>
         </div>
         <div class="form-group mt-2">
@@ -121,10 +121,10 @@
 
 <!-- Modal Edit Survey -->
 @foreach($surveys as $s)
-<div class="modal fade" id="editSurveyModal{{ $s->id }}" tabindex="-1">
+<div class="modal fade" id="editSurveyModal{{ $s->slug }}" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="POST" action="{{ route('admin.survey-rapat.update', $s->id) }}">
+      <form method="POST" action="{{ route('admin.survey-rapat.update', $s->slug) }}">
         @csrf @method('PUT')
         <div class="modal-header bg-warning text-white">
           <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Survey Rapat</h5>
@@ -138,8 +138,8 @@
           <div class="form-group mt-2">
             <label>Tipe</label>
             <select name="tipe" class="form-control" required>
-              <option value="internal" {{ $s->tipe=='internal'?'selected':'' }}>Internal</option>
-              <option value="eksternal" {{ $s->tipe=='eksternal'?'selected':'' }}>Eksternal</option>
+              <option value="Internal" {{ $s->tipe=='Internal'?'selected':'' }}>Internal</option>
+              <option value="Eksternal" {{ $s->tipe=='Eksternal'?'selected':'' }}>Eksternal</option>
             </select>
           </div>
           <div class="form-group mt-2">
@@ -150,8 +150,22 @@
           {{-- Preview QR Code --}}
           <div class="mt-3 text-center">
             <label>QR Code Akses</label><br>
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(route('survey.rapat.form', $s->slug)) !!}
-          </div>
+            @if($s->tipe === 'Internal')
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(route('pegawai.survey.rapat.form.internal', $s->slug)) !!}
+                <p class="mt-2">
+                <a href="{{ route('pegawai.survey.rapat.form.internal', $s->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-link"></i> Buka Survey Internal
+                </a>
+                </p>
+            @else
+                {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(150)->generate(route('tamu.survey.rapat.form.eksternal', $s->slug)) !!}
+                <p class="mt-2">
+                <a href="{{ route('tamu.survey.rapat.form.eksternal', $s->slug) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-link"></i> Buka Survey Eksternal
+                </a>
+                </p>
+            @endif
+        </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>

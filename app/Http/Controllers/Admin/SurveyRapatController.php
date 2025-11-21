@@ -20,7 +20,7 @@ class SurveyRapatController extends Controller
     {
         $request->validate([
             'judul' => 'required|string|max:255',
-            'tipe' => 'required|in:internal,eksternal',
+            'tipe' => 'required|in:Internal,Eksternal',
             'deskripsi' => 'nullable|string',
         ]);
 
@@ -42,7 +42,7 @@ class SurveyRapatController extends Controller
     {
         $request->validate([
             'judul' => 'required|string|max:255',
-            'tipe' => 'required|in:internal,eksternal',
+            'tipe' => 'required|in:Internal,Eksternal',
             'deskripsi' => 'nullable|string',
         ]);
 

@@ -25,6 +25,7 @@
             <th>Status Kehadiran</th>
             <th>Check-in</th>
             <th>Check-out</th>
+            <th>Status survey</th>
             <th>Aksi</th>
           </tr>
         </thead>
@@ -38,6 +39,17 @@
               <td>{{ ucfirst($tamu->status_kehadiran) }}</td>
               <td>{{ $tamu->checked_in_at ?? '-' }}</td>
               <td>{{ $tamu->checked_out_at ?? '-' }}</td>
+              <td>
+                @if($rapat->survey)
+                  @if($tamu->status_survey === 'sudah_isi')
+                    <span class="badge bg-success"><i class="fas fa-check"></i> Sudah isi</span>
+                  @else
+                    <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Belum isi</span>
+                  @endif
+                @else
+                  <span class="text-muted">-</span>
+                @endif
+              </td>
               <td>
                 <form action="{{ route($prefix.'.rapat.destroyTamuInstansi', [$rapat->id, $undanganInstansi->id, $tamu->id]) }}"
                         method="POST"

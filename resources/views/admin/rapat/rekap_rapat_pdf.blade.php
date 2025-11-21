@@ -138,9 +138,10 @@
         <th>Waktu</th>
         <th>Lokasi</th>
         <th>Status</th>
+        <th>Survey</th>
         <th>Total Undangan</th>
         <th>Hadir</th>
-        <th>Selesai</th> {{-- ✅ kolom baru --}}
+        <th>Selesai</th>
         <th>Tidak Hadir</th>
         <th>Pending</th>
         <th>% Hadir</th>
@@ -158,6 +159,7 @@
             {{ $r['status'] }}
           </span>
         </td>
+        <td>{{ $r['survey_filled'] }}/{{ $r['survey_total'] }}</td>
         <td>{{ $r['total'] }}</td>
         <td>{{ $r['hadir'] }}</td>
         <td>{{ $r['selesai'] ?? 0 }}</td> {{-- ✅ --}}
@@ -202,6 +204,14 @@
           <th style="border:1px solid #b5b5b5; padding:6px;">Total Pending</th>
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('pending') }}</td>
       </tr>
+      <tr>
+        <th>Total Survey Terisi</th>
+        <td>{{ $rekap->sum('survey_filled') }}</td>
+    </tr>
+    <tr>
+        <th>Total Survey Dibagikan</th>
+        <td>{{ $rekap->sum('survey_total') }}</td>
+    </tr>
   </table>
   @endif
 

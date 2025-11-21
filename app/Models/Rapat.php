@@ -34,6 +34,7 @@ class Rapat extends Model
         'updated_id',
         'deleted_id',
         'status',
+        'survey_id'
     ];
 
     protected $casts = [
@@ -51,9 +52,9 @@ class Rapat extends Model
         return $this->belongsTo(Ruangan::class, 'ruangan_id');
     }
 
-    public function surveys()
+    public function survey()
     {
-        return $this->belongsToMany(SurveyRapat::class, 'rapat_survey', 'rapat_id', 'survey_id');
+        return $this->belongsTo(SurveyRapat::class, 'survey_id');
     }
 
     public function undanganInstansi()

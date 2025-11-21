@@ -328,6 +328,14 @@ Route::middleware('auth',)->group(function () {
                     Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'pegawaiCheckout'])
                         ->name('rapat.checkout');
 
+                    // ✅ Halaman scan survey (kamera QR)
+                    Route::get('/rapat/{rapat}/scan-survey', [RapatCheckinController::class, 'scanSurveyPage'])
+                        ->name('rapat.scanSurvey');
+
+                    // ✅ Proses checkout via QR survey (dipanggil dari hasil scan)
+                    Route::get('/rapat/{rapat}/scan-survey/process', [RapatCheckinController::class, 'scanSurveyInternal'])
+                        ->name('rapat.scanSurvey.process');
+
                     // ✅ Rapat (CRUD + checkin manual + end rapat)
 
                     Route::resource('rapat', RapatController::class)->except(['create','edit']);
@@ -364,6 +372,11 @@ Route::middleware('auth',)->group(function () {
                     // ✅ Ruangan (CRUD)
                     Route::resource('ruangan', AdminRuanganController::class)->except(['create','edit','show']);
 
+                    Route::get('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'formInternal'])
+                        ->name('survey.rapat.form.internal');
+                    Route::post('/survey-rapat/{slug}/submit', [SurveyRapatFormController::class, 'submitInternal'])
+                        ->name('survey.rapat.submit.internal');
+
                 });
 
 
@@ -384,6 +397,19 @@ Route::middleware('auth',)->group(function () {
 
             // Agenda rapat tamu (rapat eksternal yang sudah diikuti)
             Route::get('/rapat-saya', [RapatCheckinEksternalController::class, 'index'])->name('rapat.saya');
+             // ✅ Scan QR Rapat Eksternal via Dashboard (shortcut global)
+            Route::get('/rapat/scan-dashboard', fn() => view('tamu.rapat.scan-dashboard'))
+                ->name('rapat.scan.dashboard');
+
+            // ✅ Form konfirmasi check-in setelah scan dashboard
+            Route::get('/rapat/{rapat}/checkin-dashboard',
+                [RapatCheckinEksternalController::class, 'formDashboard']
+            )->name('rapat.checkin.form.dashboard');
+
+            // ✅ Submit check-in via dashboard (langsung status hadir, tanpa verifikasi email)
+            Route::post('/rapat/{rapat}/checkin-dashboard',
+                [RapatCheckinEksternalController::class, 'submitDashboard']
+            )->name('rapat.checkin.submit.dashboard');
             Route::get('/rapat/{rapat}', [RapatCheckinEksternalController::class, 'show'])->name('rapat.show');
                 // Checkout eksternal (setelah auto login)
             Route::post('rapat/{rapat}/checkout', [RapatCheckinEksternalController::class, 'checkout'])
@@ -392,6 +418,20 @@ Route::middleware('auth',)->group(function () {
             // API untuk autocomplete: hanya instansi yang dibuat oleh admin
             Route::get('api/instansi/admin', [InstansiLookupController::class, 'listAdminInstansi'])
                 ->name('api.instansi.admin');
+
+                // Survey Eksternal
+            Route::get('/survey-rapat/eksternal/{slug}', [SurveyRapatFormController::class, 'formEksternal'])
+                ->name('survey.rapat.form.eksternal');
+            Route::post('/survey-rapat/eksternal/{slug}/submit', [SurveyRapatFormController::class, 'submitEksternal'])
+                ->name('survey.rapat.submit.eksternal');
+
+            // ✅ Halaman kamera scan QR Survey (pakai rapat id)
+            Route::get('/rapat/{rapat}/scan-survey', [RapatCheckinEksternalController::class, 'scanSurveyPage'])
+                ->name('rapat.scan.survey.eksternal');
+
+            // ✅ Proses setelah scan QR Survey (slug lewat query), update checkout lalu redirect form
+            Route::get('/rapat/{rapat}/scan-survey/process', [RapatCheckinEksternalController::class, 'scanSurveyEksternal'])
+                ->name('rapat.scan.survey.eksternal.process');
         });
         // Untuk tamu: cek status kunjungan terakhir
         Route::middleware(['auth','role:tamu'])->get('/api/tamu/notifikasi', [TamuController::class, 'checkNotification']);
@@ -433,8 +473,9 @@ Route::middleware('auth',)->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
+// Halaman Thanks (universal)
+Route::get('/survey-rapat/{slug}/thanks', function($slug) {
+    $survey = \App\Models\SurveyRapat::where('slug',$slug)->firstOrFail();
+    return view('survey-rapat.thanks', compact('survey'));
+})->name('survey.rapat.thanks');
 
-Route::get('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'form'])
-    ->name('survey.rapat.form');
-Route::post('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'submit'])
-    ->name('survey.rapat.submit');

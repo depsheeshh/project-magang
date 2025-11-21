@@ -130,12 +130,23 @@
   <div class="info">
     <p><strong>Judul Rapat :</strong> {{ $rapat->judul }}</p>
     <p><strong>Waktu :</strong> {{ \Carbon\Carbon::parse($rapat->waktu_mulai)->format('d/m/Y H:i') }}
-      s/d {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}</p>
+        s/d {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}</p>
     <p><strong>Lokasi :</strong> {{ $rapat->lokasi ?? '-' }}</p>
-    <p><strong>Jumlah Undangan :</strong> {{ $rapat->undangan->count() }} orang</p>
-    <p><strong>Jumlah Tamu :</strong> {{ $rapat->jumlah_tamu ?? 0 }}
-   / sisa {{ max(($rapat->jumlah_tamu ?? 0) - $rapat->undanganInstansi->sum('kuota'), 0) }}</p>
-  </div>
+
+    {{-- Jumlah tamu hadir --}}
+    @php
+        $jumlahHadir = $rapat->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count();
+        $totalKuotaInstansi = $rapat->undanganInstansi->sum('kuota');
+        $kuotaTersedia = $rapat->jumlah_tamu ?? 0;
+        $sisaKuota = max($kuotaTersedia - $totalKuotaInstansi, 0);
+    @endphp
+
+    <p><strong>Jumlah Tamu Hadir :</strong> {{ $jumlahHadir }} orang</p>
+    <p><strong>Kuota Tamu Tersedia :</strong> {{ $kuotaTersedia }}</p>
+    <p><strong>Total Kuota Instansi :</strong> {{ $totalKuotaInstansi }}</p>
+    <p><strong>Sisa Kuota :</strong> {{ $sisaKuota }}</p>
+    </div>
+
 
   <h3>Rekap Kuota Instansi</h3>
 <table>
@@ -170,6 +181,7 @@
       <th>Nama Peserta</th>
       <th>Instansi</th>
       <th>Status Kehadiran</th>
+      <th>Status Survey</th>
       <th>Check-in</th>
       <th>Check-out</th>
     </tr>
@@ -181,6 +193,13 @@
         <td>{{ $u->nama ?? $u->user->name ?? '-' }}</td>
         <td>{{ $u->instansi->nama_instansi ?? '-' }}</td>
         <td>{{ ucfirst($u->status_kehadiran) }}</td>
+        <td>
+            @if($u->status_survey === 'sudah_isi')
+                <span class="status selesai">Sudah Isi</span>
+            @else
+                <span class="status pending">Belum Isi</span>
+            @endif
+        </td>
         <td>{{ optional($u->checked_in_at)->format('d/m/Y H:i') }}</td>
         <td>{{ optional($u->checked_out_at)->format('d/m/Y H:i') }}</td>
       </tr>

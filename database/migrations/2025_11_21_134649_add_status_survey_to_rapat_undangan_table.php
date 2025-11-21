@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rapat_survey', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('rapat_id')->constrained('rapat')->onDelete('cascade');
-            $table->foreignId('survey_id')->constrained('survey_rapat')->onDelete('cascade');
-            $table->timestamps();
+        Schema::table('rapat_undangan', function (Blueprint $table) {
+            $table->enum('status_survey', ['belum_isi','sudah_isi'])
+                ->default('belum_isi')
+                ->after('status_kehadiran');
         });
     }
 
@@ -24,6 +23,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rapat_survey');
+        Schema::table('rapat_undangan', function (Blueprint $table) {
+            $table->dropColumn('status_survey');
+        });
     }
 };

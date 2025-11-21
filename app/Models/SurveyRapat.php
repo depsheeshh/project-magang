@@ -16,7 +16,7 @@ class SurveyRapat extends Model
 
     public function getRouteKeyName()
     {
-        return 'id'; // ⬅ binding by ID agar CRUD normal
+        return 'slug'; // ⬅ binding by ID agar CRUD normal
     }
 
     public function respon()
@@ -26,7 +26,7 @@ class SurveyRapat extends Model
 
     public function rapat()
     {
-        return $this->belongsToMany(Rapat::class, 'rapat_survey', 'survey_id', 'rapat_id');
+        return $this->hasOne(Rapat::class, 'survey_id');
     }
 
     protected static function boot()

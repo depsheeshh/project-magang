@@ -18,6 +18,7 @@ class RapatUndangan extends Model
         'jumlah_peserta',
         'rapat_undangan_instansi_id',
         'status_kehadiran',
+        'status_survey',
         'checked_in_at',
         'checked_out_at',
         'checkin_latitude',

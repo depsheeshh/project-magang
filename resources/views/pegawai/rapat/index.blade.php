@@ -12,6 +12,15 @@
     </a>
   </div>
   <div class="card-body">
+
+    {{-- ✅ Alert global untuk feedback --}}
+    @if(session('warning'))
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    @endif
+
     @forelse($rapatSaya as $rapat)
       @php $undangan = $rapat->undangan->first(); @endphp
 
@@ -41,8 +50,9 @@
             @endif
           </p>
 
+          {{-- ✅ Tombol aksi --}}
           <a href="{{ route('pegawai.rapat.detail',$rapat->id) }}" class="btn btn-primary btn-sm">
-            <i class="fas fa-info-circle"></i> Detail & Aksi
+            <i class="fas fa-info-circle"></i> Detail Rapat
           </a>
         </div>
       </div>

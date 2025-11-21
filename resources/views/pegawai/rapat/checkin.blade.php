@@ -35,18 +35,38 @@
       <p class="text-muted">
         Untuk check-in, silakan <strong>scan QR code rapat</strong> yang ditampilkan oleh admin di lokasi rapat.
       </p>
-    @elseif($undangan->status_kehadiran === 'hadir')
-      <form action="{{ route('pegawai.rapat.checkout',$rapat->id) }}" method="POST">
-        @csrf
-        <button type="submit" class="btn btn-danger">
-          <i class="fas fa-sign-out-alt"></i> Check-out
-        </button>
-      </form>
     @endif
 
-    <a href="{{ route('pegawai.agenda.rapat') }}" class="btn btn-secondary mt-3">
-      <i class="fas fa-arrow-left"></i> Kembali
-    </a>
+    {{-- ✅ Tombol aksi horizontal --}}
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <a href="{{ route('pegawai.agenda.rapat') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Kembali
+      </a>
+
+      @if($undangan->status_kehadiran === 'hadir')
+        @if($rapat->survey)
+          {{-- Jika rapat punya survey → scan survey untuk checkout --}}
+          <a href="{{ route('pegawai.rapat.scanSurvey',$rapat->id) }}" class="btn btn-success mx-1">
+            <i class="fas fa-qrcode"></i> Scan QR Survey (Auto-Checkout)
+          </a>
+        @else
+          {{-- Jika rapat tidak punya survey → checkout manual --}}
+          <form action="{{ route('pegawai.rapat.checkout',$rapat->id) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-secondary mx-1">
+              <i class="fas fa-sign-out-alt"></i> Checkout Manual
+            </button>
+          </form>
+        @endif
+      @elseif($undangan->status_kehadiran === 'selesai')
+        {{-- ✅ Jika rapat punya survey tapi belum isi, tetap tampil tombol scan survey --}}
+        @if($rapat->survey && $undangan->status_survey === 'belum_isi')
+          <a href="{{ route('pegawai.rapat.scanSurvey',$rapat->id) }}" class="btn btn-success mx-1">
+            <i class="fas fa-qrcode"></i> Scan QR Survey
+        </a>
+        @endif
+      @endif
+    </div>
   </div>
 </div>
 @endsection

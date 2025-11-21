@@ -17,7 +17,7 @@ class RapatUndanganObserver
 
     public function deleted(RapatUndangan $undangan)
     {
-        if ($undangan->status_kehadiran === 'hadir') {
+        if (in_array($undangan->status_kehadiran, ['hadir','selesai'])) {
             RapatUndanganInstansi::where('id', $undangan->rapat_undangan_instansi_id)
                 ->decrement('jumlah_hadir');
         }
@@ -29,12 +29,16 @@ class RapatUndanganObserver
             $old = $undangan->getOriginal('status_kehadiran');
             $new = $undangan->status_kehadiran;
 
-            if ($old === 'hadir' && $new !== 'hadir') {
-                RapatUndanganInstansi::where('id', $undangan->rapat_undangan_instansi_id)
-                    ->decrement('jumlah_hadir');
-            } elseif ($old !== 'hadir' && $new === 'hadir') {
+            // masuk hadir → increment
+            if ($old !== 'hadir' && $new === 'hadir') {
                 RapatUndanganInstansi::where('id', $undangan->rapat_undangan_instansi_id)
                     ->increment('jumlah_hadir');
+            }
+
+            // keluar dari hadir → decrement HANYA jika bukan selesai
+            if ($old === 'hadir' && $new !== 'hadir' && $new !== 'selesai') {
+                RapatUndanganInstansi::where('id', $undangan->rapat_undangan_instansi_id)
+                    ->decrement('jumlah_hadir');
             }
         }
     }

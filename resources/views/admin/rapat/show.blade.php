@@ -168,34 +168,36 @@
 
 
         <dt class="col-sm-3">Survey Rapat</dt>
-        <dd class="col-sm-9">
-        @if($rapat->surveys->isNotEmpty())
-            @php
-            $survey = $rapat->surveys->first();
-            $jumlahRespon = $survey->respon->count();
-            @endphp
+            <dd class="col-sm-9">
+                @if($rapat->survey)
+                    @php $survey = $rapat->survey; @endphp
+                    <p><strong>{{ $survey->judul }}</strong></p>
+                    <div class="mb-2">
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
+                            $rapat->jenis_rapat === 'Internal'
+                                ? route('pegawai.survey.rapat.form.internal', $survey->slug)
+                                : route('tamu.survey.rapat.form.eksternal', $survey->slug)
+                        ) !!}
+                    </div>
+                    <p class="mt-2">
+                        <a href="{{ $rapat->jenis_rapat === 'Internal'
+                            ? route('pegawai.survey.rapat.form.internal', $survey->slug)
+                            : route('tamu.survey.rapat.form.eksternal', $survey->slug) }}"
+                        target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-link"></i> Buka Survey
+                        </a>
+                    </p>
+                    <span class="badge badge-info mt-2">
+                        {{ $survey->respon->count() }} responden telah mengisi
+                    </span>
+                    <small class="text-muted d-block mt-1">
+                        Survey ini dipakai untuk rapat <strong>{{ $rapat->jenis_rapat }}</strong> berjudul <em>{{ $rapat->judul }}</em>.
+                    </small>
+                @else
+                    <span class="text-muted">Belum ada survey rapat terhubung.</span>
+                @endif
+            </dd>
 
-            <p><strong>{{ $survey->judul }}</strong></p>
-            <div class="mb-2">
-            {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
-                route('survey.rapat.form', $survey->slug)
-            ) !!}
-            </div>
-            <p class="mt-2">
-            <a href="{{ route('survey.rapat.form', $survey->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-link"></i> Buka Survey
-            </a>
-            </p>
-            <span class="badge badge-info mt-2">
-            {{ $jumlahRespon }} responden telah mengisi
-            </span>
-            <small class="text-muted d-block mt-1">
-            Survey ini dipakai untuk rapat <strong>{{ ucfirst($rapat->jenis_rapat) }}</strong> berjudul <em>{{ $rapat->judul }}</em>.
-            </small>
-        @else
-            <span class="text-muted">Belum ada survey rapat terhubung.</span>
-        @endif
-        </dd>
 
       <dt class="col-sm-3">QR Code Rapat</dt>
         <dd class="col-sm-9">
@@ -326,6 +328,7 @@
               <th>Status Kehadiran</th>
               <th>Check-in</th>
               <th>Check-out</th>
+              <th>Status Survey</th>
               <th>Aksi</th>
             @else
               <th>Nama Instansi</th>
@@ -347,6 +350,13 @@
                 <td>{{ $undangan->checked_in_at ?? '-' }}</td>
                 <td>{{ $undangan->checked_out_at ?? '-' }}</td>
                 <td>
+                @if($undangan->status_survey === 'sudah_isi')
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Sudah Isi</span>
+                @else
+                    <span class="badge badge-warning text-dark"><i class="fas fa-clock"></i> Belum Isi</span>
+                @endif
+                </td>
+                <td>
                   <form action="{{ route($prefix.'.rapat.destroyInvitation', [$rapat->id, $undangan->id]) }}" method="POST">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm">
@@ -366,17 +376,21 @@
                 <td>
                     {{-- Form update kuota --}}
                     <form action="{{ route($prefix.'.rapat.updateKuotaInstansi', [$rapat->id, $undanganInstansi->id]) }}"
-                        method="POST" class="d-flex align-items-center">
-                    @csrf @method('PATCH')
+                    method="POST"
+                    class="form-kuota d-flex align-items-center"
+                    data-id="{{ $undanganInstansi->id }}">
+                    @csrf
+                    @method('PATCH')
                     <input type="number" name="kuota" value="{{ $undanganInstansi->kuota }}"
                             class="form-control form-control-sm w-50 me-2" min="1">
                     <button type="submit" class="btn btn-sm btn-primary">
                         <i class="fas fa-save"></i> Simpan
                     </button>
+                    <span class="ms-2 text-success d-none kuota-status"><i class="fas fa-check"></i> Tersimpan</span>
                     </form>
                 </td>
-                <td>{{ $undanganInstansi->undangan()->where('status_kehadiran','hadir')->count() }}</td>
-                <td>{{ max(0, $undanganInstansi->kuota - $undanganInstansi->jumlah_hadir) }}</td>
+                <td>{{ $undanganInstansi->jumlah_hadir }}</td>
+                <td class="sisa-kuota">{{ max(0, $undanganInstansi->kuota - $undanganInstansi->jumlah_hadir) }}</td>
                 <td>
                     <a href="{{ route($prefix.'.rapat.detailTamuInstansi', [$rapat->id, $undanganInstansi->id]) }}"
                         class="btn btn-info btn-sm">
@@ -406,3 +420,48 @@
 
 <a href="{{ route($prefix.'.rapat.index') }}" class="btn btn-secondary mt-3">Kembali</a>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.form-kuota').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const url = this.action;
+      const data = new FormData(this);
+      const statusSpan = this.querySelector('.kuota-status');
+      const payload = { kuota: this.querySelector('input[name="kuota"]').value };
+      const row = this.closest('tr');
+
+      fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+        })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success) {
+          statusSpan.classList.remove('d-none');
+          setTimeout(() => statusSpan.classList.add('d-none'), 2000);
+          row.querySelector('input[name="kuota"]').value = res.kuota;
+          const sisaCell = row.querySelector('.sisa-kuota');
+          if (sisaCell) {
+            sisaCell.textContent = res.sisa_kuota;
+          }
+        } else {
+          alert(res.message || 'Gagal update kuota');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat update kuota');
+      });
+    });
+  });
+});
+</script>
+@endpush

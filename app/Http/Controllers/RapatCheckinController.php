@@ -11,17 +11,23 @@ use App\Models\RapatUndangan;
 class RapatCheckinController extends Controller
 {
     // 🔎 Helper validasi waktu rapat
-    private function validateWaktu(Rapat $rapat): string|bool
+    private function validateWaktu(Rapat $rapat, RapatUndangan $undangan, $user): string|bool
     {
-        if (!$rapat->waktu_mulai || !$rapat->waktu_selesai) return 'Waktu rapat belum ditentukan.';
-
-        $now     = now();
-        $mulai   = Carbon::parse($rapat->waktu_mulai);
+        $now   = now();
+        $mulai = Carbon::parse($rapat->waktu_mulai);
         $selesai = Carbon::parse($rapat->waktu_selesai);
 
         if ($now->lt($mulai->copy()->subMinutes(15))) return 'Check-in belum dibuka.';
         if ($rapat->status === 'selesai' || $now->gt($selesai)) return 'Rapat sudah selesai.';
-        if ($now->gt($mulai->copy()->addMinutes(30))) return 'Anda terlambat lebih dari 30 menit.';
+
+        // ✅ Telat >30 menit → langsung tandai tidak hadir
+        if ($now->gt($mulai->copy()->addMinutes(30))) {
+            $undangan->update([
+                'status_kehadiran' => 'tidak_hadir',
+                'updated_id'       => $user->id,
+            ]);
+            return 'Anda terlambat lebih dari 30 menit, status dicatat sebagai Tidak Hadir.';
+        }
         return true;
     }
 
@@ -84,57 +90,46 @@ class RapatCheckinController extends Controller
     // =========================
     public function checkinByRapatToken(Request $request, Rapat $rapat, $token)
     {
-        if ($rapat->qr_token_hash !== hash('sha256', $token)) {
+        if ($rapat->qr_token_hash !== hash('sha256',$token)) {
             return back()->with('error','QR code rapat tidak valid.');
         }
 
         $user = $request->user();
-        $undangan = $rapat->undangan()->where('user_id', $user->id)->first();
-        if (!$undangan) {
-            return back()->with('error','Anda tidak terdaftar sebagai undangan rapat ini.');
-        }
+        $undangan = $rapat->undangan()->where('user_id',$user->id)->firstOrFail();
 
-        $validWaktu = $this->validateWaktu($rapat);
+        $validWaktu = $this->validateWaktu($rapat,$undangan,$user);
         if ($validWaktu !== true) return back()->with('error',$validWaktu);
 
-        // ✅ Validate dengan aturan ketat untuk koordinat
         $request->validate([
             'latitude'  => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-        ], [
-            'latitude.required'  => 'Lokasi tidak dapat dideteksi, cek permission GPS.',
-            'longitude.required' => 'Lokasi tidak dapat dideteksi, cek permission GPS.',
         ]);
 
-        $buffer   = $user->hasRole('pegawai') ? 20 : 0;
         $distance = $this->calculateDistance(
-            $request->latitude, $request->longitude,
-            $rapat->latitude, $rapat->longitude
+            $request->latitude,$request->longitude,
+            $rapat->latitude,$rapat->longitude
         );
-
-        if ($distance > (($rapat->radius ?? 0) + $buffer)) {
-            $km = number_format($distance / 1000, 2, ',', '.');
-            $allowed = number_format((($rapat->radius ?? 0) + $buffer) / 1000, 2, ',', '.');
-            return back()->with('error',"❌ Anda di luar radius, jarak sekitar {$km} km (radius diizinkan {$allowed} km).");
+        if ($distance > $rapat->radius) {
+            $km = number_format($distance/1000,2,',','.');
+            return back()->with('error',"Anda di luar radius, jarak sekitar {$km} km.");
         }
 
-        // ✅ Cek apakah sudah pernah check-in
-        if ($undangan->status_kehadiran === 'hadir' || $undangan->status_kehadiran === 'selesai') {
+        if (in_array($undangan->status_kehadiran,['hadir','selesai'])) {
             return back()->with('warning','Anda sudah melakukan check-in sebelumnya.');
         }
 
         $undangan->update([
-            'status_kehadiran'  => 'hadir',
-            'checked_in_at'     => now(),
-            'qr_scanned_at'     => now(),
-            'checkin_latitude'  => $request->latitude,
-            'checkin_longitude' => $request->longitude,
-            'updated_id'        => $user->id,
-            'instansi_id'       => $user->instansi_id,
+            'status_kehadiran'=>'hadir',
+            'checked_in_at'=>now(),
+            'qr_scanned_at'=>now(),
+            'checkin_latitude'=>$request->latitude,
+            'checkin_longitude'=>$request->longitude,
+            'updated_id'=>$user->id,
+            'instansi_id'=>$user->instansi_id,
         ]);
 
         return redirect()->route('pegawai.agenda.rapat')
-            ->with('success','✅ Check-in berhasil, status Anda tercatat hadir.');
+            ->with('success','Check-in berhasil, status Anda tercatat hadir.');
     }
 
     // =========================
@@ -151,6 +146,10 @@ class RapatCheckinController extends Controller
             return back()->with('error','Anda belum melakukan check-in.');
         }
 
+        if ($rapat->survey) {
+            return back()->with('warning','Rapat ini memiliki survey, silakan checkout melalui Scan QR Survey.');
+        }
+
         $undangan->update([
             'status_kehadiran'=>'selesai',
             'checked_out_at'=>now(),
@@ -159,4 +158,31 @@ class RapatCheckinController extends Controller
 
         return redirect()->route('pegawai.agenda.rapat')->with('success','Checkout berhasil.');
     }
+    public function scanSurveyPage(Rapat $rapat)
+    {
+        return view('pegawai.rapat.scan-survey', compact('rapat'));
+    }
+
+    // ✅ Checkout via scan survey (dipanggil setelah QR valid)
+    public function scanSurveyInternal(Rapat $rapat, Request $request)
+    {
+        $user = $request->user();
+        $undangan = $rapat->undangan()->where('user_id',$user->id)->firstOrFail();
+
+        if ($undangan->status_kehadiran === 'hadir') {
+            $undangan->update([
+                'status_kehadiran' => 'selesai',
+                'checked_out_at'   => now(),
+                'updated_id'       => $user->id,
+                'status_survey'    => 'belum_isi',
+            ]);
+        } elseif ($undangan->status_kehadiran === 'tidak_hadir') {
+            return redirect()->route('pegawai.agenda.rapat')
+                ->with('error','Anda tidak tercatat hadir, tidak bisa isi survey.');
+        }
+
+        return redirect()->route('pegawai.survey.rapat.form.internal',$rapat->survey->slug)
+            ->with('success','Anda otomatis checkout, silakan isi survey rapat.');
+    }
+
 }

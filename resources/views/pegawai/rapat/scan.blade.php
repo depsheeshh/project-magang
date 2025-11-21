@@ -1,21 +1,24 @@
 @extends('layouts.admin')
 
-@section('title','Scan QR Rapat')
-@section('page-title','Scan QR Rapat')
+@section('title','Scan QR Rapat Internal')
+@section('page-title','Scan QR Rapat Internal')
 
 @section('content')
-<div class="card">
+<div class="card shadow-sm">
   <div class="card-body text-center">
-    <h5 class="mb-3">Arahkan kamera ke QR Code rapat</h5>
-    <div id="reader" style="width:320px;margin:auto;"></div>
-    <p class="text-muted mt-3">Pastikan kamera menghadap QR code yang ditampilkan admin.</p>
+    <h5 class="mb-3" id="scanTitleInternal">Arahkan kamera ke QR Code Rapat</h5>
+    <div id="readerInternal" style="width:320px;margin:auto;"></div>
+    <div id="scanResultInternal" class="mt-3 text-info"></div>
 
-    {{-- Form auto-submit setelah QR terbaca --}}
-    <form id="checkinForm" method="POST" style="display:none;">
+    {{-- Form auto-submit untuk check-in rapat --}}
+    <form id="checkinFormInternal" method="POST" style="display:none;">
       @csrf
-      <input type="hidden" name="latitude" id="lat">
-      <input type="hidden" name="longitude" id="lon">
+      <input type="hidden" name="latitude" id="latInternal">
+      <input type="hidden" name="longitude" id="lonInternal">
     </form>
+    <a href="{{ route('pegawai.agenda.rapat') }}" class="btn btn-secondary mx-1">
+        <i class="fas fa-arrow-left"></i> Kembali
+    </a>
   </div>
 </div>
 @endsection
@@ -23,40 +26,39 @@
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-function onScanSuccess(decodedText, decodedResult) {
-    // Validasi: pastikan URL mengandung /pegawai/rapat/
-    if (!decodedText.includes('/pegawai/rapat/')) {
-        alert("QR tidak valid untuk rapat internal.");
-        return;
-    }
+document.addEventListener("DOMContentLoaded", function() {
+  const scanTitle = document.getElementById("scanTitleInternal");
+  const resultElem = document.getElementById("scanResultInternal");
 
-    // Ambil hanya path dari decodedText
+  function onScanSuccess(decodedText) {
     let urlObj = new URL(decodedText, window.location.origin);
-    let pathOnly = urlObj.pathname; // contoh: /pegawai/rapat/3/checkin/abc123
+    let pathOnly = urlObj.pathname + urlObj.search;
+
+    // ✅ Hanya valid untuk QR rapat internal
+    if (!decodedText.includes('/pegawai/rapat/')) {
+      alert("QR tidak valid untuk rapat internal.");
+      return;
+    }
 
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(pos) {
-            document.getElementById('lat').value = pos.coords.latitude;
-            document.getElementById('lon').value = pos.coords.longitude;
-
-            let form = document.getElementById('checkinForm');
-            form.action = window.location.origin + pathOnly; // pakai domain aktif browser
-            form.submit();
-        }, function(err) {
-            alert("Gagal mendapatkan lokasi: " + err.message);
-        });
-    } else {
-        alert("Browser tidak mendukung geolocation.");
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        document.getElementById('latInternal').value = pos.coords.latitude;
+        document.getElementById('lonInternal').value = pos.coords.longitude;
+        let form = document.getElementById('checkinFormInternal');
+        form.action = window.location.origin + pathOnly;
+        form.submit();
+      }, function(err) {
+        alert("Gagal mendapatkan lokasi: " + err.message);
+      });
     }
-}
+  }
 
-function onScanError(errorMessage) {
+  function onScanError(errorMessage) {
     console.warn("Scan error: ", errorMessage);
-}
+  }
 
-let html5QrcodeScanner = new Html5QrcodeScanner(
-    "reader", { fps: 15, qrbox: 250 }
-);
-html5QrcodeScanner.render(onScanSuccess, onScanError);
+  let scanner = new Html5QrcodeScanner("readerInternal", { fps: 15, qrbox: 250 });
+  scanner.render(onScanSuccess, onScanError);
+});
 </script>
 @endpush
