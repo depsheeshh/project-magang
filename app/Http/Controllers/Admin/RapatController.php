@@ -603,9 +603,14 @@ class RapatController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('jenis_rapat')) {
+        $query->where('jenis_rapat', $request->jenis_rapat);
+    }
+
         $rapat = $query->get();
 
         $rekap = $rapat->map(function($r) {
+            $survey = $r->survey;
             return [
                 'judul'   => $r->judul,
                 'waktu'   => \Carbon\Carbon::parse($r->waktu_mulai)->format('d/m/Y H:i') .
@@ -618,6 +623,8 @@ class RapatController extends Controller
                 'selesai' => $r->undangan->where('status_kehadiran','selesai')->count(),
                 'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
                 'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
+                'survey_total'  => $survey ? $r->undangan->count() : 0,
+                'survey_filled' => $survey ? $r->undangan->where('status_survey','sudah_isi')->count() : 0,
             ];
         });
 

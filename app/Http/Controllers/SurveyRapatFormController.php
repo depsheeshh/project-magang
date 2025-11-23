@@ -55,7 +55,8 @@ class SurveyRapatFormController extends Controller
 
         return view('survey-rapat.form', [
             'survey'   => $survey,
-            'instansi' => [] // internal tidak butuh instansi
+            'nama'   => $user->name,
+            'instansi' => 'DINAS KOMUNIKASI, INFORMATIKA DAN STATISTIK' // internal tidak butuh instansi
         ]);
     }
 
@@ -70,9 +71,22 @@ class SurveyRapatFormController extends Controller
             return redirect()->back()->with('warning', 'QR tidak valid untuk survey eksternal.');
         }
 
+        $rapat = $survey->rapat;
+        $user  = Auth::user();
+        $undangan = $rapat->undangan()->where('user_id',$user->id)->first();
+
         $instansi = Instansi::orderBy('nama_instansi')->get();
 
-        return view('survey-rapat.form', compact('survey','instansi'));
+        if (!$undangan) {
+            return redirect()->route('tamu.rapat.index')
+                ->with('error','Anda tidak terdaftar dalam rapat ini.');
+        }
+
+        return view('survey-rapat.form', [
+            'survey'   => $survey,
+            'nama'     => $undangan->nama ?? $user->name,          // ✅ ambil dari undangan
+            'instansi' => $undangan->instansi->nama_instansi ?? '-', // ✅ ambil dari undangan
+        ]);
     }
 
     /**
@@ -85,7 +99,7 @@ class SurveyRapatFormController extends Controller
             return redirect()->back()->with('warning', 'Survey ini bukan tipe internal.');
         }
 
-        $request->validate(['nama' => 'required|string|max:255']);
+        $user = Auth::user();
 
         // ✅ Cegah duplikat
         if (Auth::check()) {
@@ -108,7 +122,7 @@ class SurveyRapatFormController extends Controller
             'rapat_id'  => $survey->rapat?->id,
             'user_id'   => Auth::id(),
             'nama'      => $request->nama,
-            'instansi'  => null,
+            'instansi'  => 'DINAS KOMUNIKASI, INFORMATIKA DAN STATISTIK',
             'jawaban'   => $jawaban,
         ]);
 
@@ -133,18 +147,16 @@ class SurveyRapatFormController extends Controller
             return redirect()->back()->with('warning', 'Survey ini bukan tipe eksternal.');
         }
 
-        $rules = [
-            'nama' => 'required|string|max:255',
-            'instansi' => 'required|string|max:255',
-        ];
-        if ($request->instansi === 'lainnya') {
-            $rules['instansi_manual'] = 'required|string|max:255';
-        }
-        $request->validate($rules);
+        $user = Auth::user();
+        $undangan = $survey->rapat->undangan()->where('user_id',$user->id)->first();
 
-        $instansiFinal = $request->instansi === 'lainnya'
-            ? $request->instansi_manual
-            : $request->instansi;
+        if (!$undangan) {
+            return redirect()->route('tamu.rapat.index')
+                ->with('error','Anda tidak terdaftar dalam rapat ini.');
+        }
+
+        $nama = $undangan->nama ?? $user->name;
+        $instansiFinal = $undangan->instansi->nama_instansi ?? '-';
 
         $jawaban = [
             'Kualitas Rapat' => $request->input('kualitas_rapat'),
@@ -156,7 +168,7 @@ class SurveyRapatFormController extends Controller
             'survey_id' => $survey->id,
             'rapat_id'  => $survey->rapat?->id, // ✅ pakai relasi langsung
             'user_id'   => Auth::id(),
-            'nama'      => $request->nama,
+            'nama'      => $nama,          // ✅ ambil dari undangan
             'instansi'  => $instansiFinal,
             'jawaban'   => $jawaban,
         ]);

@@ -12,33 +12,11 @@
       font-size: 13px;
       line-height: 1.5;
     }
-    .header {
-        text-align: center;
-        border-bottom: 3px solid #3b82f6;
-        padding-bottom: 10px;
-        margin-bottom: 25px;
-    }
-    .header img {
-        height: 60px;
-        margin-bottom: 5px; }
-    .header h2 {
-        margin: 0;
-        font-size: 20px;
-        color: #1e3a8a;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .header small {
-        color: #64748b;
-        font-size: 11px;
-    }
-    .details {
-        margin-bottom: 30px;
-        background: #f1f5f9;
-        border-radius: 10px;
-        padding: 15px 20px;
-        box-shadow: inset 0 0 6px rgba(0,0,0,0.08);
-    }
+    .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 25px; }
+    .header img { height: 60px; margin-bottom: 5px; }
+    .header h2 { margin: 0; font-size: 20px; color: #1e3a8a; text-transform: uppercase; letter-spacing: 1px; }
+    .header small { color: #64748b; font-size: 11px; }
+    .details { margin-bottom: 30px; background: #f1f5f9; border-radius: 10px; padding: 15px 20px; box-shadow: inset 0 0 6px rgba(0,0,0,0.08); }
     .details p { margin: 5px 0; font-size: 13px; }
     .details strong { color: #0f172a; }
     .qr-container { text-align: center; margin: 30px 0; }
@@ -63,9 +41,6 @@
     <p><strong>Waktu:</strong> {{ \Carbon\Carbon::parse($rapat->waktu_mulai)->format('d/m/Y H:i') }}
       s/d {{ \Carbon\Carbon::parse($rapat->waktu_selesai)->format('d/m/Y H:i') }}</p>
     <p><strong>Lokasi:</strong> {{ $rapat->lokasi ?? '-' }}</p>
-    @if(isset($jumlahRespon))
-      <p><strong>Jumlah Responden Survey:</strong> {{ $jumlahRespon }}</p>
-    @endif
   </div>
 
   {{-- QR Check-in --}}
@@ -85,42 +60,40 @@
     <div class="details">
       <p><strong>Judul Survey:</strong> {{ $survey->judul }}</p>
       <p><strong>Tipe:</strong> {{ ucfirst($survey->tipe) }}</p>
-      <p><strong>Jumlah Responden:</strong> {{ $jumlahRespon }}</p>
       <p><strong>Deskripsi:</strong> {{ $survey->deskripsi ?? '-' }}</p>
     </div>
   @endif
 
   {{-- Langkah-langkah dibedakan --}}
-    <h3 class="section-title">Langkah-langkah</h3>
-    @if($rapat->jenis_rapat === 'Internal')
+  <h3 class="section-title">Langkah-langkah</h3>
+  @if($rapat->jenis_rapat === 'Internal')
     <ol class="steps">
-        <li>Buka <strong>aplikasi Buku Tamu Digital DKIS</strong> di perangkat Anda.</li>
-        <li>Login sebagai <strong>pegawai</strong> dengan akun yang sudah terdaftar.</li>
-        <li>Pilih menu <strong>Agenda Rapat Pegawai</strong>.</li>
-        <li>Pada halaman agenda, pilih opsi <strong>Scan QR Rapat</strong>.</li>
-        <li>Arahkan kamera ke QR Code Check-in rapat di atas.</li>
-        <li>Ikuti tautan yang muncul untuk membuka <strong>form check-in pegawai</strong>.</li>
-        <li>Isi data diri sesuai form (Nama, Jabatan, Instansi).</li>
-        <li>Pastikan lokasi Anda berada dalam <strong>radius rapat</strong>.</li>
-        <li>Tekan tombol <strong>Check-in</strong> dan tunggu konfirmasi berhasil.</li>
-        <li>Setelah rapat selesai, sistem akan menandai <strong>Checkout otomatis</strong>.</li>
-        <li>Scan QR Survey untuk mengisi <strong>Survey Internal</strong>.</li>
+      <li>Buka <strong>aplikasi Buku Tamu Digital DKIS</strong> di perangkat Anda.</li>
+      <li>Login sebagai <strong>pegawai</strong> dengan akun yang sudah terdaftar.</li>
+      <li>Pilih menu <strong>Agenda Rapat Pegawai</strong>.</li>
+      <li>Pada halaman agenda, pilih opsi <strong>Scan QR Rapat</strong>.</li>
+      <li>Arahkan kamera ke QR Code Check-in rapat di atas.</li>
+      <li>Ikuti tautan yang muncul untuk membuka <strong>form check-in pegawai</strong>.</li>
+      <li>Isi data diri sesuai form (Nama, Jabatan, Instansi).</li>
+      <li>Pastikan lokasi Anda berada dalam <strong>radius rapat</strong>.</li>
+      <li>Tekan tombol <strong>Check-in</strong> dan tunggu konfirmasi berhasil.</li>
+      <li>Setelah rapat selesai, sistem akan menandai <strong>Checkout otomatis</strong>.</li>
+      <li>Scan QR Survey untuk mengisi <strong>Survey Internal</strong>.</li>
     </ol>
-    @else
+  @else
     <ol class="steps">
-        <li>Buka <strong>website Buku Tamu Digital DKIS</strong> melalui browser di perangkat Anda.</li>
-        <li>Pilih menu <strong>Check-in Rapat Eksternal</strong>.</li>
-        <li>Pada halaman check-in, pilih opsi <strong>Scan QR Rapat</strong>.</li>
-        <li>Arahkan kamera ke QR Code Check-in rapat di atas.</li>
-        <li>Ikuti tautan yang muncul untuk membuka <strong>form check-in tamu eksternal</strong>.</li>
-        <li>Isi data diri sesuai form (Nama, Email, Instansi, Jabatan).</li>
-        <li>Pastikan lokasi Anda berada dalam <strong>radius rapat</strong>.</li>
-        <li>Tekan tombol <strong>Check-in</strong> dan tunggu konfirmasi berhasil.</li>
-        <li>Setelah rapat selesai, lakukan <strong>Checkout</strong> melalui menu <strong>Rapat Saya</strong>.</li>
-        <li>Scan QR Survey untuk mengisi <strong>Survey Eksternal</strong>.</li>
+      <li>Buka <strong>website Buku Tamu Digital DKIS</strong> melalui browser di perangkat Anda.</li>
+      <li>Pilih menu <strong>Check-in Rapat Eksternal</strong>.</li>
+      <li>Pada halaman check-in, pilih opsi <strong>Scan QR Rapat</strong>.</li>
+      <li>Arahkan kamera ke QR Code Check-in rapat di atas.</li>
+      <li>Ikuti tautan yang muncul untuk membuka <strong>form check-in tamu eksternal</strong>.</li>
+      <li>Isi data diri sesuai form (Nama, Email, Instansi, Jabatan).</li>
+      <li>Pastikan lokasi Anda berada dalam <strong>radius rapat</strong>.</li>
+      <li>Tekan tombol <strong>Check-in</strong> dan tunggu konfirmasi berhasil.</li>
+      <li>Setelah rapat selesai, lakukan <strong>Checkout</strong> melalui menu <strong>Rapat Saya</strong>.</li>
+      <li>Scan QR Survey untuk mengisi <strong>Survey Eksternal</strong>.</li>
     </ol>
-    @endif
-
+  @endif
 
   <div class="footer">
     <em>Dicetak otomatis oleh sistem Buku Tamu Digital DKIS</em><br>
