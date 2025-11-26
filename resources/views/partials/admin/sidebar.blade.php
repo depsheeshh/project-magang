@@ -42,8 +42,8 @@
         @endcanany
 
         {{-- Master Data --}}
-        @canany(['pegawai.view','bidang.view','jabatan.view','reports.view'])
-            <li class="dropdown {{ request()->routeIs('admin.pegawai.*') || request()->routeIs('admin.bidang.*') || request()->routeIs('admin.jabatan.*') || request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
+        @canany(['pegawai.view','bidang.view','jabatan.view'])
+            <li class="dropdown {{ request()->routeIs('admin.pegawai.*') || request()->routeIs('admin.bidang.*') || request()->routeIs('admin.jabatan.*') ? 'active' : ''}}">
             <a href="#" class="nav-link has-dropdown">
                 <i class="fas fa-database"></i> <span>Master Data</span>
             </a>
@@ -69,21 +69,14 @@
                 </a>
                 </li>
                 @endcan
-                @can('reports.view')
-                <li class="{{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('admin.laporan.index') }}">
-                    <i class="fas fa-file-alt"></i> Laporan
-                </a>
-                </li>
-                @endcan
             </ul>
             </li>
         @endcanany
 
         {{-- Menu Tamu --}}
-        @canany(['tamu.view','kunjungan.view'])
+        @canany(['tamu.view','kunjungan.view','reports.view'])
         <li class="menu-header">Tamu</li>
-            <li class="dropdown {{ request()->routeIs('admin.tamu.*') || request()->routeIs('admin.kunjungan.*') ? 'active' : '' }}">
+            <li class="dropdown {{ request()->routeIs('admin.tamu.*') || request()->routeIs('admin.kunjungan.*')|| request()->routeIs('admin.laporan.*') ? 'active' : ''}}">
             <a href="#" class="nav-link has-dropdown">
                 <i class="fas fa-user-check"></i> <span>Kelola Tamu</span>
             </a>
@@ -92,6 +85,13 @@
                 <li class="{{ request()->routeIs('admin.tamu.*') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('admin.tamu.index') }}">
                     <i class="fas fa-user-friends"></i> Data Tamu
+                </a>
+                </li>
+                @endcan
+                @can('reports.view')
+                <li class="{{ request()->routeIs('admin.laporan.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('admin.laporan.index') }}">
+                    <i class="fas fa-file-alt"></i> Laporan
                 </a>
                 </li>
                 @endcan
@@ -217,94 +217,128 @@
       @endrole
 
       {{-- Menu khusus Pegawai --}}
-  @role('pegawai')
-  <li class="menu-header">Pegawai</li>
+        @role('pegawai')
+        <li class="menu-header">Pegawai</li>
 
-  <li class="@activeIfRoute('pegawai.kunjungan.notifikasi')">
-    <a class="nav-link" href="{{ route('pegawai.kunjungan.notifikasi') }}">
-      <i class="fas fa-bell"></i> <span>Notifikasi Tamu</span>
-    </a>
-  </li>
+        {{-- Notifikasi Tamu --}}
+        @if(Auth::user()->pegawai)
+            <li class="@activeIfRoute('pegawai.kunjungan.notifikasi')">
+            <a class="nav-link" href="{{ route('pegawai.kunjungan.notifikasi') }}">
+                <i class="fas fa-bell"></i> <span>Notifikasi Tamu</span>
+            </a>
+            </li>
+        @else
+            <li>
+            <a class="nav-link disabled" href="#" data-toggle="tooltip" title="Menu terkunci, hubungi admin DKIS">
+                <i class="fas fa-lock text-muted"></i> <span class="text-muted">Notifikasi Tamu</span>
+            </a>
+            </li>
+        @endif
 
-  <li class="@activeIfRoute('pegawai.kunjungan.riwayat')">
-    <a class="nav-link" href="{{ route('pegawai.kunjungan.riwayat') }}">
-      <i class="fas fa-history"></i> <span>Riwayat Kunjungan</span>
-    </a>
-  </li>
+        {{-- Riwayat Kunjungan --}}
+        @if(Auth::user()->pegawai)
+            <li class="@activeIfRoute('pegawai.kunjungan.riwayat')">
+            <a class="nav-link" href="{{ route('pegawai.kunjungan.riwayat') }}">
+                <i class="fas fa-history"></i> <span>Riwayat Kunjungan</span>
+            </a>
+            </li>
+        @else
+            <li>
+            <a class="nav-link disabled" href="#" data-toggle="tooltip" title="Menu terkunci, hubungi admin DKIS">
+                <i class="fas fa-lock text-muted"></i> <span class="text-muted">Riwayat Kunjungan</span>
+            </a>
+            </li>
+        @endif
 
-  <li class="@activeIfRoute(
-    'pegawai.agenda.rapat',
-    'pegawai.rapat.scan',
-    'pegawai.rapat.detail',
-    'pegawai.rapat.checkin.token',
-    'pegawai.rapat.checkout'
-  )">
-    <a class="nav-link" href="{{ route('pegawai.agenda.rapat') }}">
-      <i class="fas fa-calendar-alt"></i> <span>Agenda Rapat Saya</span>
-    </a>
-  </li>
+        <li class="@activeIfRoute(
+            'pegawai.agenda.rapat',
+            'pegawai.rapat.scan',
+            'pegawai.rapat.detail',
+            'pegawai.rapat.checkin.token',
+            'pegawai.rapat.checkout'
+        )">
+            <a class="nav-link" href="{{ route('pegawai.agenda.rapat') }}">
+            <i class="fas fa-calendar-alt"></i> <span>Agenda Rapat Saya</span>
+            </a>
+        </li>
 
-  <li class="menu-header">Rapat</li>
-  <li class="dropdown @activeIfRoute(
-    'pegawai.rapat.index',
-    'pegawai.rapat.rekap',
-    'pegawai.instansi.*',
-    'pegawai.kantor.*',
-    'pegawai.ruangan.*'
-  )">
-    <a href="#" class="nav-link has-dropdown">
-      <i class="fas fa-handshake"></i> <span>Rapat</span>
-    </a>
-    <ul class="dropdown-menu">
-      <li class="@activeIfRoute('pegawai.rapat.index')">
-        <a class="nav-link" href="{{ route('pegawai.rapat.index') }}">
-          <i class="fas fa-list"></i> Manajemen Rapat
-        </a>
-      </li>
-      <li class="@activeIfRoute('pegawai.instansi.*')">
-        <a class="nav-link" href="{{ route('pegawai.instansi.index') }}">
-          <i class="fas fa-building"></i> Data Instansi
-        </a>
-      </li>
-      <li class="@activeIfRoute('pegawai.kantor.*')">
-        <a class="nav-link" href="{{ route('pegawai.kantor.index') }}">
-          <i class="fas fa-city"></i> Data Kantor
-        </a>
-      </li>
-      <li class="@activeIfRoute('pegawai.ruangan.*')">
-        <a class="nav-link" href="{{ route('pegawai.ruangan.index') }}">
-          <i class="fas fa-door-open"></i> Data Ruangan
-        </a>
-      </li>
-      <li class="@activeIfRoute('pegawai.rapat.rekap')">
-        <a class="nav-link" href="{{ route('pegawai.rapat.rekap') }}">
-          <i class="fas fa-chart-bar"></i> Rekap Rapat
-        </a>
-      </li>
-    </ul>
-  </li>
-@endrole
+        <li class="menu-header">Rapat</li>
+        <li class="dropdown @activeIfRoute(
+            'pegawai.rapat.index',
+            'pegawai.rapat.rekap',
+            'pegawai.instansi.*',
+            'pegawai.kantor.*',
+            'pegawai.ruangan.*'
+        )">
+            <a href="#" class="nav-link has-dropdown">
+            <i class="fas fa-handshake"></i> <span>Rapat</span>
+            </a>
+            <ul class="dropdown-menu">
+            <li class="@activeIfRoute('pegawai.rapat.index')">
+                <a class="nav-link" href="{{ route('pegawai.rapat.index') }}">
+                <i class="fas fa-list"></i> Manajemen Rapat
+                </a>
+            </li>
+            <li class="@activeIfRoute('pegawai.instansi.*')">
+                <a class="nav-link" href="{{ route('pegawai.instansi.index') }}">
+                <i class="fas fa-building"></i> Data Instansi
+                </a>
+            </li>
+            <li class="@activeIfRoute('pegawai.kantor.*')">
+                <a class="nav-link" href="{{ route('pegawai.kantor.index') }}">
+                <i class="fas fa-city"></i> Data Kantor
+                </a>
+            </li>
+            <li class="@activeIfRoute('pegawai.ruangan.*')">
+                <a class="nav-link" href="{{ route('pegawai.ruangan.index') }}">
+                <i class="fas fa-door-open"></i> Data Ruangan
+                </a>
+            </li>
+            <li class="@activeIfRoute('pegawai.rapat.rekap')">
+                <a class="nav-link" href="{{ route('pegawai.rapat.rekap') }}">
+                <i class="fas fa-chart-bar"></i> Rekap Rapat
+                </a>
+            </li>
+            </ul>
+        </li>
+        @endrole
 
 
       {{-- Menu khusus Tamu --}}
       @role('tamu')
         <li class="menu-header">Tamu</li>
-        <li class="{{ request()->is('tamu/kunjungan/create') ? 'active' : '' }}">
+
+        @if(Auth::user()->tamu)
+            <li class="{{ request()->is('tamu/kunjungan/create') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.create') }}">
                 <i class="fas fa-plus"></i> <span>Tambah Kunjungan</span>
             </a>
-        </li>
-        <li class="{{ request()->is('tamu/kunjungan/status*') ? 'active' : '' }}">
+            </li>
+            <li class="{{ request()->is('tamu/kunjungan/status*') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.kunjungan.status') }}">
                 <i class="fas fa-clipboard-list"></i> <span>Status Kunjungan</span>
             </a>
-        </li>
+            </li>
+        @else
+            <li class="nav-item">
+            <div class="nav-link disabled d-flex align-items-center" style="opacity: 0.7;" data-toggle="tooltip" title="Isi form tamu terlebih dahulu untuk mengakses menu kunjungan.">
+                <i class="fas fa-lock text-warning mr-2"></i>
+                <div>
+                <strong class="d-block">Menu Kunjungan Terkunci</strong>
+                <small class="text-muted">Isi form tamu terlebih dahulu</small>
+                </div>
+            </div>
+            </li>
+        @endif
+
         <li class="{{ request()->is('tamu/rapat-saya') ? 'active' : '' }}">
             <a class="nav-link" href="{{ route('tamu.rapat.saya') }}">
-                <i class="fas fa-handshake"></i> <span>Agenda Rapat Saya</span>
+            <i class="fas fa-handshake"></i> <span>Agenda Rapat Saya</span>
             </a>
         </li>
-      @endrole
+        @endrole
+
     </ul>
   </aside>
 </div>
+

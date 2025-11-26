@@ -68,8 +68,14 @@ class RapatCheckinController extends Controller
         $user = $request->user();
 
         $undangan = RapatUndangan::where('rapat_id', $rapat->id)
-            ->where('user_id', $user->id)
-            ->firstOrFail();
+        ->where('user_id', $user->id)
+        ->first();
+
+        if (!$undangan) {
+            return redirect()->route('pegawai.agenda.rapat')
+                ->with('warning','Anda tidak diundang dalam rapat ini.');
+        }
+
 
         // Instansi otomatis DKIS bila kosong
         if (!$user->instansi_id && $user->hasRole('pegawai')) {
@@ -88,6 +94,7 @@ class RapatCheckinController extends Controller
     // =========================
     // Pegawai: check-in via QR rapat
     // =========================
+
     public function checkinByRapatToken(Request $request, Rapat $rapat, $token)
     {
         if ($rapat->qr_token_hash !== hash('sha256',$token)) {
@@ -95,7 +102,11 @@ class RapatCheckinController extends Controller
         }
 
         $user = $request->user();
-        $undangan = $rapat->undangan()->where('user_id',$user->id)->firstOrFail();
+        $undangan = $rapat->undangan()->where('user_id',$user->id)->first();
+        if (!$undangan) {
+            return redirect()->route('pegawai.agenda.rapat')
+                ->with('warning','Anda tidak diundang dalam rapat ini.');
+        }
 
         $validWaktu = $this->validateWaktu($rapat,$undangan,$user);
         if ($validWaktu !== true) return back()->with('error',$validWaktu);
@@ -118,6 +129,11 @@ class RapatCheckinController extends Controller
             return back()->with('warning','Anda sudah melakukan check-in sebelumnya.');
         }
 
+        if (!$request->has('latitude') || !$request->has('longitude')) {
+            return redirect()->route('pegawai.rapat.scan')
+                ->with('error','Data lokasi tidak lengkap, silakan ulangi scan.');
+        }
+
         $undangan->update([
             'status_kehadiran'=>'hadir',
             'checked_in_at'=>now(),
@@ -126,6 +142,8 @@ class RapatCheckinController extends Controller
             'checkin_longitude'=>$request->longitude,
             'updated_id'=>$user->id,
             'instansi_id'=>$user->instansi_id,
+            'method_checkin'=>'qr',          // 👈 audit trail
+            'status_survey'=>'belum_isi',
         ]);
 
         return redirect()->route('pegawai.agenda.rapat')

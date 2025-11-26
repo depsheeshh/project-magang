@@ -7,9 +7,6 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h4>Daftar Rapat Saya</h4>
-    <a href="{{ route('pegawai.rapat.scan') }}" class="btn btn-success btn-sm">
-      <i class="fas fa-qrcode"></i> Scan QR Rapat
-    </a>
   </div>
   <div class="card-body">
 
@@ -23,7 +20,6 @@
 
     @forelse($rapatSaya as $rapat)
       @php $undangan = $rapat->undangan->first(); @endphp
-
       <div class="card mb-3 shadow-sm border">
         <div class="card-body">
           <h5 class="mb-2">{{ $rapat->judul }}</h5>
@@ -37,6 +33,8 @@
             </span>
           </p>
           <p class="mb-2"><strong>Lokasi:</strong> {{ $rapat->lokasi ?? '-' }}</p>
+
+          {{-- ✅ Status Kehadiran --}}
           <p class="mb-2">
             <strong>Status Kehadiran:</strong>
             @if(!$undangan || $undangan->status_kehadiran === null || $undangan->status_kehadiran === 'pending')
@@ -51,9 +49,17 @@
           </p>
 
           {{-- ✅ Tombol aksi --}}
-          <a href="{{ route('pegawai.rapat.detail',$rapat->id) }}" class="btn btn-primary btn-sm">
+          <a href="{{ route('pegawai.rapat.detail',$rapat->id) }}" class="btn btn-primary btn-sm my-1">
             <i class="fas fa-info-circle"></i> Detail Rapat
           </a>
+          <br>
+          {{-- ✅ Tombol Scan QR hanya muncul jika pegawai diundang --}}
+          @if($undangan && in_array($undangan->status_kehadiran, [null, 'pending']))
+                <a href="{{ route('pegawai.rapat.scan', [$rapat->id, $rapat->qr_token]) }}"
+                class="btn btn-success btn-sm">
+                <i class="fas fa-qrcode"></i> Scan QR
+                </a>
+            @endif
         </div>
       </div>
     @empty

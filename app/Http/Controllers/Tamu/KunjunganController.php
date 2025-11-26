@@ -16,11 +16,19 @@ class KunjunganController extends Controller
 {
     public function create()
     {
+        if (!Auth::user()->tamu) {
+            return redirect()->route('tamu.rapat.saya')
+                ->with('warning','Menu kunjungan terkunci. Silakan isi form tamu terlebih dahulu.');
+        }
         return view('tamu.kunjungan.create');
     }
 
     public function store(Request $request)
     {
+        if (!Auth::user()->tamu) {
+            return back()->with('error','Anda belum pernah mengisi form tamu sebelumnya.');
+        }
+
         $request->validate([
             'pegawai_id' => 'required|exists:pegawai,id',
             'keperluan'  => 'required|string|max:255',
@@ -53,6 +61,12 @@ class KunjunganController extends Controller
 
     public function status()
     {
+        $kunjungan = collect();
+        if (!Auth::user()->tamu) {
+            return view('tamu.kunjungan.status', [
+                'kunjungan' => $kunjungan,
+            ])->with('warning','Anda belum pernah mengisi form tamu sebelumnya.');
+        }
         $tamu = Auth::user()->tamu;
         $kunjungan = Kunjungan::with('pegawai.user')
             ->where('tamu_id',$tamu->id)

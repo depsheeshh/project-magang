@@ -77,6 +77,8 @@ class TamuController extends Controller
             ]
         );
 
+        // Tambahan logika anti duplikat
+
         // simpan kunjungan
         $kunjungan = Kunjungan::create([
             'tamu_id'     => $tamu->id,

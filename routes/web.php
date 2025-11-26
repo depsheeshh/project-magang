@@ -222,6 +222,8 @@ Route::middleware('auth',)->group(function () {
                 Route::delete('rapat/{rapat}/instansi/{undanganInstansi}/tamu/{undangan}',
                 [RapatController::class, 'destroyTamuInstansi'])
                 ->name('rapat.destroyTamuInstansi');
+                Route::post('/rapat/{rapat}/invite-by-jabatan', [RapatController::class, 'inviteByJabatan'])
+                ->name('rapat.inviteByJabatan');
                 Route::patch('rapat/{rapat}/end', [RapatController::class, 'endRapat'])->name('rapat.end');
 
                 // Checkin manual lewat admin
@@ -304,6 +306,8 @@ Route::middleware('auth',)->group(function () {
                 ->name('pegawai.')
                 ->group(function () {
 
+                    Route::get('/locked', fn() => view('pegawai.locked'))
+                    ->name('locked');
                     // ✅ Kunjungan (tidak diubah, tetap jalan)
                     Route::prefix('kunjungan')->name('kunjungan.')->group(function () {
                         Route::get('/riwayat', [PegawaiKunjunganController::class, 'riwayat'])->name('riwayat');
@@ -354,8 +358,11 @@ Route::middleware('auth',)->group(function () {
 
                     Route::post('rapat/{rapat}/invitation-instansi', [RapatController::class, 'storeInvitationInstansi'])->name('rapat.storeInvitationInstansi');
                     Route::post('rapat/{rapat}/invite-all-instansi', [RapatController::class, 'inviteAllInstansi'])->name('rapat.inviteAllInstansi');
+                    Route::post('rapat/{rapat}/invite-by-jabatan', [RapatController::class, 'inviteByJabatan'])
+                    ->name('rapat.inviteByJabatan');
                     Route::patch('rapat/{rapat}/invitation-instansi/{undanganInstansi}/kuota', [RapatController::class, 'updateKuotaInstansi'])->name('rapat.updateKuotaInstansi');
                     Route::delete('rapat/{rapat}/invitation-instansi/{undanganInstansi}', [RapatController::class, 'destroyInvitationInstansi'])->name('rapat.destroyInvitationInstansi');
+
 
                     Route::get('rapat/{rapat}/instansi/{undanganInstansi}/tamu', [RapatController::class, 'detailTamuInstansi'])->name('rapat.detailTamuInstansi');
                     Route::delete('rapat/{rapat}/instansi/{undanganInstansi}/tamu/{undangan}', [RapatController::class, 'destroyTamuInstansi'])->name('rapat.destroyTamuInstansi');
@@ -397,19 +404,18 @@ Route::middleware('auth',)->group(function () {
 
             // Agenda rapat tamu (rapat eksternal yang sudah diikuti)
             Route::get('/rapat-saya', [RapatCheckinEksternalController::class, 'index'])->name('rapat.saya');
-             // ✅ Scan QR Rapat Eksternal via Dashboard (shortcut global)
-            Route::get('/rapat/scan-dashboard', fn() => view('tamu.rapat.scan-dashboard'))
-                ->name('rapat.scan.dashboard');
+             // Scan QR via dashboard
+            Route::get('/rapat/scan-dashboard', fn() => view('tamu.rapat.scan-dashboard'))->name('rapat.scan.dashboard');
 
-            // ✅ Form konfirmasi check-in setelah scan dashboard
-            Route::get('/rapat/{rapat}/checkin-dashboard',
-                [RapatCheckinEksternalController::class, 'formDashboard']
-            )->name('rapat.checkin.form.dashboard');
+            // Validasi instansi saat scan QR
+            Route::get('/rapat/{rapat}/validate-instansi', [RapatCheckinEksternalController::class, 'validateInstansi'])
+                ->name('rapat.validate.instansi');
 
-            // ✅ Submit check-in via dashboard (langsung status hadir, tanpa verifikasi email)
-            Route::post('/rapat/{rapat}/checkin-dashboard',
-                [RapatCheckinEksternalController::class, 'submitDashboard']
-            )->name('rapat.checkin.submit.dashboard');
+            // Form check-in dashboard
+            Route::get('/rapat/{rapat}/checkin-dashboard', [RapatCheckinEksternalController::class, 'formDashboard'])
+                ->name('rapat.checkin.form.dashboard');
+            Route::post('/rapat/{rapat}/checkin-dashboard', [RapatCheckinEksternalController::class, 'submitDashboard'])
+                ->name('rapat.checkin.submit.dashboard');
             Route::get('/rapat/{rapat}', [RapatCheckinEksternalController::class, 'show'])->name('rapat.show');
                 // Checkout eksternal (setelah auto login)
             Route::post('rapat/{rapat}/checkout', [RapatCheckinEksternalController::class, 'checkout'])
@@ -419,17 +425,15 @@ Route::middleware('auth',)->group(function () {
             Route::get('api/instansi/admin', [InstansiLookupController::class, 'listAdminInstansi'])
                 ->name('api.instansi.admin');
 
-                // Survey Eksternal
+            // === Survey Eksternal ===
             Route::get('/survey-rapat/eksternal/{slug}', [SurveyRapatFormController::class, 'formEksternal'])
                 ->name('survey.rapat.form.eksternal');
             Route::post('/survey-rapat/eksternal/{slug}/submit', [SurveyRapatFormController::class, 'submitEksternal'])
                 ->name('survey.rapat.submit.eksternal');
 
-            // ✅ Halaman kamera scan QR Survey (pakai rapat id)
+            // Scan QR Survey eksternal
             Route::get('/rapat/{rapat}/scan-survey', [RapatCheckinEksternalController::class, 'scanSurveyPage'])
                 ->name('rapat.scan.survey.eksternal');
-
-            // ✅ Proses setelah scan QR Survey (slug lewat query), update checkout lalu redirect form
             Route::get('/rapat/{rapat}/scan-survey/process', [RapatCheckinEksternalController::class, 'scanSurveyEksternal'])
                 ->name('rapat.scan.survey.eksternal.process');
         });

@@ -5,21 +5,19 @@
 
 @section('content')
 <style>
-/* 🌙 Dark Glassy Card */
+/* 🌗 Mode adaptif */
 .card-password {
   border: none;
   border-radius: 18px;
-  background: linear-gradient(145deg, #1b1b2f, #1e2743);
-  box-shadow: 0 8px 20px rgba(0, 120, 255, 0.15);
+  background: var(--card-bg, #fff);
+  box-shadow: 0 8px 20px rgba(0, 120, 255, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
 }
-
 .card-password:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 170, 255, 0.25);
+  box-shadow: 0 12px 30px rgba(0, 170, 255, 0.2);
 }
-
 .card-password .card-header {
   background: linear-gradient(90deg, #0066ff, #00b4ff);
   color: #fff;
@@ -30,18 +28,17 @@
   padding: 1.2rem;
 }
 
-/* Input */
+/* Input adaptif */
 .form-control {
   border-radius: 10px;
   border: 1px solid rgba(0, 150, 255, 0.2);
-  background: rgba(25, 35, 60, 0.85);
-  color: #e0e8ff;
+  background-color: var(--input-bg, #fff);
+  color: var(--input-text, #000);
   transition: all 0.3s ease;
 }
 .form-control:focus {
   border-color: #00bfff;
-  box-shadow: 0 0 10px rgba(0, 180, 255, 0.4);
-  background: rgba(35, 45, 75, 0.95);
+  box-shadow: 0 0 10px rgba(0, 180, 255, 0.3);
 }
 
 /* Tombol */
@@ -68,6 +65,15 @@
 .card-body {
   animation: fadeInUp 0.5s ease forwards;
 }
+
+/* Light/Dark mode switch via prefers-color-scheme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-bg: linear-gradient(145deg, #1b1b2f, #1e2743);
+    --input-bg: rgba(25, 35, 60, 0.85);
+    --input-text: #e0e8ff;
+  }
+}
 </style>
 
 <div class="row justify-content-center">
@@ -87,27 +93,46 @@
         <form method="POST" action="{{ route('password.change.update') }}" novalidate>
           @csrf
 
-          <div class="form-group mb-3">
-            <label for="current_password" class="fw-semibold">Password Lama</label>
-            <input type="password" name="current_password" id="current_password"
-              class="form-control @error('current_password') is-invalid @enderror" required>
+          {{-- Password Lama --}}
+          <div class="mb-3">
+            <label for="current_password" class="form-label fw-semibold">Password Lama</label>
+            <div class="input-group">
+              <input type="password" name="current_password" id="current_password"
+                     class="form-control @error('current_password') is-invalid @enderror" required>
+              <span class="input-group-text bg-white" onclick="togglePassword('current_password', this)" style="cursor:pointer">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
             @error('current_password')
-              <div class="invalid-feedback">{{ $message }}</div>
+              <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
           </div>
 
-          <div class="form-group mb-3">
-            <label for="new_password" class="fw-semibold">Password Baru</label>
-            <input type="password" name="new_password" id="new_password"
-              class="form-control @error('new_password') is-invalid @enderror" required>
+          {{-- Password Baru --}}
+          <div class="mb-3">
+            <label for="new_password" class="form-label fw-semibold">Password Baru</label>
+            <div class="input-group">
+              <input type="password" name="new_password" id="new_password"
+                     class="form-control @error('new_password') is-invalid @enderror" required>
+              <span class="input-group-text bg-white" onclick="togglePassword('new_password', this)" style="cursor:pointer">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
             @error('new_password')
-              <div class="invalid-feedback">{{ $message }}</div>
+              <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
           </div>
 
-          <div class="form-group mb-4">
-            <label for="new_password_confirmation" class="fw-semibold">Konfirmasi Password Baru</label>
-            <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control" required>
+          {{-- Konfirmasi Password Baru --}}
+          <div class="mb-4">
+            <label for="new_password_confirmation" class="form-label fw-semibold">Konfirmasi Password Baru</label>
+            <div class="input-group">
+              <input type="password" name="new_password_confirmation" id="new_password_confirmation"
+                     class="form-control" required>
+              <span class="input-group-text bg-white" onclick="togglePassword('new_password_confirmation', this)" style="cursor:pointer">
+                <i class="fas fa-eye"></i>
+              </span>
+            </div>
           </div>
 
           <div class="text-end">
@@ -121,3 +146,19 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  function togglePassword(fieldId, el) {
+    const input = document.getElementById(fieldId);
+    const icon = el.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace("fa-eye", "fa-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.replace("fa-eye-slash", "fa-eye");
+    }
+  }
+</script>
+@endpush

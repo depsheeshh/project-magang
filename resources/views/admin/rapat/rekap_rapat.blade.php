@@ -71,8 +71,7 @@
           <th>Status</th>
           <th>Survey</th>
           <th>Total Undangan</th>
-          <th>Hadir</th>
-          <th>Selesai</th>
+          <th>Hadir (termasuk selesai)</th>
           <th>Tidak Hadir</th>
           <th>Pending</th>
         </tr>
@@ -105,8 +104,14 @@
             @endif
             </td>
           <td>{{ $r['total'] }}</td>
-          <td><span class="badge badge-success">{{ $r['hadir'] }}</span></td>
-          <td><span class="badge badge-secondary">{{ $r['selesai'] ?? 0 }}</span></td> {{-- ✅ --}}
+           <td class="text-center">
+              <span class="badge bg-success">
+                {{ $r['hadir'] }}
+              </span>
+              <small class="text-muted d-block">
+                Termasuk {{ $r['selesai'] }} peserta yang sudah checkout
+              </small>
+            </td>
           <td><span class="badge badge-danger">{{ $r['tidak'] }}</span></td>
           <td><span class="badge badge-warning text-dark">{{ $r['pending'] }}</span></td>
         </tr>

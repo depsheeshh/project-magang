@@ -25,7 +25,7 @@ class NotificationController extends Controller
                 'event'       => $n->data['event'] ?? null,
                 'waktu'       => $n->created_at->format('d-m-Y H:i'),
 
-                // kunjungan legacy
+                // legacy kunjungan
                 'kunjungan'   => $n->data['kunjungan_id'] ?? null,
                 'nama'        => $n->data['nama'] ?? null,
                 'instansi'    => $n->data['instansi'] ?? null,
@@ -40,8 +40,11 @@ class NotificationController extends Controller
                 // rapat
                 'rapat_id'    => $n->data['rapat_id'] ?? null,
                 'judul'       => $n->data['judul'] ?? null,
-                'waktu_rapat' => $n->data['waktu'] ?? null,
+                'waktu_rapat' => $n->data['waktu_rapat'] ?? null,
                 'waktu_notif' => $n->data['waktu_notif'] ?? null,
+
+                // survey rapat
+                'survey_id'   => $n->data['survey_id'] ?? null,
             ];
         });
 
@@ -69,6 +72,7 @@ class NotificationController extends Controller
     {
         $notif = DatabaseNotification::where('id', $id)
             ->where('notifiable_id', $request->user()->id)
+            ->where('notifiable_type', get_class($request->user()))
             ->first();
 
         if ($notif) {
@@ -91,31 +95,4 @@ class NotificationController extends Controller
 
         return response()->json(['success' => true]);
     }
-
-    // 🔹 Hapus semua notifikasi (fix versi Laravel 12)
-    // public function clearAll(Request $request)
-    // {
-    //     $user = $request->user();
-
-    //     // Ambil semua notifiable_type unik di DB
-    //     $types = DB::table('notifications')->distinct()->pluck('notifiable_type')->toArray();
-
-    //     // Filter hanya tipe yang mengandung kata "User"
-    //     $userTypes = array_filter($types, fn($t) => stripos($t, 'user') !== false);
-
-    //     $deleted = DB::table('notifications')
-    //         ->where('notifiable_id', $user->id)
-    //         ->whereIn('notifiable_type', $userTypes)
-    //         ->delete();
-
-    //     Log::info("🧹 CLEAR ALL run", [
-    //         'id' => $user->id,
-    //         'types_used' => $userTypes,
-    //         'deleted' => $deleted,
-    //     ]);
-
-    //     return response()->json(['success' => true, 'deleted' => $deleted]);
-    // }
-
-
 }

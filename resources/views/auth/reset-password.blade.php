@@ -15,19 +15,27 @@
     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
-  <div class="form-floating mb-3">
+  <div class="form-floating mb-3 position-relative">
     <input type="password" name="password" id="password"
            class="form-control @error('password') is-invalid @enderror"
            placeholder="Password Baru" required>
     <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password Baru</label>
+    <span class="toggle-password position-absolute top-50 end-0 translate-middle-y me-3"
+          onclick="togglePassword('password', this)">
+      <i class="bi bi-eye"></i>
+    </span>
     @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
-  <div class="form-floating mb-3">
+  <div class="form-floating mb-3 position-relative">
     <input type="password" name="password_confirmation" id="password_confirmation"
            class="form-control @error('password_confirmation') is-invalid @enderror"
            placeholder="Konfirmasi Password Baru" required>
     <label for="password_confirmation"><i class="bi bi-check2-all me-2 text-primary"></i>Konfirmasi Password Baru</label>
+    <span class="toggle-password position-absolute top-50 end-0 translate-middle-y me-3"
+          onclick="togglePassword('password_confirmation', this)">
+      <i class="bi bi-eye"></i>
+    </span>
     @error('password_confirmation') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
@@ -49,3 +57,21 @@
   Kembali ke <a href="{{ route('login') }}" class="fw-bold">Login</a>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  function togglePassword(fieldId, el) {
+    const input = document.getElementById(fieldId);
+    const icon = el.querySelector('i');
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.remove("bi-eye");
+      icon.classList.add("bi-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.remove("bi-eye-slash");
+      icon.classList.add("bi-eye");
+    }
+  }
+</script>
+@endpush

@@ -60,6 +60,27 @@
         </button>
       </form>
 
+      <hr>
+    <form action="{{ route($prefix.'.rapat.inviteByJabatan', $rapat->id) }}" method="POST">
+    @csrf
+    <div class="form-row">
+        <div class="col-md-8">
+        <select name="jabatan_id" class="form-control" required>
+            <option value="">-- Pilih Jabatan --</option>
+            @foreach($jabatans as $jabatan)
+            <option value="{{ $jabatan->id }}">{{ $jabatan->nama_jabatan }}</option>
+            @endforeach
+        </select>
+        </div>
+        <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-users"></i> Tambah Pegawai per Jabatan
+        </button>
+        </div>
+    </div>
+    </form>
+
+
     @elseif($rapat->jenis_rapat === 'Eksternal')
         {{-- Form undangan untuk instansi --}}
         <form action="{{ route($prefix.'.rapat.storeInvitationInstansi', $rapat->id) }}" method="POST">
@@ -179,14 +200,6 @@
                                 : route('tamu.survey.rapat.form.eksternal', $survey->slug)
                         ) !!}
                     </div>
-                    <p class="mt-2">
-                        <a href="{{ $rapat->jenis_rapat === 'Internal'
-                            ? route('pegawai.survey.rapat.form.internal', $survey->slug)
-                            : route('tamu.survey.rapat.form.eksternal', $survey->slug) }}"
-                        target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-link"></i> Buka Survey
-                        </a>
-                    </p>
                     <span class="badge badge-info mt-2">
                         {{ $survey->respon->count() }} responden telah mengisi
                     </span>
@@ -215,7 +228,7 @@
                 </a>
             @elseif($rapat->jenis_rapat === 'Eksternal')
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
-                    route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token])
+                    route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token], false)
                 ) !!}
                 <p class="mt-2 text-muted">Tamu eksternal silakan scan QR ini untuk check-in rapat.</p>
                 <a href="{{ route('admin.rapat.export.qrpdf', $rapat->id) }}" class="btn btn-info btn-sm mr-2">
@@ -257,7 +270,7 @@
 {{-- Statistik --}}
 @php
   $total   = $rapat->undangan->count();
-  $hadir   = $rapat->undangan->where('status_kehadiran','hadir')->count();
+  $hadir   = $rapat->undangan->where('status_kehadiran','hadir', 'selesai')->count();
   $selesai = $rapat->undangan->where('status_kehadiran','selesai')->count();
   $pending = $rapat->undangan->where('status_kehadiran','pending')->count();
   $tidak   = $rapat->undangan->where('status_kehadiran','tidak_hadir')->count();
@@ -323,8 +336,8 @@
           <tr>
             <th>#</th>
             @if($rapat->jenis_rapat === 'Internal')
-              <th>Nama Tamu</th>
-              <th>Instansi Asal</th>
+              <th>Nama Pegawai</th>
+              <th>Jabatan</th>
               <th>Status Kehadiran</th>
               <th>Check-in</th>
               <th>Check-out</th>
@@ -345,7 +358,7 @@
               <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $undangan->user->name ?? '-' }}</td>
-                <td>{{ $undangan->user->instansi->nama_instansi ?? '-' }}</td>
+                <td>{{ $undangan->user->pegawai->jabatan->nama_jabatan ?? '-' }}</td>
                 <td>{{ ucfirst($undangan->status_kehadiran) }}</td>
                 <td>{{ $undangan->checked_in_at ?? '-' }}</td>
                 <td>{{ $undangan->checked_out_at ?? '-' }}</td>

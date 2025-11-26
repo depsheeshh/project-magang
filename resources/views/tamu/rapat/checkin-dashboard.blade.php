@@ -18,24 +18,10 @@
       </div>
 
       <div class="form-group mb-3">
-        <label for="instansi_id"><i class="bi bi-building"></i> Instansi (opsional)</label>
-        <select name="instansi_id" id="instansi_id" class="form-control">
-          <option value="">-- Pilih Instansi --</option>
-          @foreach($instansiList as $undangan)
-            @php
-              $kuota = $undangan->kuota;
-              $hadir = $undangan->jumlah_hadir;
-              $sisa  = max(0, $kuota - $hadir);
-              $penuh = $sisa <= 0;
-            @endphp
-            <option value="{{ $undangan->instansi->id }}"
-                    @if($penuh) disabled class="text-muted" @endif>
-              {{ $undangan->instansi->nama_instansi }}
-              (Kuota: {{ $kuota }}, Hadir: {{ $hadir }}, Sisa: {{ $sisa }})
-              @if($penuh) - [Penuh] @endif
-            </option>
-          @endforeach
-        </select>
+        <label><i class="bi bi-building"></i> Instansi</label>
+        <input type="text" class="form-control" value="{{ $user->instansi->nama_instansi ?? '-' }}" readonly>
+        {{-- Hidden instansi_id agar tetap dikirim ke backend --}}
+        <input type="hidden" name="instansi_id" value="{{ $user->instansi_id }}">
       </div>
 
       <div class="form-group mb-3">

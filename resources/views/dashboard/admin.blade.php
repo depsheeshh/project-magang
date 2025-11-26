@@ -106,6 +106,18 @@ body.dark-mode .badge {
     </div>
   </div>
 
+  {{-- Total Kunjungan Tamu --}}
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+        <div class="card-icon bg-warning"><i class="fas fa-user-clock"></i></div>
+        <div class="card-wrap">
+        <div class="card-header"><h4>Total Kunjungan Tamu</h4></div>
+        <div class="card-body">{{ $totalKunjunganTamu }}</div>
+        </div>
+    </div>
+    </div>
+
+
   {{-- Survey --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
@@ -138,6 +150,29 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
+
+  {{-- Survey Rapat Terisi --}}
+    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+        <div class="card-icon bg-success"><i class="fas fa-check-circle"></i></div>
+        <div class="card-wrap">
+        <div class="card-header"><h4>Survey Rapat Terisi</h4></div>
+        <div class="card-body">{{ $surveyRapatFilled }}</div>
+        </div>
+    </div>
+    </div>
+
+
+</div>
+<div class="row mt-5">
+<div class="col-12">
+    <div class="card shadow-sm">
+    <div class="card-header"><h4 class="mb-0">📊 Grafik Statistik Rapat & Kunjungan</h4></div>
+    <div class="card-body">
+        <canvas id="chartAdmin" height="120"></canvas>
+    </div>
+    </div>
+</div>
 </div>
 @endif
 
@@ -248,6 +283,16 @@ body.dark-mode .badge {
     @endif
   </div>
 </div>
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Frontliner</h4></div>
+      <div class="card-body">
+        <canvas id="chartFrontliner" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 @endif
 
 
@@ -355,6 +400,16 @@ body.dark-mode .badge {
     </div>
   </div>
 </div>
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Pegawai</h4></div>
+      <div class="card-body">
+        <canvas id="chartPegawai" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 @endif
 
 
@@ -405,6 +460,143 @@ body.dark-mode .badge {
     </div>
   </div>
 </div>
+<div class="row mt-5">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Tamu</h4></div>
+      <div class="card-body">
+        <canvas id="chartTamu" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 @endif
 
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var ctx = document.getElementById('chartAdmin').getContext('2d');
+  var chartAdmin = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [
+        'Total Rapat',
+        'Survey Terisi',
+        'Survey Belum Terisi',
+        'Total Tamu',
+        'Total Kunjungan Tamu'
+        ],
+        datasets: [{
+        label: 'Statistik',
+        data: [
+            {{ $totalRapat }},
+            {{ $surveyRapatFilled }},
+            {{ $surveyRapatPending }},
+            {{ $totalTamu }},
+            {{ $totalKunjunganTamu }}
+        ],
+        backgroundColor: [
+            '#4e73df',
+            '#1cc88a',
+            '#e74a3b',
+            '#36b9cc',
+            '#f6c23e'
+        ]
+        }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 }
+        }
+      }
+    }
+  });
+</script>
+<script>
+  var ctxFront = document.getElementById('chartFrontliner').getContext('2d');
+  var chartFrontliner = new Chart(ctxFront, {
+    type: 'bar',
+    data: {
+      labels: ['Total Kunjungan','Diterima','Ditolak','Sedang Bertamu','Selesai'],
+      datasets: [{
+        label: 'Statistik',
+        data: [
+          {{ $total }},
+          {{ $diterima }},
+          {{ $ditolak }},
+          {{ $sedangBertamu }},
+          {{ $selesai }}
+        ],
+        backgroundColor: ['#4e73df','#1cc88a','#e74a3b','#f6c23e','#36b9cc']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+</script>
+<script>
+  var ctxPegawai = document.getElementById('chartPegawai').getContext('2d');
+  var chartPegawai = new Chart(ctxPegawai, {
+    type: 'bar',
+    data: {
+      labels: ['Total Kunjungan','Selesai','Sedang Bertamu','Ditolak'],
+      datasets: [{
+        label: 'Statistik',
+        data: [
+          {{ $totalKunjungan }},
+          {{ $selesai }},
+          {{ $sedangBertamu }},
+          {{ $ditolakPegawai }}
+        ],
+        backgroundColor: ['#4e73df','#1cc88a','#f6c23e','#e74a3b']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+</script>
+<script>
+  var ctxTamu = document.getElementById('chartTamu').getContext('2d');
+  var chartTamu = new Chart(ctxTamu, {
+    type: 'bar',
+    data: {
+      labels: ['Total Kunjungan Saya','Diterima','Ditolak','Undangan Rapat'],
+      datasets: [{
+        label: 'Statistik',
+        data: [
+          {{ $total }},
+          {{ $diterima }},
+          {{ $ditolak }},
+          {{ $undanganRapat }}
+        ],
+        backgroundColor: ['#4e73df','#1cc88a','#e74a3b','#f6c23e']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+  });
+</script>
+@endpush
+

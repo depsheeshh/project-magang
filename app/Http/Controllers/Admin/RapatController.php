@@ -16,7 +16,9 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\RapatUndanganInstansi;
+use App\Notifications\GenericNotification;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\RapatInvitationNotification;
 use App\Notifications\RapatInvitationCancelledNotification;
 
@@ -39,55 +41,66 @@ class RapatController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-        'judul'         => 'required|string|max:255',
-        'ruangan_id'    => 'required|exists:ruangan,id',
-        'waktu_mulai'   => 'required|date|after_or_equal:now',
-        'waktu_selesai' => 'required|date|after:waktu_mulai',
-        'jenis_rapat'   => 'required|string',
-        'lokasi'        => 'required|exists:kantor,nama_kantor',
-        'survey_id'     => 'nullable|exists:survey_rapat,id',
-        'jumlah_tamu'   => 'nullable|integer|min:1',
-        'jumlah_instansi' => 'nullable|integer|min:1',
-    ]);
-
-    $kantor  = Kantor::where('nama_kantor',$request->lokasi)->first();
-    $ruangan = Ruangan::findOrFail($request->ruangan_id);
-
-    if (! $ruangan->isAvailable($request->waktu_mulai, $request->waktu_selesai)) {
-        return back()->withErrors(['ruangan_id' => 'Ruangan sedang dipakai pada periode tersebut.'])->withInput();
-    }
-
-    if ($request->jumlah_tamu !== null && $request->jumlah_tamu > $ruangan->kapasitas_maksimal) {
-        return back()->withErrors(['jumlah_tamu' => 'Jumlah tamu melebihi kapasitas ruangan.'])->withInput();
-    }
-
-    $rapat = Rapat::create([
-        'judul'          => $request->judul,
-        'ruangan_id'     => $request->ruangan_id,
-        'jenis_rapat'    => $request->jenis_rapat,
-        'waktu_mulai'    => $request->waktu_mulai,
-        'waktu_selesai'  => $request->waktu_selesai,
-        'lokasi'         => $kantor->nama_kantor,
-        'latitude'       => $kantor->latitude,
-        'longitude'      => $kantor->longitude,
-        'radius'         => 100,
-        'jumlah_tamu'    => $request->jumlah_tamu,
-        'jumlah_instansi'=> $request->jumlah_instansi,
-        'created_id'     => Auth::id(),
-        'survey_id'      => $request->survey_id, // ✅ langsung simpan survey_id
-    ]);
-
-    if ($request->has('buat_survey_baru')) {
-        $surveyBaru = SurveyRapat::create([
-            'judul'     => 'Survey untuk ' . $rapat->judul,
-            'slug'      => Str::slug('survey-' . $rapat->judul . '-' . uniqid()),
-            'tipe'      => $rapat->jenis_rapat,
-            'deskripsi' => 'Survey otomatis untuk rapat ' . $rapat->judul,
+            'judul'         => 'required|string|max:255',
+            'ruangan_id'    => 'required|exists:ruangan,id',
+            'waktu_mulai'   => 'required|date|after_or_equal:now',
+            'waktu_selesai' => 'required|date|after:waktu_mulai',
+            'jenis_rapat'   => 'required|string',
+            'lokasi'        => 'required|exists:kantor,nama_kantor',
+            'survey_id'     => 'nullable|exists:survey_rapat,id',
+            'jumlah_tamu'   => 'nullable|integer|min:1',
+            'jumlah_instansi' => 'nullable|integer|min:1',
         ]);
-        $rapat->update(['survey_id' => $surveyBaru->id]);
-    }
 
-    return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil dibuat');
+        $kantor  = Kantor::where('nama_kantor',$request->lokasi)->first();
+        $ruangan = Ruangan::findOrFail($request->ruangan_id);
+
+        if (! $ruangan->isAvailable($request->waktu_mulai, $request->waktu_selesai)) {
+            return back()->withErrors(['ruangan_id' => 'Ruangan sedang dipakai pada periode tersebut.'])->withInput();
+        }
+
+        if ($request->jumlah_tamu !== null && $request->jumlah_tamu > $ruangan->kapasitas_maksimal) {
+            return back()->withErrors(['jumlah_tamu' => 'Jumlah tamu melebihi kapasitas ruangan.'])->withInput();
+        }
+
+        $rapat = Rapat::create([
+            'judul'          => $request->judul,
+            'ruangan_id'     => $request->ruangan_id,
+            'jenis_rapat'    => $request->jenis_rapat,
+            'waktu_mulai'    => $request->waktu_mulai,
+            'waktu_selesai'  => $request->waktu_selesai,
+            'lokasi'         => $kantor->nama_kantor,
+            'latitude'       => $kantor->latitude,
+            'longitude'      => $kantor->longitude,
+            'radius'         => 100,
+            'jumlah_tamu'    => $request->jumlah_tamu,
+            'jumlah_instansi'=> $request->jumlah_instansi,
+            'created_id'     => Auth::id(),
+            'survey_id'      => $request->survey_id, // ✅ langsung simpan survey_id
+        ]);
+
+        if ($request->has('buat_survey_baru')) {
+            $surveyBaru = SurveyRapat::create([
+                'judul'     => 'Survey untuk ' . $rapat->judul,
+                'slug'      => Str::slug('survey-' . $rapat->judul . '-' . uniqid()),
+                'tipe'      => $rapat->jenis_rapat,
+                'deskripsi' => 'Survey otomatis untuk rapat ' . $rapat->judul,
+            ]);
+            $rapat->update(['survey_id' => $surveyBaru->id]);
+        }
+
+        if ($rapat->survey_id) {
+                Notification::send(User::role(['admin','pegawai'])->get(), new GenericNotification([
+                    'event'     => 'survey_rapat_baru',
+                    'survey_id' => $rapat->survey_id,
+                    'rapat_id'  => $rapat->id,
+                    'judul'     => $rapat->survey->judul,
+                    'user'      => Auth::user()->name,
+                    'waktu'     => now()->format('d-m-Y H:i'),
+                ]));
+            }
+
+        return redirect()->route($this->routePrefix().'.rapat.index')->with('success','Rapat berhasil dibuat');
     }
 
     public function show(Rapat $rapat)
@@ -103,7 +116,7 @@ class RapatController extends Controller
 
         // Eager load relasi undangan + user + pegawai + instansi
         $rapat->load([
-            'undangan.user.pegawai.instansi',
+            'undangan.user.pegawai',
             'undangan.instansi',
             'survey'
         ]);
@@ -123,8 +136,9 @@ class RapatController extends Controller
             ->get();
 
         $surveys = SurveyRapat::select('id','judul','tipe')->orderBy('created_at','desc')->get();
+        $jabatans = \App\Models\Jabatan::orderBy('nama_jabatan')->get();
 
-        return view('admin.rapat.show', compact('rapat','users','instansi'));
+        return view('admin.rapat.show', compact('rapat','users','instansi','jabatans'));
     }
 
 
@@ -419,6 +433,11 @@ class RapatController extends Controller
 
         $callback = function() use ($rapat) {
             $handle = fopen('php://output', 'w');
+            fputcsv($handle, [
+                'Total Peserta', $rapat->undangan->count(),
+                'Total Hadir', $rapat->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count(),
+                'Total Tidak Hadir', $rapat->undangan->where('status_kehadiran','tidak_hadir')->count(),
+            ]);
             // ✅ Tambahkan kolom Checked Out At
             fputcsv($handle, [
                 'Nama', 'Instansi Asal', 'Status',
@@ -465,6 +484,48 @@ class RapatController extends Controller
         return $pdf->download($filename);
     }
 
+    public function inviteByJabatan(Request $request, Rapat $rapat)
+    {
+        $request->validate([
+            'jabatan_id' => 'required|exists:jabatan,id',
+        ]);
+
+        $jabatanId = $request->jabatan_id;
+
+        // Ambil semua pegawai dengan jabatan ini
+        $users = User::whereHas('pegawai', function($q) use ($jabatanId) {
+            $q->where('jabatan_id', $jabatanId);
+        })->get();
+
+        $addedCount = 0;
+
+        foreach ($users as $user) {
+            // Cek kapasitas ruangan
+            if ($rapat->ruangan && $rapat->undangan()->count() >= $rapat->ruangan->kapasitas_maksimal) {
+                return back()->with('warning','Jumlah tamu sudah mencapai kapasitas ruangan.');
+            }
+
+            if ($rapat->jumlah_tamu !== null && $rapat->undangan()->count() >= $rapat->jumlah_tamu) {
+                return back()->with('warning','Jumlah tamu sudah mencapai batas maksimal.');
+            }
+
+            // Cek duplikasi
+            $exists = $rapat->undangan()->where('user_id',$user->id)->exists();
+            if (!$exists) {
+                $token = (string) \Illuminate\Support\Str::uuid();
+                $rapat->undangan()->create([
+                    'user_id'            => $user->id,
+                    'checkin_token'      => $token,
+                    'checkin_token_hash' => hash('sha256',$token),
+                    'status_kehadiran'   => 'pending',
+                    'created_id'         => Auth::id(),
+                ]);
+                $addedCount++;
+            }
+        }
+
+        return back()->with('success',"Undangan berhasil ditambahkan untuk {$addedCount} pegawai dengan jabatan terpilih.");
+    }
 
     public function endRapat(Rapat $rapat)
     {
@@ -494,7 +555,7 @@ class RapatController extends Controller
                 'status_kehadiran' => 'tidak_hadir',
             ]);
 
-        RapatUndanganInstansi::where('rapat_id', $rapat->id)
+        RapatUndangan::where('rapat_id', $rapat->id)
             ->update([
                 'status_survey' => DB::raw("CASE WHEN status_survey='sudah_isi' THEN 'sudah_isi' ELSE 'belum_isi' END")
             ]);
@@ -543,7 +604,7 @@ class RapatController extends Controller
                 'lokasi'  => $r->lokasi,
                 'status'  => ucfirst($r->status),
                 'total'   => $r->undangan->count(),
-                'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'hadir'   => $r->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count(),
                 'selesai' => $r->undangan->where('status_kehadiran','selesai')->count(),
                 'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
                 'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
@@ -619,7 +680,7 @@ class RapatController extends Controller
                 'lokasi'  => $r->lokasi,
                 'status'  => ucfirst($r->status),
                 'total'   => $r->undangan->count(),
-                'hadir'   => $r->undangan->where('status_kehadiran','hadir')->count(),
+                'hadir'   => $r->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count(),
                 'selesai' => $r->undangan->where('status_kehadiran','selesai')->count(),
                 'tidak'   => $r->undangan->where('status_kehadiran','tidak_hadir')->count(),
                 'pending' => $r->undangan->where('status_kehadiran','pending')->count(),
@@ -635,50 +696,51 @@ class RapatController extends Controller
     }
 
     public function exportQrPdf(Rapat $rapat)
-{
-    // ✅ Generate QR check-in sesuai jenis rapat
-    if ($rapat->jenis_rapat === 'Internal') {
-        $qrUrl = route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token]);
-    } else {
-        $qrUrl = route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token]);
-    }
-
-    $qrCode = base64_encode(
-        QrCode::format('png')->size(250)->margin(2)->generate($qrUrl)
-    );
-
-    // ✅ Jika ada survey rapat, generate QR survey juga
-    $survey = $rapat->survey;
-    $surveyQr = null;
-    $surveyUrl = null;
-    $jumlahRespon = 0;
-
-    if ($survey) {
+    {
+        // ✅ Generate QR check-in sesuai jenis rapat
         if ($rapat->jenis_rapat === 'Internal') {
-            $surveyUrl = route('pegawai.survey.rapat.form.internal', $survey->slug);
-        } else {
-            $surveyUrl = route('tamu.survey.rapat.form.eksternal', $survey->slug);
+                // gunakan relative path agar CSRF tetap valid
+                $qrUrl = url()->route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token], false);
+            } else {
+                $qrUrl = url()->route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token], false);
+            }
+
+        $qrCode = base64_encode(
+            QrCode::format('png')->size(250)->margin(2)->generate($qrUrl)
+        );
+
+        // ✅ Jika ada survey rapat, generate QR survey juga
+        $survey = $rapat->survey;
+        $surveyQr = null;
+        $surveyUrl = null;
+        $jumlahRespon = 0;
+
+        if ($survey) {
+            if ($rapat->jenis_rapat === 'Internal') {
+                $surveyUrl = route('pegawai.survey.rapat.form.internal', $survey->slug);
+            } else {
+                $surveyUrl = route('tamu.survey.rapat.form.eksternal', $survey->slug);
+            }
+
+            $surveyQr = base64_encode(
+                QrCode::format('png')->size(250)->margin(2)->generate($surveyUrl)
+            );
+            $jumlahRespon = $survey->respon->count();
         }
 
-        $surveyQr = base64_encode(
-            QrCode::format('png')->size(250)->margin(2)->generate($surveyUrl)
-        );
-        $jumlahRespon = $survey->respon->count();
+        // ✅ Kirim semua data ke view
+        $pdf = Pdf::loadView('admin.rapat.qr_pdf', [
+            'rapat'        => $rapat,
+            'qrCode'       => $qrCode,
+            'qrUrl'        => $qrUrl,
+            'survey'       => $survey,
+            'surveyQr'     => $surveyQr,
+            'surveyUrl'    => $surveyUrl,
+            'jumlahRespon' => $jumlahRespon,
+        ]);
+
+        return $pdf->download('QR_Rapat_'.$rapat->id.'.pdf');
     }
-
-    // ✅ Kirim semua data ke view
-    $pdf = Pdf::loadView('admin.rapat.qr_pdf', [
-        'rapat'        => $rapat,
-        'qrCode'       => $qrCode,
-        'qrUrl'        => $qrUrl,
-        'survey'       => $survey,
-        'surveyQr'     => $surveyQr,
-        'surveyUrl'    => $surveyUrl,
-        'jumlahRespon' => $jumlahRespon,
-    ]);
-
-    return $pdf->download('QR_Rapat_'.$rapat->id.'.pdf');
-}
 
 
     public function inviteAll(Request $request, Rapat $rapat)

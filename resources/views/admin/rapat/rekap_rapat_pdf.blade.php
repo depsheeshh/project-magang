@@ -161,12 +161,17 @@
         </td>
         <td>{{ $r['survey_filled'] }}/{{ $r['survey_total'] }}</td>
         <td>{{ $r['total'] }}</td>
-        <td>{{ $r['hadir'] }}</td>
+        <td>
+            {{ $r['hadir'] }}
+            <br>
+            <small style="color:#555;">(termasuk {{ $r['selesai'] ?? 0 }} selesai)</small>
+        </td>
         <td>{{ $r['selesai'] ?? 0 }}</td> {{-- ✅ --}}
         <td>{{ $r['tidak'] }}</td>
         <td>{{ $r['pending'] }}</td>
         <td>
-          {{ $r['total'] > 0 ? round((($r['hadir'] + ($r['selesai'] ?? 0)) / $r['total']) * 100, 1) . '%' : '-' }}
+          {{ $r['total'] > 0 ? round(($r['hadir'] / $r['total']) * 100, 1) . '%' : '-' }}
+
         </td>
       </tr>
       @empty
@@ -196,6 +201,12 @@
           <th style="border:1px solid #b5b5b5; padding:6px;">Total Selesai</th>
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('selesai') }}</td>
       </tr>
+      <tr>
+        <th style="border:1px solid #b5b5b5; padding:6px;">Total Hadir (termasuk selesai)</th>
+        <td style="border:1px solid #b5b5b5; padding:6px;">
+            {{ $rekap->sum('hadir') }} (termasuk {{ $rekap->sum('selesai') }} selesai)
+        </td>
+    </tr>
             <tr>
           <th style="border:1px solid #b5b5b5; padding:6px;">Total Tidak Hadir</th>
           <td style="border:1px solid #b5b5b5; padding:6px;">{{ $rekap->sum('tidak') }}</td>

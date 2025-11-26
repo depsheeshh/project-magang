@@ -145,6 +145,103 @@ body:not(.dark-mode) .text-section {
 body:not(.dark-mode) .btn-save {
   background: linear-gradient(135deg, #2db7ff, #0077ff);
 }
+/* Wrapper card untuk radio */
+.custom-radio-card {
+  display: inline-block;
+  cursor: pointer;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 150, 255, 0.25);
+  background: rgba(20, 30, 55, 0.85);
+  padding: 14px 18px;
+  transition: all 0.3s ease;
+  min-width: 240px;
+  max-width: 280px;
+}
+
+.custom-radio-card:hover {
+  transform: translateY(-3px);
+  border-color: #00bfff;
+  box-shadow: 0 0 18px rgba(0,180,255,0.35);
+}
+
+/* Hide default radio */
+.custom-radio-card input[type="radio"] {
+  display: none;
+}
+
+/* Konten radio */
+.radio-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.radio-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0, 120, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00bfff;
+  font-size: 20px;
+  transition: all 0.3s ease;
+}
+
+.radio-title {
+  font-weight: 600;
+  color: #e2ecff;
+  margin-bottom: 4px;
+}
+
+.radio-desc {
+  font-size: 13px;
+  color: #a9bbd9;
+}
+
+/* Saat dipilih */
+.custom-radio-card input[type="radio"]:checked + .radio-content .radio-icon {
+  background: linear-gradient(135deg, #00b4ff, #0077ff);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0,150,255,0.5);
+}
+
+.custom-radio-card input[type="radio"]:checked + .radio-content .radio-title {
+  color: #00bfff;
+}
+/* ======================================
+   LIGHT MODE OVERRIDE untuk Radio Bidang
+   ====================================== */
+body:not(.dark-mode) .custom-radio-card {
+  background: #f8f9fc;
+  border: 1px solid #cce5ff;
+  color: #212529;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+body:not(.dark-mode) .custom-radio-card:hover {
+  border-color: #00bfff;
+  box-shadow: 0 0 18px rgba(0,180,255,0.25);
+}
+body:not(.dark-mode) .radio-icon {
+  background: rgba(0, 120, 255, 0.1);
+  color: #007bff;
+}
+body:not(.dark-mode) .custom-radio-card input[type="radio"]:checked + .radio-content .radio-icon {
+  background: linear-gradient(135deg, #00b4ff, #0077ff);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(0,150,255,0.5);
+}
+body:not(.dark-mode) .custom-radio-card input[type="radio"]:checked + .radio-content .radio-title {
+  color: #007bff;
+}
+body:not(.dark-mode) .radio-title {
+  color: #212529;
+}
+body:not(.dark-mode) .radio-desc {
+  color: #6c757d;
+}
+
 </style>
 @endpush
 

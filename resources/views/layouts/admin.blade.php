@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
 
   <title>@yield('title') - Dashboard Buku Tamu Digital</title>
 
@@ -26,6 +28,48 @@
     <link rel="apple-touch-icon" href="{{ asset('assets/favicon.ico') }}" />
 
     <link rel="stylesheet" href="{{ asset('css/style-dark.css') }}">
+
+    <style>
+        .dropdown-menu.dropdown-menu-lg {
+        width: 100%;
+        max-width: 380px;
+        max-height: 80vh;
+        overflow-y: auto;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .notif-item {
+        transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .notif-item:hover {
+        background: rgba(59,130,246,0.08);
+        transform: translateX(2px);
+        cursor: pointer;
+        }
+
+        .notif-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.1rem;
+        }
+        .notif-title {
+        font-weight: 600;
+        color: #111827;
+        }
+        .notif-sub {
+        color: #4b5563;
+        }
+        .notif-time {
+        color: #6b7280;
+        font-size: 0.75rem;
+        }
+
+    </style>
 
 <!-- Tempat untuk CSS tambahan dari child view -->
     @stack('style')
@@ -295,6 +339,44 @@
         `;
         }
 
+        if (item.event === 'survey_rapat_baru') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
+                data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
+            <div class="notif-icon bg-teal-500 text-white me-3">
+                <i class="fas fa-poll-h"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title">Survey Rapat Baru</div>
+                <div class="notif-sub small">${item.judul || 'Survey'} • oleh ${item.user || 'Admin'}</div>
+                <div class="notif-time"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
+
+        if (item.event === 'survey_rapat_respon') {
+        return `
+            <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
+                data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
+            <div class="notif-icon bg-green-500 text-white me-3">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title">Respon Survey Rapat</div>
+                <div class="notif-sub small">${item.user || 'Peserta'} ${item.instansi ? '• ' + item.instansi : ''}</div>
+                <div class="notif-time"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+            </div>
+        `;
+        }
+
       // default render
       return `
         <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
@@ -482,6 +564,11 @@
   });
 
 })();
+</script>
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
 </script>
 
 

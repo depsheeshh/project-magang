@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.form-layout')
 
 @section('title', 'Check-in Rapat Eksternal')
 
@@ -36,7 +36,7 @@
         @csrf
 
         <div class="row g-4 mb-4">
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="email" class="form-label text-light"><i class="bi bi-envelope"></i> Email</label>
             <input type="email" name="email" id="email"
                    class="form-control form-control-lg"
@@ -44,7 +44,7 @@
                    value="{{ old('email') }}">
           </div>
 
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="nama" class="form-label text-light"><i class="bi bi-person"></i> Nama Lengkap</label>
             <input type="text" name="nama" id="nama"
                    class="form-control form-control-lg"
@@ -52,7 +52,7 @@
                    value="{{ old('nama') }}">
           </div>
 
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="instansi_id" class="form-label text-light">
                 <i class="bi bi-building"></i> Instansi
             </label>
@@ -76,7 +76,7 @@
             </select>
             </div>
 
-          <div class="col-md-6">
+          <div class="col-12 col-md-6">
             <label for="jabatan" class="form-label text-light"><i class="bi bi-briefcase"></i> Jabatan</label>
             <input type="text" name="jabatan" id="jabatan"
                    class="form-control form-control-lg"

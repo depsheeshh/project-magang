@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
 
         // Buat user default admin
         $admin = User::firstOrCreate(
-            ['email' => 'admin@yahoo.com'],
+            ['email' => 'admin@dkis.go.id'],
             [
                 'name'              => 'Admin',
                 'password'          => Hash::make('Admin123!'), // password kompleks
@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
 
         // User default frontliner
         $frontliner = User::firstOrCreate(
-            ['email' => 'frontliner@example.com'],
+            ['email' => 'frontliner@dkis.go.id'],
             [
                 'name'              => 'Frontliner',
                 'password'          => Hash::make('Front123!'),
@@ -60,7 +60,7 @@ class DatabaseSeeder extends Seeder
 
         // User default pegawai
         $pegawai = User::firstOrCreate(
-            ['email' => 'pegawai@example.com'],
+            ['email' => 'pegawai@dkis.go.id'],
             [
                 'name'              => 'Pegawai',
                 'password'          => Hash::make('Pegawai123!'),

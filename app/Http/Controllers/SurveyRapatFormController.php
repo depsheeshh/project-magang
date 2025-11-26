@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Instansi;
 use App\Models\SurveyRapat;
-use App\Models\SurveyRapatRespon;
 use Illuminate\Http\Request;
+use App\Models\SurveyRapatRespon;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\GenericNotification;
+use Illuminate\Support\Facades\Notification;
 
 class SurveyRapatFormController extends Controller
 {
@@ -133,6 +136,15 @@ class SurveyRapatFormController extends Controller
             $undangan->update(['status_survey' => 'sudah_isi']);
         }
 
+        Notification::send(User::role('admin')->get(), new GenericNotification([
+            'event'     => 'survey_rapat_respon',
+            'survey_id' => $survey->id,
+            'rapat_id'  => $survey->rapat?->id,
+            'judul'     => $survey->judul,
+            'user'      => $user->name,
+            'waktu'     => now()->format('d-m-Y H:i'),
+        ]));
+
         return redirect()->route('survey.rapat.thanks',$survey->slug);
     }
 
@@ -188,6 +200,16 @@ class SurveyRapatFormController extends Controller
         if ($undanganInstansi) {
             $undanganInstansi->update(['status_survey' => 'sudah_isi']);
         }
+
+        Notification::send(User::role('admin')->get(), new GenericNotification([
+            'event'     => 'survey_rapat_respon',
+            'survey_id' => $survey->id,
+            'rapat_id'  => $survey->rapat?->id,
+            'judul'     => $survey->judul,
+            'user'      => $undangan->nama ?? $user->name,
+            'instansi'  => $undangan->instansi->nama_instansi ?? '-',
+            'waktu'     => now()->format('d-m-Y H:i'),
+        ]));
 
         return redirect()->route('survey.rapat.thanks', $survey->slug);
     }

@@ -14,13 +14,17 @@
     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
-  <div class="form-floating mb-3">
-    <input type="password" name="password" id="password"
-           class="form-control @error('password') is-invalid @enderror"
-           placeholder="Password" required>
-    <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password</label>
-    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
-  </div>
+  <div class="form-floating mb-3 position-relative">
+  <input type="password" name="password" id="password"
+         class="form-control @error('password') is-invalid @enderror"
+         placeholder="Password" required>
+  <label for="password"><i class="bi bi-key me-2 text-primary"></i>Password</label>
+  <span class="toggle-password position-absolute top-50 end-0 translate-middle-y me-3"
+        onclick="togglePassword('password', this)">
+    <i class="bi bi-eye"></i>
+  </span>
+  @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
 
   <div class="d-flex justify-content-between mb-3">
     <a href="{{ route('password.request') }}" class="small text-info text-decoration-none">

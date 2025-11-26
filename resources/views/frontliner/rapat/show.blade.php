@@ -51,7 +51,7 @@
             @forelse($rapat->undangan as $u)
             <tr>
               <td>{{ $u->user->name ?? '-' }}</td>
-              <td>{{ $u->jabatan ?? ($u->user->pegawai->jabatan ?? '-') }}</td>
+              <td>{{ $u->user->pegawai->jabatan->nama_jabatan ?? '-' }}</td>
               <td>
                 @switch($u->status_kehadiran)
                   @case('pending') <span class="badge bg-warning text-dark">Belum Check-in</span> @break

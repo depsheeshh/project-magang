@@ -126,13 +126,8 @@ class UserController extends Controller
 
         // Jika role = pegawai, pastikan instansi tetap DKIS
         if ($validated['role'] === 'pegawai') {
-            $instansi = Instansi::firstOrCreate(
-                ['nama_instansi' => 'DKIS Kota Cirebon'],
-                ['lokasi' => 'Jl. DR. Sudarsono No.40, Kesambi, Kec. Kesambi, Kota Cirebon, Jawa Barat 45134']
-            );
-            $data['instansi_id'] = $instansi->id;
+            $data['instansi_id'] = 18; // langsung set ke instansi DKIS
         }
-
         $user->update($data);
         $user->syncRoles([$validated['role']]);
 

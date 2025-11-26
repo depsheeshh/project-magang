@@ -64,7 +64,7 @@
                 <td class="text-center">
                 @if($r->jenis_rapat === 'Internal')
                     @php
-                        $hadir = $r->undangan->where('status_kehadiran','hadir')->count();
+                        $hadir = $r->undangan->where('status_kehadiran','hadir','selesai')->count();
                         $total = $r->jumlah_tamu ?? 0;
                     @endphp
                     <span class="badge badge-success">Tamu Maks: {{ $total }}</span><br>

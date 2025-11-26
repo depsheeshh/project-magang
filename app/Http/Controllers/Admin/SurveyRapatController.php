@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\SurveyRapat;
 use Illuminate\Support\Str;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\GenericNotification;
 
 class SurveyRapatController extends Controller
 {
@@ -25,7 +28,19 @@ class SurveyRapatController extends Controller
         ]);
 
         // slug otomatis di model, cukup simpan field utama
-        SurveyRapat::create($request->only(['judul','tipe','deskripsi']));
+        $survey = SurveyRapat::create($request->only(['judul','tipe','deskripsi']));
+
+         $data = [
+            'event'      => 'survey_rapat_baru',
+            'survey_id'  => $survey->id,
+            'rapat_id'   => $survey->rapat?->id,
+            'judul'      => $survey->judul,
+            'user'       => Auth::user()->name,
+            'waktu'      => now()->format('d-m-Y H:i'),
+        ];
+
+        $recipients = User::role(['admin','pegawai'])->get();
+        Notification::send($recipients, new GenericNotification($data));
 
         return redirect()->route('admin.survey-rapat.index')
             ->with('success', 'Survey rapat berhasil dibuat.');

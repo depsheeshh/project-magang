@@ -20,10 +20,19 @@ class RapatController extends Controller
             ->orderByDesc('waktu_mulai')
             ->paginate(10);
 
+        // Tambahkan summary kehadiran agar frontliner langsung lihat angka
+        $rapat->getCollection()->transform(function ($r) {
+            $r->total = $r->undangan->count();
+            $r->hadir = $r->undangan->whereIn('status_kehadiran', ['hadir','selesai'])->count();
+            $r->tidak = $r->undangan->where('status_kehadiran','tidak_hadir')->count();
+            $r->pending = $r->undangan->where('status_kehadiran','pending')->count();
+            return $r;
+        });
+
         return view('frontliner.rapat.index', compact('rapat'));
     }
 
-    // ✅ Daftar rapat hari ini (opsional filter)
+    // ✅ Daftar rapat hari ini
     public function today()
     {
         $today = Carbon::today();
@@ -37,6 +46,14 @@ class RapatController extends Controller
             ->orderBy('waktu_mulai')
             ->get();
 
+        $rapat->transform(function ($r) {
+            $r->total = $r->undangan->count();
+            $r->hadir = $r->undangan->whereIn('status_kehadiran', ['hadir','selesai'])->count();
+            $r->tidak = $r->undangan->where('status_kehadiran','tidak_hadir')->count();
+            $r->pending = $r->undangan->where('status_kehadiran','pending')->count();
+            return $r;
+        });
+
         return view('frontliner.rapat.today', compact('rapat'));
     }
 
@@ -48,6 +65,12 @@ class RapatController extends Controller
             'undangan.user.pegawai.instansi',
             'undanganInstansi.instansi'
         ]);
+
+        // Tambahkan summary agar detail juga jelas
+        $rapat->total = $rapat->undangan->count();
+        $rapat->hadir = $rapat->undangan->whereIn('status_kehadiran', ['hadir','selesai'])->count();
+        $rapat->tidak = $rapat->undangan->where('status_kehadiran','tidak_hadir')->count();
+        $rapat->pending = $rapat->undangan->where('status_kehadiran','pending')->count();
 
         return view('frontliner.rapat.show', compact('rapat'));
     }

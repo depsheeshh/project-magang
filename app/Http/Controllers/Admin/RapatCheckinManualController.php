@@ -47,6 +47,8 @@ class RapatCheckinManualController extends Controller
                 'checked_in_at'    => now(),
                 'checked_in_by'    => Auth::id(),
                 'created_id'       => Auth::id(),
+                'status_survey'    => 'belum_isi',   // 👈 flag survey default
+                'method_checkin'   => 'manual',
             ])->save();
 
             return back()->with('success','Pegawai berhasil di‑checkin manual.');
@@ -90,6 +92,8 @@ class RapatCheckinManualController extends Controller
             'checked_in_at'    => now(),            // ✅ isi waktu checkin
             'checked_in_by'    => Auth::id(),
             'created_id'       => Auth::id(),
+            'status_survey'    => 'belum_isi',   // 👈 default survey
+            'method_checkin'   => 'manual',
         ]);
 
         return back()->with('success','Peserta manual berhasil ditambahkan.');
@@ -178,6 +182,8 @@ class RapatCheckinManualController extends Controller
                 'status_kehadiran' => 'hadir',
                 'checked_in_at'    => $now,
                 'checked_in_by'    => Auth::id(),
+                'status_survey'    => $undangan->status_survey ?? 'belum_isi', // 👈 pastikan survey flag ada
+                'method_checkin'   => 'manual',
             ]);
 
             return back()->with('success','Peserta berhasil di-check-in.');
@@ -197,6 +203,7 @@ class RapatCheckinManualController extends Controller
                 'status_kehadiran' => 'selesai',
                 'checked_out_at'   => now(),
                 'updated_id'       => Auth::id(),
+                'status_survey'    => $undangan->status_survey ?? 'belum_isi',
             ]);
 
             // Kurangi jumlah hadir instansi

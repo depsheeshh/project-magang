@@ -22,8 +22,11 @@ class KunjunganController extends Controller
 
         $pegawaiRel = Auth::user()->pegawai;
         if (!$pegawaiRel) {
-            abort(403, 'Akun ini tidak memiliki relasi pegawai.');
+            return view('pegawai.locked', [
+                'message' => 'Menu ini hanya tersedia jika akun Anda sudah terhubung dengan data pegawai.'
+            ]);
         }
+
 
         $query = Kunjungan::with('tamu')
             ->where('pegawai_id', $pegawaiRel->id)
@@ -46,8 +49,11 @@ class KunjunganController extends Controller
     {
         $pegawaiRel = Auth::user()->pegawai;
         if (!$pegawaiRel) {
-            abort(403, 'Akun ini tidak memiliki relasi pegawai.');
+            return view('pegawai.locked', [
+                'message' => 'Menu ini hanya tersedia jika akun Anda sudah terhubung dengan data pegawai.'
+            ]);
         }
+
 
         $notifikasi = Kunjungan::with('tamu')
             ->where('pegawai_id', $pegawaiRel->id)

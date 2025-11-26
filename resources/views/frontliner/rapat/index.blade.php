@@ -48,9 +48,9 @@
             </td>
             <td class="text-center">{{ $r->undangan->count() }}</td>
             <td class="text-center">
-              <span class="badge bg-success">
-                {{ $r->undangan->where('status_kehadiran','hadir')->count() }}
-              </span>
+                <span class="badge bg-success">
+                    {{ $r->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count() }}
+                </span>
             </td>
             <td class="text-center">
               <span class="badge bg-danger">

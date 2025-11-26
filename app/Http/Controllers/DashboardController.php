@@ -12,6 +12,8 @@ use App\Models\Tamu;
 use App\Models\Survey;
 use App\Models\Rapat;
 use App\Models\Instansi;
+use \App\Models\SurveyRapat;
+use \App\Models\RapatUndangan;
 
 class DashboardController extends Controller
 {
@@ -35,6 +37,12 @@ class DashboardController extends Controller
         $riwayatSingkat = collect();
         $totalRapatPegawai = 0;
 
+        // ✅ Inisialisasi aman untuk indikator admin (biar tidak undefined)
+        $surveyRapatTotal   = 0;
+        $surveyRapatFilled  = 0;
+        $surveyRapatPending = 0;
+        $totalKunjunganTamu = 0;
+
         if ($role === 'admin') {
             $totalUsers    = User::count();
             $totalPegawai  = Pegawai::count();
@@ -44,6 +52,13 @@ class DashboardController extends Controller
             $totalRapat    = Rapat::count();
             $totalInstansi = Instansi::count();
             $totalTamu     = User::role('tamu')->count(); // ✅ indikator total tamu
+            $totalKunjunganTamu = Kunjungan::count();
+
+
+            // ✅ indikator survey rapat
+            $surveyRapatTotal   = SurveyRapat::count();
+            $surveyRapatFilled  = RapatUndangan::where('status_survey','sudah_isi')->count();
+            $surveyRapatPending = RapatUndangan::where('status_survey','belum_isi')->count();
         }
 
         if ($role === 'frontliner') {
@@ -124,6 +139,7 @@ class DashboardController extends Controller
             'role',
             'totalUsers','totalPegawai','totalBidang','totalJabatan',
             'totalSurvey','totalRapat','totalInstansi','totalTamu',
+            'surveyRapatTotal','surveyRapatFilled','surveyRapatPending','totalKunjunganTamu',
             'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya',
             'total','diterima','ditolak','undanganRapat',
             'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat',

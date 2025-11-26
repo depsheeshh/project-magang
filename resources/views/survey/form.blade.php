@@ -178,17 +178,22 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label"><i class="fas fa-star"></i> Rating Umum</label>
-          <div class="d-flex flex-wrap gap-3 rating-group">
-            @for($i=1;$i<=5;$i++)
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="rating" id="rating{{ $i }}" value="{{ $i }}" {{ $survey->rating == $i ? 'checked' : '' }} required>
-                <label class="form-check-label" for="rating{{ $i }}">
-                  <i class="fas fa-star text-warning"></i> {{ ['Sangat Buruk','Buruk','Cukup','Baik','Sangat Baik'][$i-1] }}
+        <label class="form-label"><i class="fas fa-star"></i> Rating Umum</label>
+        <div class="d-flex flex-wrap gap-3 rating-group">
+            @for($i = 1; $i <= 5; $i++)
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="rating" id="rating{{ $i }}"
+                    value="{{ $i }}" {{ $survey->rating == $i ? 'checked' : '' }} required>
+                <label class="form-check-label d-flex align-items-center gap-1" for="rating{{ $i }}">
+                {{-- Tampilkan jumlah bintang sesuai nilai --}}
+                @for($j = 1; $j <= $i; $j++)
+                    <i class="fas fa-star text-warning"></i>
+                @endfor
+                {{ ['Sangat Buruk','Buruk','Cukup','Baik','Sangat Baik'][$i-1] }}
                 </label>
-              </div>
+            </div>
             @endfor
-          </div>
+        </div>
         </div>
 
         <div class="mb-4">

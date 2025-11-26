@@ -73,32 +73,30 @@ class LoginController extends Controller
     {
         $googleUser = Socialite::driver('google')->user();
 
-    // update kalau sudah ada, create kalau belum ada
-    $user = User::updateOrCreate(
-        ['email' => $googleUser->getEmail()],
-        [
-            'name'              => $googleUser->getName(),
-            'email_verified_at' => now(),
-            // password hanya diisi saat create baru
-            'password'          => bcrypt(Str::random(16)),
-        ]
-    );
+        $user = User::updateOrCreate(
+            ['email' => $googleUser->getEmail()],
+            [
+                'name'              => $googleUser->getName(),
+                'email_verified_at' => now(),
+                'password'          => bcrypt(Str::random(16)),
+            ]
+        );
 
-    // 🚩 kalau user baru dibuat, kirim notifikasi ke admin
-    if ($user->wasRecentlyCreated) {
-        $admins = User::role('admin')->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new UserBaruNotification($user, 'google'));
+        if ($user->wasRecentlyCreated) {
+            $admins = User::role('admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new UserBaruNotification($user, 'google'));
+            }
         }
+
+        Auth::login($user);
+
+        // Redirect setelah login via Google
+        if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
+            return redirect()->route('dashboard.index');
+        }
+
+        return redirect()->route('home'); // ✅ selalu ke home untuk tamu
     }
 
-    Auth::login($user);
-
-    // Redirect setelah login via Google
-    if ($user->hasRole('admin') || $user->hasRole('frontliner') || $user->hasRole('pegawai')) {
-        return redirect()->route('dashboard.index');
-    }
-
-    return redirect()->route('home');
-    }
 }

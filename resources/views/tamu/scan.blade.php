@@ -150,9 +150,6 @@ h2 {
     </div>
 
     <div class="mt-4 d-flex gap-3 justify-content-center" data-aos="fade-up" data-aos-delay="400">
-      <button class="btn btn-primary btn-modern" id="flash-btn">
-        <i class="bi bi-lightning-charge"></i> Nyalakan Flash
-      </button>
       <button class="btn btn-outline-secondary btn-modern" onclick="window.history.back()">
         <i class="bi bi-x-circle"></i> Batal
       </button>

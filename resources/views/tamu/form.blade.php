@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.form-layout')
 
 @section('title', 'Form Buku Tamu')
 

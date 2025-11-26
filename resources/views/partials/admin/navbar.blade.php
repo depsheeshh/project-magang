@@ -54,7 +54,7 @@
     </a>
 
     <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg shadow-lg border-0 p-0"
-        style="width: 360px; border-radius: 10px; overflow: hidden;">
+        style="width: 300px; border-radius: 10px; overflow: hidden;">
 
         <!-- Header -->
         <div class="dropdown-header d-flex justify-content-between align-items-center px-3 py-2 bg-primary text-white">

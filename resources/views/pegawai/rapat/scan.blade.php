@@ -11,11 +11,12 @@
     <div id="scanResultInternal" class="mt-3 text-info"></div>
 
     {{-- Form auto-submit untuk check-in rapat --}}
-    <form id="checkinFormInternal" method="POST" style="display:none;">
+    <form id="checkinFormInternal" target="_self" method="POST" style="display:none;">
       @csrf
       <input type="hidden" name="latitude" id="latInternal">
       <input type="hidden" name="longitude" id="lonInternal">
     </form>
+
     <a href="{{ route('pegawai.agenda.rapat') }}" class="btn btn-secondary mx-1">
         <i class="fas fa-arrow-left"></i> Kembali
     </a>
@@ -27,31 +28,34 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  const scanTitle = document.getElementById("scanTitleInternal");
   const resultElem = document.getElementById("scanResultInternal");
 
   function onScanSuccess(decodedText) {
-    let urlObj = new URL(decodedText, window.location.origin);
-    let pathOnly = urlObj.pathname + urlObj.search;
-
-    // ✅ Hanya valid untuk QR rapat internal
     if (!decodedText.includes('/pegawai/rapat/')) {
-      alert("QR tidak valid untuk rapat internal.");
-      return;
+        alert("QR tidak valid untuk rapat internal.");
+        return;
     }
+
+    resultElem.textContent = "QR terdeteksi, memproses check-in...";
 
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(pos) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
         document.getElementById('latInternal').value = pos.coords.latitude;
         document.getElementById('lonInternal').value = pos.coords.longitude;
+
         let form = document.getElementById('checkinFormInternal');
-        form.action = window.location.origin + pathOnly;
+        let urlObj = new URL(decodedText);
+        form.action = urlObj.pathname; // hanya path
+        form.method = "POST";
         form.submit();
-      }, function(err) {
+        }, function(err) {
         alert("Gagal mendapatkan lokasi: " + err.message);
-      });
+        });
+    } else {
+        alert("Perangkat tidak mendukung geolocation.");
     }
-  }
+    }
+
 
   function onScanError(errorMessage) {
     console.warn("Scan error: ", errorMessage);

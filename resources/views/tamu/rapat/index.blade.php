@@ -53,7 +53,7 @@
           @if($undangan)
             <p class="mb-2">
               <strong>Peserta:</strong> {{ $undangan->user->name }} <br>
-              <strong>Instansi:</strong> {{ $undangan->user->instansi->nama_instansi ?? '-' }} <br>
+              <strong>Instansi:</strong> {{ $undangan->instansi->nama_instansi ?? '-' }} <br>
               <strong>Status Kehadiran:</strong>
               @if($undangan->status_kehadiran === 'pending' || $undangan->status_kehadiran === null)
                 <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> Belum Check-in</span>
@@ -84,25 +84,25 @@
           {{-- Aksi --}}
           @if($undangan)
             @if($undangan->status_kehadiran === 'pending' || $undangan->status_kehadiran === null)
-              <a href="{{ route('tamu.rapat.show', $rapat->id) }}" class="btn btn-info btn-sm">
+                <a href="{{ route('tamu.rapat.show', $rapat->id) }}" class="btn btn-info btn-sm">
                 <i class="fas fa-info-circle"></i> Detail & Check-in
-              </a>
+                </a>
             @elseif($undangan->status_kehadiran === 'hadir')
-              <form action="{{ route('tamu.rapat.checkout',$rapat->id) }}" method="POST" class="d-inline">
+                <form action="{{ route('tamu.rapat.checkout',$rapat->id) }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-danger btn-sm">
-                  <i class="fas fa-sign-out-alt"></i> Checkout
+                    <i class="fas fa-sign-out-alt"></i> Checkout & Isi Survey
                 </button>
-              </form>
+                </form>
             @elseif($undangan->status_kehadiran === 'selesai' && $survey)
-              {{-- Tombol Scan QR Survey: gunakan rapat id (bukan slug) sesuai route --}}
-              @if($undangan->status_survey === 'belum_isi')
+                {{-- Fallback: Scan QR Survey manual --}}
+                @if($undangan->status_survey === 'belum_isi')
                 <a href="{{ route('tamu.rapat.scan.survey.eksternal', $rapat->id) }}" class="btn btn-success btn-sm mt-2">
-                  <i class="fas fa-qrcode"></i> Scan QR Survey
+                    <i class="fas fa-qrcode"></i> Scan QR Survey (Opsional)
                 </a>
-              @endif
+                @endif
             @endif
-          @endif
+            @endif
         </div>
       </div>
     @empty
