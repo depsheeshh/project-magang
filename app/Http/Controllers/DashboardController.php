@@ -8,6 +8,7 @@ use App\Models\Pegawai;
 use App\Models\Bidang;
 use App\Models\Jabatan;
 use App\Models\Kunjungan;
+use App\Models\ApelPagi;
 use App\Models\Tamu;
 use App\Models\Survey;
 use App\Models\Rapat;
@@ -42,6 +43,7 @@ class DashboardController extends Controller
         $surveyRapatFilled  = 0;
         $surveyRapatPending = 0;
         $totalKunjunganTamu = 0;
+        $apelTotal = 0;
 
         if ($role === 'admin') {
             $totalUsers    = User::count();
@@ -53,6 +55,7 @@ class DashboardController extends Controller
             $totalInstansi = Instansi::count();
             $totalTamu     = User::role('tamu')->count(); // ✅ indikator total tamu
             $totalKunjunganTamu = Kunjungan::count();
+            $apelTotal   = ApelPagi::count();
 
 
             // ✅ indikator survey rapat
@@ -143,7 +146,8 @@ class DashboardController extends Controller
             'kunjunganMenunggu','kunjunganTerbaru','kunjunganSaya',
             'total','diterima','ditolak','undanganRapat',
             'totalKunjungan','sedangBertamu','menunggu','selesai','ditolakPegawai','riwayatSingkat',
-            'totalRapatPegawai'
+            'totalRapatPegawai',
+            'apelTotal'
         ));
     }
 }

@@ -95,11 +95,12 @@
                 </button>
                 </form>
             @elseif($undangan->status_kehadiran === 'selesai' && $survey)
-                {{-- Fallback: Scan QR Survey manual --}}
                 @if($undangan->status_survey === 'belum_isi')
-                <a href="{{ route('tamu.rapat.scan.survey.eksternal', $rapat->id) }}" class="btn btn-success btn-sm mt-2">
-                    <i class="fas fa-qrcode"></i> Scan QR Survey (Opsional)
-                </a>
+                    <a href="{{ route('tamu.survey.rapat.form.eksternal', $survey->slug) }}" class="btn btn-danger btn-sm mt-2">
+                        <i class="fas fa-sign-out-alt"></i> Checkout Survey
+                    </a>
+                @else
+                    <span class="badge bg-success mt-2"><i class="fas fa-check"></i> Survey sudah diisi</span>
                 @endif
             @endif
             @endif

@@ -164,17 +164,22 @@ class RapatCheckinController extends Controller
             return back()->with('error','Anda belum melakukan check-in.');
         }
 
-        if ($rapat->survey) {
-            return back()->with('warning','Rapat ini memiliki survey, silakan checkout melalui Scan QR Survey.');
-        }
-
+        // 🚨 langsung update status kehadiran jadi selesai
         $undangan->update([
-            'status_kehadiran'=>'selesai',
-            'checked_out_at'=>now(),
-            'updated_id'=>$user->id,
+            'status_kehadiran' => 'selesai',
+            'checked_out_at'   => now(),
+            'updated_id'       => $user->id,
         ]);
 
-        return redirect()->route('pegawai.agenda.rapat')->with('success','Checkout berhasil.');
+        // 🚨 kalau rapat punya survey → arahkan ke halaman scan survey (opsional)
+        if ($rapat->survey) {
+            return redirect()->route('pegawai.rapat.scanSurvey', $rapat->id)
+                ->with('success','Checkout berhasil. Anda dapat mengisi survey rapat secara opsional.');
+        }
+
+        // 🚨 kalau tidak ada survey → kembali ke agenda rapat
+        return redirect()->route('pegawai.agenda.rapat')
+            ->with('success','Checkout berhasil.');
     }
     public function scanSurveyPage(Rapat $rapat)
     {

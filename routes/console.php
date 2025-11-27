@@ -18,5 +18,6 @@ Schedule::command('rapat:generate-report')->dailyAt('23:00');
 // Schedule::command('ruangan:update-dipakai')->everyMinute();
 Schedule::command('ruangan:update-status')->everyMinute();
 Schedule::command('rapat:update-status')->everyMinute();
+Schedule::command('apel:refresh-qr')->weeklyOn(1, '05:00');
 // Schedule::command('rapat:end-auto')->everyFiveMinutes();
 

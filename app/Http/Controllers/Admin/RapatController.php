@@ -699,11 +699,11 @@ class RapatController extends Controller
     {
         // ✅ Generate QR check-in sesuai jenis rapat
         if ($rapat->jenis_rapat === 'Internal') {
-                // gunakan relative path agar CSRF tetap valid
-                $qrUrl = url()->route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token], false);
-            } else {
-                $qrUrl = url()->route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token], false);
-            }
+            // gunakan absolute URL agar bisa dibuka kamera polosan
+            $qrUrl = route('pegawai.rapat.checkin.token', [$rapat->id, $rapat->qr_token]);
+        } else {
+            $qrUrl = route('tamu.rapat.checkin.form', [$rapat->id, $rapat->qr_token]);
+        }
 
         $qrCode = base64_encode(
             QrCode::format('png')->size(250)->margin(2)->generate($qrUrl)
@@ -741,6 +741,7 @@ class RapatController extends Controller
 
         return $pdf->download('QR_Rapat_'.$rapat->id.'.pdf');
     }
+
 
 
     public function inviteAll(Request $request, Rapat $rapat)

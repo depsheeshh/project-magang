@@ -1,11 +1,13 @@
 <?php
 
+use App\Models\SurveyRapat;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TamuController;
 use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\ApelPagiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Auth\LoginController;
@@ -42,6 +44,11 @@ use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganCo
 
 // Landing page publik
 Route::get('/', fn () => view('home'))->name('home');
+
+// Apel pagi
+Route::get('/apelpagi/{nip}', [ApelPagiController::class, 'show'])->name('apelpagi.show');
+Route::post('/apelpagi/{nip}/masuk', [ApelPagiController::class, 'masuk'])->name('apelpagi.masuk');
+
 
 // Flow tamu
 Route::prefix('tamu')->name('tamu.')->group(function () {
@@ -150,6 +157,9 @@ Route::middleware('auth',)->group(function () {
             ->prefix('admin')
             ->name('admin.')
             ->group(function () {
+                Route::get('/apelpagi', [\App\Http\Controllers\Admin\ApelPagiController::class, 'index'])->name('apelpagi.index');
+                Route::get('/apelpagi/export-pdf', [\App\Http\Controllers\Admin\ApelPagiController::class, 'exportPdf'])->name('apelpagi.exportPdf');
+
                 Route::resource('/users', AdminUserController::class);
                 Route::resource('/roles', RoleController::class);
                 Route::resource('/permissions', PermissionController::class);
@@ -300,6 +310,7 @@ Route::middleware('auth',)->group(function () {
                 Route::get('/rapat/{rapat}', [FrontlinerRapatController::class, 'show'])
                     ->name('rapat.show');
 
+                Route::get('/apelpagi', [ApelPagiController::class, 'index'])->name('apelpagi.index');
             });
             Route::middleware(['role:pegawai'])
                 ->prefix('pegawai')
@@ -332,13 +343,11 @@ Route::middleware('auth',)->group(function () {
                     Route::post('/rapat/{rapat}/checkout', [RapatCheckinController::class, 'pegawaiCheckout'])
                         ->name('rapat.checkout');
 
-                    // ✅ Halaman scan survey (kamera QR)
-                    Route::get('/rapat/{rapat}/scan-survey', [RapatCheckinController::class, 'scanSurveyPage'])
-                        ->name('rapat.scanSurvey');
+                    // 🚨 Halaman scan survey internal tetap ada, tapi sifatnya opsional
+                    Route::get('/rapat/{rapat}/scan-survey', [RapatCheckinController::class, 'scanSurveyPage'])->name('rapat.scanSurvey');
 
-                    // ✅ Proses checkout via QR survey (dipanggil dari hasil scan)
-                    Route::get('/rapat/{rapat}/scan-survey/process', [RapatCheckinController::class, 'scanSurveyInternal'])
-                        ->name('rapat.scanSurvey.process');
+                    // 🚨 Proses checkout via QR survey tidak lagi wajib, bisa dihapus atau dibiarkan opsional
+                    Route::get('/rapat/{rapat}/scan-survey/process', [RapatCheckinController::class, 'scanSurveyInternal'])->name('rapat.scanSurvey.process');
 
                     // ✅ Rapat (CRUD + checkin manual + end rapat)
 
@@ -379,14 +388,10 @@ Route::middleware('auth',)->group(function () {
                     // ✅ Ruangan (CRUD)
                     Route::resource('ruangan', AdminRuanganController::class)->except(['create','edit','show']);
 
-                    Route::get('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'formInternal'])
-                        ->name('survey.rapat.form.internal');
-                    Route::post('/survey-rapat/{slug}/submit', [SurveyRapatFormController::class, 'submitInternal'])
-                        ->name('survey.rapat.submit.internal');
-
+                     // ✅ Survey internal (opsional)
+                    Route::get('/survey-rapat/{slug}', [SurveyRapatFormController::class, 'formInternal'])->name('survey.rapat.form.internal');
+                    Route::post('/survey-rapat/{slug}/submit', [SurveyRapatFormController::class, 'submitInternal'])->name('survey.rapat.submit.internal');
                 });
-
-
 
         Route::prefix('tamu')->name('tamu.')->middleware('role:tamu')->group(function () {
             // Kunjungan

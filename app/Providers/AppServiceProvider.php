@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\ApelPagi;
 use App\Models\Tamu;
 use App\Models\User;
 use App\Models\Rapat;
@@ -18,6 +19,8 @@ use App\Models\RapatUndangan;
 use App\Observers\BaseObserver;
 use App\Observers\UserObserver;
 use App\Models\RapatUndanganInstansi;
+use App\Models\SurveyRapat;
+use App\Models\SurveyRapatRespon;
 use Illuminate\Support\ServiceProvider;
 use App\Observers\RapatUndanganObserver;
 use Illuminate\Support\Facades\Validator;
@@ -56,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         Kantor::observe(BaseObserver::class);
         RapatUndanganInstansi::observe(BaseObserver::class);
         Ruangan::observe(BaseObserver::class);
+        ApelPagi::observe(BaseObserver::class);
         Validator::replacer('Password', function ($message, $attribute, $rule, $parameters) {
         return "Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan simbol.";
     });

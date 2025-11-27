@@ -109,6 +109,13 @@
 
         <li class="menu-header">Fitur</li>
 
+        {{-- Menu Apel Pagi --}}
+        <li class="{{ request()->routeIs('admin.apelpagi.*') ? 'active' : '' }}">
+        <a class="nav-link" href="{{ route('admin.apelpagi.index') }}">
+            <i class="fas fa-sun"></i> <span>Apel Pagi</span>
+        </a>
+        </li>
+
         {{-- Menu Survey --}}
         @can('surveys.view')
             <li class="dropdown {{ request()->routeIs('admin.surveys.*') || request()->routeIs('admin.survey_links.*') || request()->routeIs('admin.survey-rapat.*') ? 'active' : '' }}">
@@ -213,6 +220,12 @@
         <a class="nav-link" href="{{ route('frontliner.rapat.today') }}">
             <i class="fas fa-calendar-day"></i> <span>Rapat Hari Ini</span>
         </a>
+        </li>
+         <li class="{{ request()->is('frontliner/apelpagi') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('frontliner.apelpagi.index') }}">
+            <i class="fas fa-sun"></i>
+            <span>Apel Pagi</span>
+            </a>
         </li>
       @endrole
 

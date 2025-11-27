@@ -90,5 +90,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(Instansi::class, 'instansi_id');
     }
+    public function apelPagi()
+    {
+        return $this->hasMany(ApelPagi::class);
+    }
 
 }

@@ -228,7 +228,7 @@
                 </a>
             @elseif($rapat->jenis_rapat === 'Eksternal')
                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)->generate(
-                    route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token], false)
+                    url(route('tamu.rapat.checkin.form', ['rapat'=>$rapat->id, 'token'=>$rapat->qr_token]))
                 ) !!}
                 <p class="mt-2 text-muted">Tamu eksternal silakan scan QR ini untuk check-in rapat.</p>
                 <a href="{{ route('admin.rapat.export.qrpdf', $rapat->id) }}" class="btn btn-info btn-sm mr-2">
@@ -359,7 +359,32 @@
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $undangan->user->name ?? '-' }}</td>
                 <td>{{ $undangan->user->pegawai->jabatan->nama_jabatan ?? '-' }}</td>
-                <td>{{ ucfirst($undangan->status_kehadiran) }}</td>
+                <td>
+                @switch($undangan->status_kehadiran)
+                    @case('pending')
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-clock"></i> Belum Check-in
+                    </span>
+                    @break
+                    @case('hadir')
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle"></i> Hadir
+                    </span>
+                    @break
+                    @case('selesai')
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-flag-checkered"></i> Selesai
+                    </span>
+                    @break
+                    @case('tidak_hadir')
+                    <span class="badge bg-danger">
+                        <i class="fas fa-times-circle"></i> Tidak Hadir
+                    </span>
+                    @break
+                    @default
+                    <span class="badge bg-light text-dark">-</span>
+                @endswitch
+                </td>
                 <td>{{ $undangan->checked_in_at ?? '-' }}</td>
                 <td>{{ $undangan->checked_out_at ?? '-' }}</td>
                 <td>
