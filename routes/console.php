@@ -34,7 +34,7 @@ Schedule::command('rapat:generate-report')->dailyAt('23:00');
 // Schedule::command('ruangan:update-dipakai')->everyMinute();
 Schedule::command('ruangan:update-status')->everyMinute();
 Schedule::command('rapat:update-status')->everyMinute();
-Schedule::command('apel:generate-token')->weeklyOn(1, '05:00');
+Schedule::command('apel:generate-token')->weeklyOn(1, '01:00');
 
 // Schedule::command('rapat:end-auto')->everyFiveMinutes();
 
