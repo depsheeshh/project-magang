@@ -9,6 +9,7 @@
 @section('content')
 <div class="card card-modern p-4">
   <h4 class="mb-3"><i class="fa-solid fa-id-card me-2"></i> Data Pegawai</h4>
+  <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::today()->translatedFormat('d F Y') }}</p>
   <p><strong>NIP:</strong> {{ $pegawai->nip }}</p>
   <p><strong>Nama:</strong> {{ $pegawai->user->name }}</p>
   <p><strong>Bidang:</strong> {{ $pegawai->bidang->nama_bidang ?? '-' }}</p>
@@ -18,7 +19,8 @@
   <div id="distanceStatus" class="mt-2 fw-bold" style="display:none;"></div>
 
   @if(!$absen)
-    <form action="{{ route('apelpagi.masuk',$pegawai->nip) }}" method="POST" id="formMasuk">
+    {{-- ✅ pakai token, bukan NIP --}}
+    <form action="{{ route('apelpagi.masuk',$pegawai->apel_token) }}" method="POST" id="formMasuk">
       @csrf
       <input type="hidden" name="latitude" id="lat">
       <input type="hidden" name="longitude" id="lon">
@@ -38,6 +40,9 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+  const formMasuk = document.getElementById('formMasuk');
+  const btnMasuk = document.getElementById('btnMasuk');
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       const lat = pos.coords.latitude;
@@ -46,7 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       document.getElementById('lat').value = lat;
       document.getElementById('lon').value = lon;
-      document.getElementById('btnMasuk').disabled = false;
+      btnMasuk.disabled = false;
 
       const kantorLat = -6.725961238379822;
       const kantorLon = 108.5391054937919;

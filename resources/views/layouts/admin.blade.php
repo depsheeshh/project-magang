@@ -69,6 +69,13 @@
         font-size: 0.75rem;
         }
 
+        mark {
+        background-color: yellow;
+        padding: 0 2px;
+        border-radius: 2px;
+        }
+
+
     </style>
 
 <!-- Tempat untuk CSS tambahan dari child view -->
@@ -206,8 +213,237 @@
   const endpoint = '/notifikasi';
   let renderHandler = null;
 
-  // === RENDER GENERIC (admin/frontliner/pegawai) ===
-  function renderCommon(data, color, icon, url = null) {
+  // === Helper Render Per Event ===
+  function renderInstansiBaru(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+            data-id="${item.id}" data-url="/admin/instansi">
+        <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Instansi Baru Ditambahkan</div>
+            <div class="notif-sub small">${item.nama_instansi || '-'} oleh ${item.user || 'Peserta'}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderUserBaru(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+            data-id="${item.id}" data-url="${item.url}">
+        <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">User Baru Ditambahkan</div>
+            <div class="notif-sub small">
+            ${item.nama} (${item.email}) • via ${
+                item.source === 'form_tamu' ? 'Form Tamu' :
+                item.source === 'google' ? 'Google' : 'Register'
+            }
+            </div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderSurveyPelayanan(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+            data-id="${item.id}" data-url="/admin/surveys">
+        <div class="notif-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-poll"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Survey Pelayanan Baru</div>
+            <div class="notif-sub small">${item.judul || 'Survey'} oleh ${item.user || 'Peserta'}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderSurveyBaru(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+            data-id="${item.id}" data-url="/admin/surveys">
+        <div class="notif-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Survey Baru Ditambahkan</div>
+            <div class="notif-sub small">${item.judul || 'Survey'} oleh ${item.user || 'Admin/Peserta'}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderSurveyRapatBaru(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
+            data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
+        <div class="notif-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-poll-h"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Survey Rapat Baru</div>
+            <div class="notif-sub small">${item.judul || 'Survey'} • oleh ${item.user || 'Admin'}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderSurveyRapatRespon(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
+            data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
+        <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Respon Survey Rapat</div>
+            <div class="notif-sub small">${item.user || 'Peserta'} ${item.instansi ? '• ' + item.instansi : ''}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+  function renderRapatUndanganPegawai(item) { return `
+          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+               data-id="${item.id}" data-url="/pegawai/rapat/${item.rapat_id}">
+            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:38px;height:38px;">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <div class="notif-content flex-fill">
+              <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
+              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
+              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `; }
+  function renderRapatUndanganTamu(item) { return `
+          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
+               data-id="${item.id}" data-url="/tamu/rapat/${item.rapat_id}">
+            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                 style="width:38px;height:38px;">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <div class="notif-content flex-fill">
+              <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
+              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
+              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        `; }
+  function renderRapatDibatalkan(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+        <div class="notif-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-ban"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Undangan Rapat Dibatalkan</div>
+            <div class="notif-sub small">${item.judul || 'Rapat'} • ${item.waktu || ''}</div>
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu_notif || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderKunjunganDisetujui(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+        <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
+            <div class="status-disetujui small">Disetujui</div>
+            ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderKunjunganDitolak(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+        <div class="notif-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
+            <div class="status-ditolak small">Ditolak</div>
+            ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+    function renderKunjunganMenunggu(item) {
+    return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+        <div class="notif-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+            style="width:38px;height:38px;">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="notif-content flex-fill">
+            <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
+            <div class="status-menunggu small">Menunggu</div>
+            ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
+            <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu || ''}</div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+        </div>`;
+    }
+
+  // === Handler Per Role ===
+  function renderAdmin(data) {
     const badge = document.getElementById('notif-badge');
     const list = document.getElementById('notif-list');
     if (!badge || !list) return;
@@ -223,184 +459,43 @@
     badge.classList.remove('d-none');
 
     list.innerHTML = items.map(item => {
-      // cek kalau event instansi_baru → render khusus
-      if (item.event === 'instansi_baru') {
-        return `
-          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-               data-id="${item.id}" data-url="/admin/instansi">
-            <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                 style="width:38px;height:38px;">
-              <i class="fas fa-building"></i>
-            </div>
-            <div class="notif-content flex-fill">
-              <div class="notif-title font-weight-bold">Instansi Baru Ditambahkan</div>
-              <div class="notif-sub small">
-                ${(item.nama_instansi || '-')} oleh ${(item.user || 'Peserta')}
-              </div>
-              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        `;
+      switch(item.event) {
+        case 'instansi_baru': return renderInstansiBaru(item);
+        case 'user_baru': return renderUserBaru(item);
+        case 'survey_pelayanan': return renderSurveyPelayanan(item);
+        case 'survey_baru': return renderSurveyBaru(item);
+        case 'survey_rapat_baru': return renderSurveyRapatBaru(item);
+        case 'survey_rapat_respon': return renderSurveyRapatRespon(item);
+        default: return '';
       }
-
-     if (item.event === 'user_baru') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-                data-id="${item.id}" data-url="${item.url}">
-            <div class="notif-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                style="width:38px;height:38px;">
-                <i class="fas fa-user-plus"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title font-weight-bold">User Baru Ditambahkan</div>
-                <div class="notif-sub small">
-                ${item.nama} (${item.email}) • via ${
-                    item.source === 'form_tamu' ? 'Form Tamu' :
-                    item.source === 'google' ? 'Google' : 'Register'
-                }
-                </div>
-                <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-
-
-      if (item.event === 'survey_pelayanan') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-                data-id="${item.id}" data-url="/admin/surveys">
-            <div class="notif-icon bg-purple text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                style="width:38px;height:38px;">
-                <i class="fas fa-poll"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title font-weight-bold">Survey Pelayanan Baru</div>
-                <div class="notif-sub small">
-                ${(item.judul || 'Survey')} oleh ${(item.user || 'Peserta')}
-                </div>
-                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-        if (item.event === 'rapat_undangan') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-                data-id="${item.id}" data-url="/pegawai/rapat/${item.rapat_id}">
-            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                style="width:38px;height:38px;">
-                <i class="fas fa-handshake"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
-                <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
-                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-
-      // cek kalau event survey_baru → render khusus
-        if (item.event === 'survey_baru') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-                data-id="${item.id}" data-url="/admin/surveys">
-            <div class="notif-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                style="width:38px;height:38px;">
-                <i class="fas fa-comment-dots"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title font-weight-bold">Survey Baru Ditambahkan</div>
-                <div class="notif-sub small">
-                ${(item.judul || 'Survey')} oleh ${(item.user || 'Admin/Peserta')}
-                </div>
-                <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-        if (item.event === 'survey_rapat_baru') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
-                data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
-            <div class="notif-icon bg-teal-500 text-white me-3">
-                <i class="fas fa-poll-h"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title">Survey Rapat Baru</div>
-                <div class="notif-sub small">${item.judul || 'Survey'} • oleh ${item.user || 'Admin'}</div>
-                <div class="notif-time"><i class="fas fa-clock"></i> ${item.waktu}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-        if (item.event === 'survey_rapat_respon') {
-        return `
-            <div class="notif-item d-flex align-items-start border-bottom py-2 px-3"
-                data-id="${item.id}" data-url="/admin/survey-rapat/${item.survey_id}">
-            <div class="notif-icon bg-green-500 text-white me-3">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="notif-content flex-fill">
-                <div class="notif-title">Respon Survey Rapat</div>
-                <div class="notif-sub small">${item.user || 'Peserta'} ${item.instansi ? '• ' + item.instansi : ''}</div>
-                <div class="notif-time"><i class="fas fa-clock"></i> ${item.waktu}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-            </div>
-        `;
-        }
-
-      // default render
-      return `
-        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-             data-id="${item.id}" ${url ? `data-url="${url}"` : ''}>
-          <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-               style="width:38px;height:38px;">
-            <i class="fas ${icon}"></i>
-          </div>
-          <div class="notif-content flex-fill">
-            <div class="notif-title font-weight-bold">${item.nama || 'Notifikasi'}</div>
-            <div class="notif-sub small">
-              ${(item.instansi || '')} ${(item.keperluan ? ' • ' + item.keperluan : '')}
-            </div>
-            <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
-          </div>
-          <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
-      `;
     }).join('');
   }
 
-  // === RENDER TAMU ===
+  function renderPegawai(data) {
+    const badge = document.getElementById('notif-badge');
+    const list = document.getElementById('notif-list');
+    if (!badge || !list) return;
+
+    const items = data.items ?? [];
+    if (items.length === 0) {
+      badge.classList.add('d-none');
+      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
+      return;
+    }
+
+    badge.textContent = items.length;
+    badge.classList.remove('d-none');
+
+    list.innerHTML = items.map(item => {
+      switch(item.event) {
+        case 'rapat_undangan': return renderRapatUndanganPegawai(item);
+        case 'survey_rapat_baru': return renderSurveyRapatBaru(item);
+        case 'survey_rapat_respon': return renderSurveyRapatRespon(item);
+        default: return '';
+      }
+    }).join('');
+  }
+
   function renderTamu(data) {
     const badge = document.getElementById('notif-badge');
     const list = document.getElementById('notif-list');
@@ -417,88 +512,24 @@
     badge.classList.remove('d-none');
 
     list.innerHTML = items.map(item => {
-      // 🔔 Undangan rapat baru
-      if (item.event === 'rapat_undangan') {
-        return `
-          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-               data-id="${item.id}" data-url="/tamu/rapat/${item.rapat_id}">
-            <div class="notif-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                 style="width:38px;height:38px;">
-              <i class="fas fa-handshake"></i>
-            </div>
-            <div class="notif-content flex-fill">
-              <div class="notif-title font-weight-bold">Undangan Rapat Baru</div>
-              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
-              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        `;
+      switch(item.event) {
+        case 'rapat_undangan': return renderRapatUndanganTamu(item);
+        case 'rapat_undangan_dibatalkan': return renderRapatDibatalkan(item);
+        case 'disetujui': return renderKunjunganDisetujui(item);
+        case 'ditolak': return renderKunjunganDitolak(item);
+        case 'menunggu': return renderKunjunganMenunggu(item);
+        default: return '';
       }
-
-      // 🔔 Undangan rapat dibatalkan
-      if (item.event === 'rapat_undangan_dibatalkan') {
-        return `
-          <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-               data-id="${item.id}">
-            <div class="notif-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                 style="width:38px;height:38px;">
-              <i class="fas fa-ban"></i>
-            </div>
-            <div class="notif-content flex-fill">
-              <div class="notif-title font-weight-bold">Undangan Rapat Dibatalkan</div>
-              <div class="notif-sub small">${item.judul || 'Rapat'} • ${(item.waktu || '')}</div>
-              <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu_notif || '')}</div>
-            </div>
-            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        `;
-      }
-
-      // default kunjungan
-      let icon = 'fa-clock',
-          color = 'bg-warning',
-          label = 'Menunggu',
-          labelClass = 'status-menunggu';
-
-      if (item.event === 'disetujui') {
-        icon = 'fa-check-circle'; color = 'bg-success'; label = 'Disetujui'; labelClass = 'status-disetujui';
-      }
-      if (item.event === 'ditolak') {
-        icon = 'fa-times-circle'; color = 'bg-danger'; label = 'Ditolak'; labelClass = 'status-ditolak';
-      }
-
-      return `
-        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2"
-             data-id="${item.id}" data-url="/tamu/kunjungan/status">
-          <div class="notif-icon ${color} text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-               style="width:38px;height:38px;">
-            <i class="fas ${icon}"></i>
-          </div>
-          <div class="notif-content flex-fill">
-            <div class="notif-title font-weight-bold">Status kunjungan Anda</div>
-            <div class="${labelClass} small">${label}</div>
-            ${item.alasan ? `<div class="notif-sub small">Alasan: ${item.alasan}</div>` : ''}
-            <div class="notif-time small"><i class="fas fa-clock"></i> ${(item.waktu || '')}</div>
-          </div>
-          <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>`;
     }).join('');
   }
 
   // === Role Selector ===
   if (roles.includes('admin')) {
-    renderHandler = (data) => renderCommon(data, 'bg-warning', 'fa-info-circle');
+    renderHandler = renderAdmin;
   } else if (roles.includes('frontliner')) {
-    renderHandler = (data) => renderCommon(data, 'bg-primary', 'fa-user', '/frontliner/kunjungan');
+    renderHandler = renderAdmin; // share event admin
   } else if (roles.includes('pegawai')) {
-    renderHandler = (data) => renderCommon(data, 'bg-info', 'fa-user-friends', '/pegawai/kunjungan/notifikasi');
+    renderHandler = renderPegawai;
   } else if (roles.includes('tamu')) {
     renderHandler = renderTamu;
   }
@@ -545,11 +576,17 @@
     const url = item.dataset.url;
 
     // Fallback: kalau URL kosong/undefined (misal rapat dibatalkan), arahkan ke daftar rapat
-    if (!url) {
+    if (!url || url === 'undefined') {
+        if (roles.includes('tamu')) {
         url = '/tamu/rapat/saya';
-    } else if (!url || url === 'undefined') {
-            url = '/admin/users';
+        } else if (roles.includes('admin')) {
+        url = '/admin/users';
+        } else if (roles.includes('pegawai')) {
+        url = '/pegawai/rapat/saya';
+        } else if (roles.includes('frontliner')) {
+        url = '/frontliner/kunjungan';
         }
+    }
 
     fetch(`/notifikasi/${id}/read`, {
       method: 'PATCH',

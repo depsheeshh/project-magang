@@ -46,8 +46,8 @@ use App\Http\Controllers\Frontliner\KunjunganController as FrontlinerKunjunganCo
 Route::get('/', fn () => view('home'))->name('home');
 
 // Apel pagi
-Route::get('/apelpagi/{nip}', [ApelPagiController::class, 'show'])->name('apelpagi.show');
-Route::post('/apelpagi/{nip}/masuk', [ApelPagiController::class, 'masuk'])->name('apelpagi.masuk');
+Route::get('/apelpagi/{token}', [ApelPagiController::class, 'show'])->name('apelpagi.show');
+Route::post('/apelpagi/{token}/masuk', [ApelPagiController::class, 'masuk'])->name('apelpagi.masuk');
 
 
 // Flow tamu

@@ -4,10 +4,10 @@
 
 @section('content')
 <div class="card card-modern p-4">
-  <h4 class="mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i> History Apel Pagi Pegawai</h4>
+  <h4 class="mb-4"><i class="fa-solid fa-clock-rotate-left me-2"></i> History Apel Pagi Pegawai</h4>
 
-    {{-- Filter & Search --}}
-  <form method="GET" action="{{ route('admin.apelpagi.index') }}" class="row g-3 mb-3">
+  {{-- Filter & Search --}}
+  <form method="GET" action="{{ route('admin.apelpagi.index') }}" class="row g-3 mb-4">
     <div class="col-md-3">
       <label class="form-label">Tanggal Mulai</label>
       <input type="date" name="start_date" class="form-control" value="{{ $start_date }}">
@@ -20,22 +20,25 @@
       <label class="form-label">Cari Pegawai</label>
       <input type="text" name="search" class="form-control" placeholder="NIP / Nama" value="{{ $search }}">
     </div>
-    <div class="col-md-3 align-self-end">
-      <button type="submit" class="btn btn-primary">
-        <i class="fa fa-filter me-2"></i> Terapkan
+    <div class="col-md-3 text-end align-self-end">
+      <button type="submit" class="btn btn-primary me-2">
+        <i class="fa fa-filter me-1"></i> Terapkan
       </button>
-      <a href="{{ route('admin.apelpagi.index') }}" class="btn btn-secondary">Reset</a>
+      <a href="{{ route('admin.apelpagi.index') }}" class="btn btn-outline-secondary">Reset</a>
     </div>
   </form>
 
-  <a href="{{ route('admin.apelpagi.exportPdf') }}" class="btn btn-danger mb-3">
-    <i class="fa fa-file-pdf me-2"></i> Export PDF
-  </a>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">Total {{ $history->total() }} entri</span>
+    <a href="{{ route('admin.apelpagi.exportPdf', request()->query()) }}" class="btn btn-danger">
+      <i class="fa fa-file-pdf me-2"></i> Export PDF
+    </a>
+  </div>
 
-  <div id="historyTable">
+  <div id="historyTable" class="table-responsive">
     @include('admin.apelpagi.table', ['history' => $history])
-    </div>
-
+  </div>
+</div>
 @endsection
 
 @push('scripts')

@@ -75,12 +75,13 @@ class DatabaseSeeder extends Seeder
 
         // ✅ Tambahkan juga ke tabel pegawai
         DB::table('pegawai')->updateOrInsert(
-            ['user_id' => $pegawai->id], // supaya tidak double insert
+    ['user_id' => $pegawai->id],
             [
-                'bidang_id'  => 3,              // isi default, bisa disesuaikan
-                'jabatan_id' => 4,              // isi default, bisa disesuaikan
-                'nip'        => '02111929344', // contoh NIP unik
-                'telepon'    => '082123456789',   // contoh telepon unik
+                'bidang_id'  => 3,
+                'jabatan_id' => 4,
+                'nip'        => '02111929344',
+                'telepon'    => '082123456789',
+                'apel_token' => \Illuminate\Support\Str::random(32), // ✅ token random
                 'created_id' => 1,
                 'updated_id' => null,
                 'deleted_id' => null,
@@ -89,6 +90,7 @@ class DatabaseSeeder extends Seeder
                 'deleted_at' => null,
             ]
         );
+
 
         // User default tamu (Inactive contoh)
         $tamu = User::firstOrCreate(

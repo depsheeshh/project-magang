@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('bidang_id')->nullable();
             $table->unsignedBigInteger('jabatan_id')->nullable();
             $table->string('nip', 50)->nullable();
+            $table->string('apel_token', 64)->nullable()->unique();
             $table->string('telepon', 20)->nullable();
 
             // Audit trail

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class UserPegawaiSeeder extends Seeder
 {
@@ -26,7 +27,6 @@ class UserPegawaiSeeder extends Seeder
         ];
 
         foreach ($pegawaiData as $p) {
-            // Insert ke tabel users (pakai Eloquent biar bisa assign role)
             $user = User::create([
                 'name'              => $p['name'],
                 'email'             => $p['email'],
@@ -37,16 +37,15 @@ class UserPegawaiSeeder extends Seeder
                 'updated_at'        => Carbon::now(),
             ]);
 
-            // Assign role pegawai
             $user->assignRole('pegawai');
 
-            // Insert ke tabel pegawai
             DB::table('pegawai')->insert([
                 'user_id'    => $user->id,
                 'bidang_id'  => $p['bidang_id'],
                 'jabatan_id' => $p['jabatan_id'],
                 'nip'        => $p['nip'],
                 'telepon'    => $p['telepon'],
+                'apel_token' => Str::random(32), // ✅ token random langsung
                 'created_id' => 1,
                 'updated_id' => null,
                 'deleted_id' => null,

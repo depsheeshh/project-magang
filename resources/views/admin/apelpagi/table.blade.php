@@ -1,3 +1,11 @@
+  @php
+    function highlight($text, $search) {
+        if (!$search) return $text;
+        return preg_replace("/(" . preg_quote($search, '/') . ")/i",
+            '<mark>$1</mark>', $text);
+    }
+    @endphp
+
   <div class="table-responsive">
     <table class="table table-bordered align-middle">
       <thead class="table-light">
@@ -14,8 +22,8 @@
         @forelse($history as $h)
           <tr>
             <td>{{ $loop->iteration + ($history->currentPage()-1)*$history->perPage() }}</td>
-            <td>{{ $h->user->pegawai->nip }}</td>
-            <td>{{ $h->user->name }}</td>
+            <td>{!! highlight($h->user->pegawai->nip, request('search')) !!}</td>
+            <td>{!! highlight($h->user->name, request('search')) !!}</td>
             <td>{{ $h->user->pegawai->bidang->nama_bidang ?? '-' }}</td>
             <td>
             {{ \Carbon\Carbon::parse($h->tanggal)->format('d/m/Y') }}

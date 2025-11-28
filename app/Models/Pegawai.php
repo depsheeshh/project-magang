@@ -50,4 +50,12 @@ class Pegawai extends Model
     {
         return $this->hasMany(Kunjungan::class, 'pegawai_id');
     }
+
+    protected static function booted()
+    {
+        static::creating(function ($pegawai) {
+            $pegawai->apel_token = \Illuminate\Support\Str::random(32);
+        });
+    }
+
 }

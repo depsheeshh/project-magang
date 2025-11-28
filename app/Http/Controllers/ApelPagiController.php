@@ -28,7 +28,7 @@ class ApelPagiController extends Controller
         $pegawai = Pegawai::with('user')
             ->when($search, function($q) use ($search) {
                 $q->where('nip','like',"%{$search}%")
-                ->orWhereHas('user', fn($uq) => $uq->where('name','like',"%{$search}%"));
+                  ->orWhereHas('user', fn($uq) => $uq->where('name','like',"%{$search}%"));
             })
             ->orderBy('nip')
             ->paginate(10);
@@ -40,12 +40,16 @@ class ApelPagiController extends Controller
         return view('frontliner.apelpagi.index', compact('pegawai','search'));
     }
 
-
-    // Halaman detail pegawai setelah scan QR
-    public function show($nip)
+    // Halaman detail pegawai setelah scan QR (pakai token)
+    public function show($token)
     {
-        $pegawai = Pegawai::where('nip', $nip)->firstOrFail();
+        $pegawai = Pegawai::where('apel_token', $token)->firstOrFail();
         $user = $pegawai->user;
+
+        // ✅ Validasi hanya hari Senin
+        if (!Carbon::today()->isMonday()) {
+            abort(403, 'QR Code Apel Pagi hanya berlaku hari Senin');
+        }
 
         $absen = ApelPagi::whereDate('tanggal', today())
             ->where('user_id', $user->id)
@@ -54,11 +58,18 @@ class ApelPagiController extends Controller
         return view('apelpagi.scan', compact('pegawai','absen'));
     }
 
-    // Proses klik tombol MASUK
-    public function masuk(Request $request, $nip)
+    // Proses klik tombol MASUK (pakai token)
+    public function masuk(Request $request, $token)
     {
-        $pegawai = Pegawai::where('nip', $nip)->firstOrFail();
+        $pegawai = Pegawai::where('apel_token', $token)->firstOrFail();
         $user = $pegawai->user;
+
+        // ✅ Validasi hanya hari Senin
+        if (!Carbon::today()->isMonday()) {
+            return view('apelpagi.error', [
+                'message' => "QR Code Apel Pagi hanya berlaku hari Senin."
+            ]);
+        }
 
         $kantorLat = -6.725979820888484;
         $kantorLon = 108.53894692259564;
@@ -76,7 +87,6 @@ class ApelPagiController extends Controller
             $kantorLon
         );
 
-        // ✅ Tambahkan log debug
         logger()->info('Apel Pagi Debug', [
             'pegawai'   => $pegawai->nip,
             'user'      => $user->name,
@@ -100,14 +110,12 @@ class ApelPagiController extends Controller
 
         $status = $now->gt($jamBatas) ? 'telat' : 'tepat_waktu';
 
-        // ✅ gunakan helper getTelatInfo
         $telatInfo = $this->getTelatInfo($now, $jamBatas);
         $telatMenit = $telatInfo['menit'];
         $telatJamMenit = $telatInfo['jam'];
 
-        // Cek apakah sudah absen minggu ini
-        $startOfWeek = Carbon::now()->startOfWeek(); // default Senin
-        $endOfWeek = Carbon::now()->endOfWeek();     // default Minggu
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $endOfWeek = Carbon::now()->endOfWeek();
 
         $alreadyAbsen = ApelPagi::where('user_id', $user->id)
             ->whereBetween('tanggal', [$startOfWeek, $endOfWeek])
@@ -120,7 +128,6 @@ class ApelPagiController extends Controller
                 'text' => 'Anda sudah absen apel pagi minggu ini. Tidak bisa absen ulang.',
             ]);
         }
-
 
         $absen = ApelPagi::firstOrCreate(
             ['user_id' => $user->id, 'tanggal' => today()],
@@ -138,7 +145,6 @@ class ApelPagiController extends Controller
             : view('apelpagi.tepat', compact('pegawai','now'));
     }
 
-    // Helper hitung jarak (Haversine formula)
     private function calculateDistance($latUser, $lonUser, $latKantor, $lonKantor): float
     {
         $earth = 6371000; // meter
@@ -153,7 +159,6 @@ class ApelPagiController extends Controller
         return $earth * $c;
     }
 
-    // ✅ Helper format jarak (meter / km)
     private function formatDistance(float $distance): string
     {
         if ($distance < 1000) {
