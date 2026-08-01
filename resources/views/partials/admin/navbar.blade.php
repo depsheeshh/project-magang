@@ -101,7 +101,7 @@
           <i class="fas fa-key"></i> Ubah Password
         </a>
         <a href="{{ url('/') }}" class="dropdown-item has-icon">
-          <i class="fas fa-home"></i> Landing Page
+          <i class="fas fa-home"></i> Home
         </a>
 
         <div class="dropdown-divider"></div>

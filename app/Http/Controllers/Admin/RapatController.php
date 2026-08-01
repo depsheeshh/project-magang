@@ -478,7 +478,7 @@ class RapatController extends Controller
             ? 'admin.rapat.kehadiran_internal_pdf'
             : 'admin.rapat.kehadiran_eksternal_pdf';
 
-        $pdf = Pdf::loadView($view, $data)->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView($view, $data)->setPaper('a4', 'landscape')->setOption('isPhpEnabled', true);
 
         $filename = 'kehadiran_rapat_' . $rapat->id . '.pdf';
         return $pdf->download($filename);
@@ -690,7 +690,8 @@ class RapatController extends Controller
         });
 
         $pdf = Pdf::loadView('admin.rapat.rekap_rapat_pdf', compact('rekap'))
-                ->setPaper('a4', 'landscape');
+                ->setPaper('a4', 'landscape')
+                ->setOption('isPhpEnabled', true);
 
         return $pdf->download('rekap_rapat.pdf');
     }
@@ -737,7 +738,7 @@ class RapatController extends Controller
             'surveyQr'     => $surveyQr,
             'surveyUrl'    => $surveyUrl,
             'jumlahRespon' => $jumlahRespon,
-        ]);
+        ])->setOption('isPhpEnabled', true);
 
         return $pdf->download('QR_Rapat_'.$rapat->id.'.pdf');
     }

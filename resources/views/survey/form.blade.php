@@ -4,7 +4,6 @@
 
 @push('styles')
 <style>
-  /* ✨ Animasi */
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -52,6 +51,33 @@
   textarea.form-control:focus {
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+  }
+
+  /* 🔢 Skala Keterangan */
+  .scale-info {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .scale-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #64748b;
+    background: #f1f5f9;
+    border-radius: 20px;
+    padding: 3px 10px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .scale-item .scale-num {
+    font-weight: 700;
+    color: #2563eb;
+    min-width: 14px;
+    text-align: center;
   }
 
   /* 🌟 Rating Label */
@@ -121,6 +147,16 @@
     .btn-submit:hover {
       background: linear-gradient(135deg, #15803d, #166534);
     }
+
+    .scale-item {
+      background: #334155;
+      border-color: #475569;
+      color: #94a3b8;
+    }
+
+    .scale-item .scale-num {
+      color: #60a5fa;
+    }
   }
 </style>
 @endpush
@@ -141,61 +177,89 @@
       <form method="POST" action="{{ route('survey.submit', [$kunjungan->id, Str::afterLast($survey->link,'/')] ) }}">
         @csrf
 
+        {{-- Kemudahan Registrasi --}}
         <div class="mb-3">
           <label class="form-label"><i class="fas fa-id-card"></i> Kemudahan Proses Registrasi</label>
           <select name="kemudahan_registrasi" class="form-select" required>
             <option value="">-- Pilih Nilai --</option>
+            @php
+              $labelRegistrasi = [1=>'Sangat Sulit', 2=>'Sulit', 3=>'Cukup Mudah', 4=>'Mudah', 5=>'Sangat Mudah'];
+            @endphp
             @for($i=1;$i<=5;$i++)
               <option value="{{ $i }}" {{ $survey->kemudahan_registrasi == $i ? 'selected' : '' }}>
-                {{ $i }}
+                {{ $i }} – {{ $labelRegistrasi[$i] }}
               </option>
             @endfor
           </select>
+          <div class="scale-info">
+            @foreach($labelRegistrasi as $num => $label)
+              <span class="scale-item"><span class="scale-num">{{ $num }}</span> {{ $label }}</span>
+            @endforeach
+          </div>
         </div>
 
+        {{-- Keramahan Pelayanan --}}
         <div class="mb-3">
           <label class="form-label"><i class="fas fa-handshake"></i> Keramahan Pelayanan</label>
           <select name="keramahan_pelayanan" class="form-select" required>
             <option value="">-- Pilih Nilai --</option>
+            @php
+              $labelKeramahan = [1=>'Sangat Tidak Ramah', 2=>'Tidak Ramah', 3=>'Cukup Ramah', 4=>'Ramah', 5=>'Sangat Ramah'];
+            @endphp
             @for($i=1;$i<=5;$i++)
               <option value="{{ $i }}" {{ $survey->keramahan_pelayanan == $i ? 'selected' : '' }}>
-                {{ $i }}
+                {{ $i }} – {{ $labelKeramahan[$i] }}
               </option>
             @endfor
           </select>
+          <div class="scale-info">
+            @foreach($labelKeramahan as $num => $label)
+              <span class="scale-item"><span class="scale-num">{{ $num }}</span> {{ $label }}</span>
+            @endforeach
+          </div>
         </div>
 
+        {{-- Waktu Tunggu --}}
         <div class="mb-3">
           <label class="form-label"><i class="fas fa-clock"></i> Waktu Tunggu</label>
           <select name="waktu_tunggu" class="form-select" required>
             <option value="">-- Pilih Nilai --</option>
+            @php
+              $labelWaktu = [1=>'Sangat Lama', 2=>'Lama', 3=>'Cukup Cepat', 4=>'Cepat', 5=>'Sangat Cepat'];
+            @endphp
             @for($i=1;$i<=5;$i++)
               <option value="{{ $i }}" {{ $survey->waktu_tunggu == $i ? 'selected' : '' }}>
-                {{ $i }}
+                {{ $i }} – {{ $labelWaktu[$i] }}
               </option>
             @endfor
           </select>
+          <div class="scale-info">
+            @foreach($labelWaktu as $num => $label)
+              <span class="scale-item"><span class="scale-num">{{ $num }}</span> {{ $label }}</span>
+            @endforeach
+          </div>
         </div>
 
+        {{-- Rating Umum --}}
         <div class="mb-3">
-        <label class="form-label"><i class="fas fa-star"></i> Rating Umum</label>
-        <div class="d-flex flex-wrap gap-3 rating-group">
+          <label class="form-label"><i class="fas fa-star"></i> Rating Umum</label>
+          <div class="d-flex flex-wrap gap-3 rating-group">
             @for($i = 1; $i <= 5; $i++)
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="rating" id="rating{{ $i }}"
-                    value="{{ $i }}" {{ $survey->rating == $i ? 'checked' : '' }} required>
-                <label class="form-check-label d-flex align-items-center gap-1" for="rating{{ $i }}">
-                {{-- Tampilkan jumlah bintang sesuai nilai --}}
+              <input class="form-check-input" type="radio" name="rating" id="rating{{ $i }}"
+                value="{{ $i }}" {{ $survey->rating == $i ? 'checked' : '' }} required>
+              <label class="form-check-label d-flex align-items-center gap-1" for="rating{{ $i }}">
                 @for($j = 1; $j <= $i; $j++)
-                    <i class="fas fa-star text-warning"></i>
+                  <i class="fas fa-star text-warning"></i>
                 @endfor
                 {{ ['Sangat Buruk','Buruk','Cukup','Baik','Sangat Baik'][$i-1] }}
-                </label>
+              </label>
             </div>
             @endfor
-        </div>
+          </div>
         </div>
 
+        {{-- Saran --}}
         <div class="mb-4">
           <label class="form-label"><i class="fas fa-comment-dots"></i> Saran / Masukan</label>
           <textarea name="saran" class="form-control" rows="3" placeholder="Tuliskan masukan Anda...">{{ $survey->saran }}</textarea>

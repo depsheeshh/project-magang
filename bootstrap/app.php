@@ -26,6 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'tamu.scanned' => EnsureTamuScanned::class,
             'ensure.verified' => EnsureEmailIsVerified::class,
         ]);
+
+        // ✅ Kecualikan route apelpagi dari CSRF — diakses via QR scan HP (HTTP)
+        // Keamanan tetap terjaga karena URL-nya sudah pakai token unik per pegawai
+        $middleware->validateCsrfTokens(except: [
+            'apelpagi/*/masuk',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

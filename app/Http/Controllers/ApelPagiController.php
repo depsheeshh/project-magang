@@ -46,16 +46,25 @@ class ApelPagiController extends Controller
         $pegawai = Pegawai::where('apel_token', $token)->firstOrFail();
         $user = $pegawai->user;
 
-        // ✅ Validasi hanya hari Senin
-        if (!Carbon::today()->isMonday()) {
-            abort(403, 'QR Code Apel Pagi hanya berlaku hari Senin');
+        // ✅ Null check: pastikan pegawai punya akun user
+        if (!$user) {
+            return view('apelpagi.error', [
+                'message' => 'Akun pegawai ini tidak ditemukan. Hubungi admin.',
+            ]);
+        }
+
+        // ✅ Validasi hari — ubah ke isMonday() setelah selesai testing
+        if (!Carbon::today()->isFriday()) {
+            return view('apelpagi.error', [
+                'message' => 'QR Code Apel Pagi hanya berlaku hari Senin.',
+            ]);
         }
 
         $absen = ApelPagi::whereDate('tanggal', today())
             ->where('user_id', $user->id)
             ->first();
 
-        return view('apelpagi.scan', compact('pegawai','absen'));
+        return view('apelpagi.scan', compact('pegawai', 'absen'));
     }
 
     // Proses klik tombol MASUK (pakai token)
@@ -64,44 +73,59 @@ class ApelPagiController extends Controller
         $pegawai = Pegawai::where('apel_token', $token)->firstOrFail();
         $user = $pegawai->user;
 
-        // ✅ Validasi hanya hari Senin
-        if (!Carbon::today()->isMonday()) {
-            return view('apelpagi.error', [
-                'message' => "QR Code Apel Pagi hanya berlaku hari Senin."
+        // ✅ Null check: pastikan pegawai punya akun user
+        if (!$user) {
+            return redirect()->route('apelpagi.show', $token)->with('swal', [
+                'icon'  => 'error',
+                'title' => 'Kesalahan',
+                'text'  => 'Akun pegawai ini tidak ditemukan. Hubungi admin.',
+            ]);
+        }
+
+        // ✅ Validasi hari — ubah ke isMonday() setelah selesai testing
+        if (!Carbon::today()->isFriday()) {
+            return redirect()->route('apelpagi.show', $token)->with('swal', [
+                'icon'  => 'warning',
+                'title' => 'Tidak Berlaku',
+                'text'  => 'QR Code Apel Pagi hanya berlaku hari Senin.',
             ]);
         }
 
         $kantorLat = -6.725979820888484;
         $kantorLon = 108.53894692259564;
 
-        if (!$request->latitude || !$request->longitude) {
-            return view('apelpagi.error', [
-                'message' => "Lokasi tidak terdeteksi. Pastikan izin GPS aktif."
+        // Jika koordinat tersedia, cek radius kantor
+        // Jika tidak (misal HTTP di dev), lewati saja pengecekan jarak
+        if ($request->latitude && $request->longitude) {
+            $distance = $this->calculateDistance(
+                (float)$request->latitude,
+                (float)$request->longitude,
+                $kantorLat,
+                $kantorLon
+            );
+
+            logger()->info('Apel Pagi Debug', [
+                'pegawai'    => $pegawai->nip,
+                'user'       => $user->name,
+                'lat_user'   => $request->latitude,
+                'lon_user'   => $request->longitude,
+                'lat_kantor' => $kantorLat,
+                'lon_kantor' => $kantorLon,
+                'distance_m' => round($distance, 2),
+                'status'     => $distance > 50 ? 'di luar radius' : 'dalam radius',
             ]);
-        }
 
-        $distance = $this->calculateDistance(
-            (float)$request->latitude,
-            (float)$request->longitude,
-            $kantorLat,
-            $kantorLon
-        );
-
-        logger()->info('Apel Pagi Debug', [
-            'pegawai'   => $pegawai->nip,
-            'user'      => $user->name,
-            'lat_user'  => $request->latitude,
-            'lon_user'  => $request->longitude,
-            'lat_kantor'=> $kantorLat,
-            'lon_kantor'=> $kantorLon,
-            'distance_m'=> round($distance, 2),
-            'status'    => $distance > 50 ? 'di luar radius' : 'dalam radius',
-        ]);
-
-        if ($distance > 50) {
-            $distanceText = $this->formatDistance($distance);
-            return view('apelpagi.error', [
-                'message' => "Anda di luar radius kantor (±{$distanceText})."
+            if ($distance > 50) {
+                $distanceText = $this->formatDistance($distance);
+                return redirect()->route('apelpagi.show', $token)->with('swal', [
+                    'icon'  => 'error',
+                    'title' => 'Di Luar Radius',
+                    'text'  => "Anda berada di luar radius kantor (±{$distanceText}). Pastikan Anda berada di lokasi kantor.",
+                ]);
+            }
+        } else {
+            logger()->info('Apel Pagi: koordinat tidak tersedia, cek radius dilewati', [
+                'pegawai' => $pegawai->nip,
             ]);
         }
 
@@ -122,14 +146,14 @@ class ApelPagiController extends Controller
             ->exists();
 
         if ($alreadyAbsen) {
-            return redirect()->back()->with('swal', [
+            return redirect()->route('apelpagi.show', $token)->with('swal', [
                 'icon' => 'warning',
                 'title' => 'Sudah Absen',
                 'text' => 'Anda sudah absen apel pagi minggu ini. Tidak bisa absen ulang.',
             ]);
         }
 
-        $absen = ApelPagi::firstOrCreate(
+        ApelPagi::firstOrCreate(
             ['user_id' => $user->id, 'tanggal' => today()],
             [
                 'jam_masuk'   => $now,
@@ -140,9 +164,13 @@ class ApelPagiController extends Controller
             ]
         );
 
-        return $status === 'telat'
-            ? view('apelpagi.telat', compact('pegawai','telatMenit','telatJamMenit'))
-            : view('apelpagi.tepat', compact('pegawai','now'));
+        // ✅ PRG pattern: redirect ke halaman hasil agar mobile browser tidak stuck
+        return redirect()->route('apelpagi.show', $token)->with('hasil_absen', [
+            'status'         => $status,
+            'telatMenit'     => $telatMenit,
+            'telatJamMenit'  => $telatJamMenit,
+            'jam'            => $now->format('H:i'),
+        ]);
     }
 
     private function calculateDistance($latUser, $lonUser, $latKantor, $lonKantor): float

@@ -125,9 +125,7 @@
       line-height: 1.4;
     }
 
-    .page-number:after {
-      content: counter(page) " / " counter(pages);
-    }
+    /* Nomor halaman di-render via PHP inline script */
 
   </style>
 </head>
@@ -190,7 +188,18 @@
   </div>
 
   <footer>
-    Halaman <span class="page-number"></span><br>
+    <script type="text/php">
+        if (isset($pdf)) {
+            $text = "Halaman " . $PAGE_NUM . " / " . $PAGE_COUNT;
+            $font = $fontMetrics->get_font("DejaVu Sans", "normal");
+            $size = 9;
+            $color = array(0.42, 0.46, 0.49);
+            $width  = $pdf->get_width();
+            $height = $pdf->get_height();
+            $pdf->page_text($width / 2 - 40, $height - 25, $text, $font, $size, $color);
+        }
+    </script>
+    <br>
     <span style="font-size:9px; color:#888;">
       Laporan ini dicetak otomatis dari Sistem Buku Tamu Digital — DKIS Kota Cirebon
     </span>

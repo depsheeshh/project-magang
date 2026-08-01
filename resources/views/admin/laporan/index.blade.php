@@ -57,7 +57,7 @@
   <div class="card-body">
 
     {{-- Form Filter Periode + Status --}}
-    <form method="GET" action="{{ route('admin.apelpagi.index') }}" class="mb-3">
+    <form method="GET" action="{{ route('admin.laporan.index') }}" class="mb-3">
     <div class="row">
         {{-- Kolom kiri: input tanggal --}}
         <div class="col-md-6 d-flex align-items-center flex-wrap">
@@ -81,8 +81,8 @@
         {{-- Kolom kanan: tombol --}}
         <div class="col-md-6 d-flex justify-content-end align-items-center">
         <button type="submit" class="btn btn-primary me-2">Cari</button>
-        <a href="{{ route('admin.apelpagi.index') }}" class="btn btn-secondary me-2">Reset</a>
-        <a href="{{ route('admin.apelpagi.exportPdf', request()->all()) }}" target="_blank" class="btn btn-danger">
+        <a href="{{ route('admin.laporan.index') }}" class="btn btn-secondary me-2">Reset</a>
+        <a href="{{ route('admin.laporan.cetak', request()->all()) }}" target="_blank" class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> Cetak PDF
         </a>
         </div>

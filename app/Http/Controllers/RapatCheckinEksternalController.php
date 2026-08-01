@@ -252,8 +252,7 @@ class RapatCheckinEksternalController extends Controller
                 'rapat_undangan_instansi_id' => $undanganInstansi->id,
                 'user_id'                    => $user->id,
                 'jabatan'                    => $data['jabatan'],
-                'instansi_id'                => $data['instansi_id'], // 🚨 selalu pakai dari form
-                'email'                      => $data['email'],
+                'instansi_id'                => $data['instansi_id'],
                 'status_kehadiran'           => 'pending',
                 'checkin_token_hash'         => hash('sha256',$tokenVerif),
                 'checkin_latitude'           => $data['latitude'],
@@ -263,12 +262,74 @@ class RapatCheckinEksternalController extends Controller
                 'created_id'                 => $user->id,
             ]);
 
-            Mail::to($data['email'])->send(new CheckinVerificationMail($rapat, $undangan, $tokenVerif));
+            try {
+                Mail::to($data['email'])->send(new CheckinVerificationMail($rapat, $undangan, $tokenVerif));
+                Log::info('CheckinVerificationMail sent', [
+                    'undangan_id' => $undangan->id,
+                    'email'       => $data['email'],
+                    'rapat_id'    => $rapat->id,
+                ]);
+            } catch (Exception $mailError) {
+                Log::error('CheckinVerificationMail FAILED', [
+                    'undangan_id' => $undangan->id,
+                    'email'       => $data['email'],
+                    'error'       => $mailError->getMessage(),
+                ]);
+                // Tetap lanjutkan ke halaman pending, user bisa resend manual
+            }
 
-            return redirect()->route('tamu.rapat.checkin.pending')
-                ->with('success','Check-in berhasil disubmit. Silakan verifikasi melalui email untuk menyelesaikan check-in.');
+            return redirect()->route('tamu.rapat.checkin.pending', [
+                    'rapat_id'    => $rapat->id,
+                    'undangan_id' => $undangan->id,
+                    'rapat_name'  => $rapat->judul,
+                ])
+                ->with('email', $data['email']);
         } catch (Exception $e) {
+            Log::error('Checkin error', ['error' => $e->getMessage()]);
             return back()->with('error','Terjadi kesalahan: '.$e->getMessage())->withInput();
+        }
+    }
+
+    // ✅ Resend email verifikasi check-in
+    public function resendVerificationEmail(Request $request)
+    {
+        $rapatId    = $request->input('rapat_id');
+        $undanganId = $request->input('undangan_id');
+
+        $undangan = RapatUndangan::where('id', $undanganId)
+            ->where('rapat_id', $rapatId)
+            ->where('status_kehadiran', 'pending')
+            ->whereNull('checkin_verified_at')
+            ->first();
+
+        if (!$undangan) {
+            return back()->with('error', 'Data check-in tidak ditemukan atau sudah diverifikasi.');
+        }
+
+        $rapat = Rapat::find($rapatId);
+        $user  = User::find($undangan->user_id);
+
+        if (!$rapat || !$user) {
+            return back()->with('error', 'Data rapat atau user tidak ditemukan.');
+        }
+
+        // Generate token baru
+        $newToken = Str::random(64);
+        $undangan->update(['checkin_token_hash' => hash('sha256', $newToken)]);
+
+        try {
+            Mail::to($user->email)->send(new CheckinVerificationMail($rapat, $undangan, $newToken));
+            Log::info('CheckinVerificationMail resent', [
+                'undangan_id' => $undangan->id,
+                'email'       => $user->email,
+            ]);
+            return back()->with('success', 'Email verifikasi berhasil dikirim ulang ke ' . $user->email . '. Silakan cek inbox dan folder Spam.');
+        } catch (Exception $e) {
+            Log::error('Resend CheckinVerificationMail FAILED', [
+                'undangan_id' => $undangan->id,
+                'error'       => $e->getMessage(),
+            ]);
+            return back()->with('error', 'Gagal mengirim email: ' . $e->getMessage());
         }
     }
 
@@ -333,11 +394,23 @@ class RapatCheckinEksternalController extends Controller
             'status_survey'       => 'belum_isi',
         ]);
 
+        // ✅ Update email_verified_at pada user agar status verifikasi email tercatat
+        $user = User::find($undangan->user_id);
+        if ($user && !$user->email_verified_at) {
+            $user->update(['email_verified_at' => now()]);
+            Log::info('VerifyCheckin: email_verified_at updated', ['user_id' => $user->id]);
+        }
+
+        // ✅ Auto-login user agar bisa redirect ke halaman sukses yang butuh auth
+        if (!Auth::check() && $user) {
+            Auth::login($user);
+        }
+
         Log::info('VerifyCheckin: Success', [
-            'undangan_id' => $undangan->id,
-            'rapat_id'    => $rapat->id,
-            'user_id'     => $undangan->user_id,
-            'status_survey'    => 'belum_isi',
+            'undangan_id'  => $undangan->id,
+            'rapat_id'     => $rapat->id,
+            'user_id'      => $undangan->user_id,
+            'status_survey'=> 'belum_isi',
         ]);
 
         return redirect()->route('tamu.rapat.checkin.success')

@@ -60,7 +60,7 @@
 
     /* ===== FOOTER ===== */
     footer { position: fixed; bottom: -20px; left: 0; right: 0; text-align: right; font-size: 10px; color: #6c757d; }
-    .page-number:after { content: counter(page) " / " counter(pages); }
+    /* Nomor halaman di-render via PHP inline script */
 
     .dicetak { position: fixed; bottom: 45px; left: 0; right: 0; text-align: center; font-size: 10.5px; color: #555; }
   </style>
@@ -138,7 +138,17 @@
   </div>
 
   <footer>
-    Halaman <span class="page-number"></span>
+    <script type="text/php">
+        if (isset($pdf)) {
+            $text = "Halaman " . $PAGE_NUM . " / " . $PAGE_COUNT;
+            $font = $fontMetrics->get_font("DejaVu Sans", "normal");
+            $size = 9;
+            $color = array(0.42, 0.46, 0.49);
+            $width  = $pdf->get_width();
+            $height = $pdf->get_height();
+            $pdf->page_text($width - 120, $height - 30, $text, $font, $size, $color);
+        }
+    </script>
   </footer>
 </body>
 </html>

@@ -82,7 +82,7 @@ class ApelPagiController extends Controller
                 'start_date'  => $request->start_date,
                 'end_date'    => $request->end_date,
             ]
-        ]);
+        ])->setOption('isPhpEnabled', true);
 
         return $pdf->download('laporan-apelpagi-'.now()->format('Ymd').'.pdf');
     }

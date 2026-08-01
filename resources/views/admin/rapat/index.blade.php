@@ -64,8 +64,7 @@
                 <td class="text-center">
                 @if($r->jenis_rapat === 'Internal')
                     @php
-                        $hadir = $r->undangan->where('status_kehadiran','hadir','selesai')->count();
-                        $total = $r->jumlah_tamu ?? 0;
+                        $hadir = $r->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count(); $total = $r->jumlah_tamu ?? 0;
                     @endphp
                     <span class="badge badge-success">Tamu Maks: {{ $total }}</span><br>
                     <span class="badge badge-primary">Hadir: {{ $hadir }}/{{ $total }}</span>
@@ -99,7 +98,7 @@
             @endforelse
             </tbody>
       </table>
-      {{ $rapat->links() }}
+      {{ $rapat->links('pagination::bootstrap-4') }}
     </div>
   </div>
 </div>

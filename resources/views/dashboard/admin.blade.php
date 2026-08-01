@@ -44,8 +44,134 @@ body.dark-mode .list-group-item {
 body.dark-mode .badge {
   color: #fff !important;
 }
+
+/* ===== Monthly Filter Bar ===== */
+.month-filter-bar {
+  background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(78, 115, 223, 0.3);
+}
+
+body.dark-mode .month-filter-bar {
+  background: linear-gradient(135deg, #2a2a4a 0%, #1a1a3a 100%);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.month-filter-bar .filter-label {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.month-filter-bar .filter-label i {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.month-filter-bar select {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s;
+  backdrop-filter: blur(4px);
+  min-width: 110px;
+}
+
+.month-filter-bar select option {
+  background: #2c3e50;
+  color: #fff;
+}
+
+.month-filter-bar select:hover,
+.month-filter-bar select:focus {
+  background: rgba(255,255,255,0.28);
+}
+
+.month-filter-bar .btn-filter {
+  background: #fff;
+  color: #4e73df;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.month-filter-bar .btn-filter:hover {
+  background: #f0f0ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.month-filter-bar .period-badge {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: auto;
+  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+/* Animasi card stats */
+.card-statistic-1 {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card-statistic-1:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
 </style>
 @endpush
+
+
+{{-- ===== FILTER BULAN / TAHUN (tampil untuk semua role) ===== --}}
+<form method="GET" action="{{ route('dashboard.index') }}" id="filterForm">
+  <div class="month-filter-bar">
+    <span class="filter-label">
+      <i class="fas fa-calendar-alt"></i>
+      Filter Periode:
+    </span>
+
+    <select name="bulan" onchange="this.form.submit()" title="Pilih Bulan">
+      @foreach($bulanList as $num => $nama)
+        <option value="{{ $num }}" {{ $bulan == $num ? 'selected' : '' }}>{{ $nama }}</option>
+      @endforeach
+    </select>
+
+    <select name="tahun" onchange="this.form.submit()" title="Pilih Tahun">
+      @foreach(array_reverse($tahunList) as $t)
+        <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}</option>
+      @endforeach
+    </select>
+
+    <span class="period-badge">
+      <i class="fas fa-chart-bar me-1"></i>
+      Data: {{ $bulanList[$bulan] }} {{ $tahun }}
+    </span>
+  </div>
+</form>
 
 
 {{-- Dashboard untuk Admin --}}
@@ -106,35 +232,34 @@ body.dark-mode .badge {
     </div>
   </div>
 
-  {{-- Total Kunjungan Tamu --}}
-    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+  {{-- Total Kunjungan Tamu (per bulan) --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-        <div class="card-icon bg-warning"><i class="fas fa-user-clock"></i></div>
-        <div class="card-wrap">
-        <div class="card-header"><h4>Total Kunjungan Tamu</h4></div>
+      <div class="card-icon bg-warning"><i class="fas fa-user-clock"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Kunjungan Tamu</h4></div>
         <div class="card-body">{{ $totalKunjunganTamu }}</div>
-        </div>
+      </div>
     </div>
-    </div>
+  </div>
 
-
-  {{-- Survey --}}
+  {{-- Survey (per bulan) --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
       <div class="card-icon bg-info"><i class="fas fa-comment-dots"></i></div>
       <div class="card-wrap">
-        <div class="card-header"><h4>Total Survey</h4></div>
+        <div class="card-header"><h4>Survey Tamu</h4></div>
         <div class="card-body">{{ $totalSurvey }}</div>
       </div>
     </div>
   </div>
 
-  {{-- Rapat --}}
+  {{-- Rapat (per bulan) --}}
   <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
       <div class="card-icon bg-secondary"><i class="fas fa-handshake"></i></div>
       <div class="card-wrap">
-        <div class="card-header"><h4>Total Rapat</h4></div>
+        <div class="card-header"><h4>Rapat Dibuat</h4></div>
         <div class="card-body">{{ $totalRapat }}</div>
       </div>
     </div>
@@ -151,39 +276,47 @@ body.dark-mode .badge {
     </div>
   </div>
 
-  {{-- Survey Rapat Terisi --}}
-    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+  {{-- Survey Rapat Terisi (per bulan) --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
     <div class="card card-statistic-1">
-        <div class="card-icon bg-success"><i class="fas fa-check-circle"></i></div>
-        <div class="card-wrap">
+      <div class="card-icon bg-success"><i class="fas fa-check-circle"></i></div>
+      <div class="card-wrap">
         <div class="card-header"><h4>Survey Rapat Terisi</h4></div>
         <div class="card-body">{{ $surveyRapatFilled }}</div>
-        </div>
-    </div>
-    </div>
-    {{-- Apel Pagi --}}
-<div class="col-lg-3 col-md-6 col-sm-6 col-12">
-  <div class="card card-statistic-1">
-    <div class="card-icon bg-info"><i class="fas fa-sun"></i></div>
-    <div class="card-wrap">
-      <div class="card-header"><h4>Total Apel Pagi</h4></div>
-      <div class="card-body">{{ $apelTotal }}</div>
+      </div>
     </div>
   </div>
+
+  {{-- Apel Pagi (per bulan) --}}
+  <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+    <div class="card card-statistic-1">
+      <div class="card-icon bg-info"><i class="fas fa-sun"></i></div>
+      <div class="card-wrap">
+        <div class="card-header"><h4>Apel Pagi</h4></div>
+        <div class="card-body">{{ $apelTotal }}</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-
-
+{{-- Info periode yang ditampilkan --}}
+<div class="alert alert-info mt-2 mb-3 py-2 px-3" style="border-radius:8px; font-size:13px;">
+  <i class="fas fa-info-circle me-1"></i>
+  Data <strong>Kunjungan Tamu, Survey, Rapat, Survey Rapat Terisi, dan Apel Pagi</strong>
+  menampilkan total <strong>{{ $bulanList[$bulan] }} {{ $tahun }}</strong>.
+  Data <strong>User, Pegawai, Bidang, Jabatan, Tamu, dan Instansi</strong> adalah total keseluruhan.
 </div>
-<div class="row mt-5">
-<div class="col-12">
+
+<div class="row mt-3">
+  <div class="col-12">
     <div class="card shadow-sm">
-    <div class="card-header"><h4 class="mb-0">📊 Grafik Statistik Rapat & Kunjungan</h4></div>
-    <div class="card-body">
+      <div class="card-header"><h4 class="mb-0">📊 Grafik Statistik Rapat & Kunjungan — {{ $bulanList[$bulan] }} {{ $tahun }}</h4></div>
+      <div class="card-body">
         <canvas id="chartAdmin" height="120"></canvas>
+      </div>
     </div>
-    </div>
-</div>
+  </div>
 </div>
 @endif
 
@@ -257,9 +390,14 @@ body.dark-mode .badge {
   </div>
 </div>
 
+<div class="alert alert-info mt-2 mb-3 py-2 px-3" style="border-radius:8px; font-size:13px;">
+  <i class="fas fa-info-circle me-1"></i>
+  Statistik kunjungan & rapat periode <strong>{{ $bulanList[$bulan] }} {{ $tahun }}</strong>.
+  Daftar kunjungan menunggu di bawah menampilkan semua status terkini (real-time).
+</div>
 
 {{-- Daftar kunjungan menunggu --}}
-<div class="card mt-4">
+<div class="card mt-2">
   <div class="card-header"><h4>Daftar Kunjungan Menunggu</h4></div>
   <div class="card-body">
     @if($kunjunganMenunggu->isEmpty())
@@ -297,7 +435,7 @@ body.dark-mode .badge {
 <div class="row mt-5">
   <div class="col-12">
     <div class="card shadow-sm">
-      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Frontliner</h4></div>
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Frontliner — {{ $bulanList[$bulan] }} {{ $tahun }}</h4></div>
       <div class="card-body">
         <canvas id="chartFrontliner" height="120"></canvas>
       </div>
@@ -341,6 +479,12 @@ body.dark-mode .badge {
       </div>
     </div>
   </div>
+</div>
+
+<div class="alert alert-info mt-0 mb-3 py-2 px-3" style="border-radius:8px; font-size:13px;">
+  <i class="fas fa-info-circle me-1"></i>
+  Statistik kunjungan & rapat periode <strong>{{ $bulanList[$bulan] }} {{ $tahun }}</strong>.
+  Kunjungan terbaru & riwayat singkat menampilkan 5 data terakhir (semua waktu).
 </div>
 
 {{-- Baris 3: Kunjungan Terbaru & Riwayat Singkat (di bawah Data Rapat) --}}
@@ -414,7 +558,7 @@ body.dark-mode .badge {
 <div class="row mt-5">
   <div class="col-12">
     <div class="card shadow-sm">
-      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Pegawai</h4></div>
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Pegawai — {{ $bulanList[$bulan] }} {{ $tahun }}</h4></div>
       <div class="card-body">
         <canvas id="chartPegawai" height="120"></canvas>
       </div>
@@ -471,10 +615,16 @@ body.dark-mode .badge {
     </div>
   </div>
 </div>
-<div class="row mt-5">
+
+<div class="alert alert-info mt-2 mb-3 py-2 px-3" style="border-radius:8px; font-size:13px;">
+  <i class="fas fa-info-circle me-1"></i>
+  Menampilkan data kunjungan & undangan rapat periode <strong>{{ $bulanList[$bulan] }} {{ $tahun }}</strong>.
+</div>
+
+<div class="row mt-3">
   <div class="col-12">
     <div class="card shadow-sm">
-      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Tamu</h4></div>
+      <div class="card-header"><h4 class="mb-0">📊 Statistik Kunjungan Tamu — {{ $bulanList[$bulan] }} {{ $tahun }}</h4></div>
       <div class="card-body">
         <canvas id="chartTamu" height="120"></canvas>
       </div>
@@ -487,41 +637,45 @@ body.dark-mode .badge {
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@if($role === 'admin')
 <script>
   var ctx = document.getElementById('chartAdmin').getContext('2d');
   var chartAdmin = new Chart(ctx, {
     type: 'bar',
     data: {
         labels: [
-        'Total Rapat',
-        'Survey Terisi',
-        'Survey Belum Terisi',
-        'Total Tamu',
-        'Total Kunjungan Tamu'
+          'Rapat Dibuat',
+          'Survey Rapat Terisi',
+          'Survey Rapat Belum',
+          'Kunjungan Tamu',
+          'Survey Tamu',
+          'Apel Pagi'
         ],
         datasets: [{
-        label: 'Statistik',
-        data: [
-            {{ $totalRapat }},
-            {{ $surveyRapatFilled }},
-            {{ $surveyRapatPending }},
-            {{ $totalTamu }},
-            {{ $totalKunjunganTamu }}
-        ],
-        backgroundColor: [
-            '#4e73df',
-            '#1cc88a',
-            '#e74a3b',
-            '#36b9cc',
-            '#f6c23e'
-        ]
+          label: 'Statistik {{ $bulanList[$bulan] }} {{ $tahun }}',
+          data: [
+              {{ $totalRapat }},
+              {{ $surveyRapatFilled }},
+              {{ $surveyRapatPending }},
+              {{ $totalKunjunganTamu }},
+              {{ $totalSurvey }},
+              {{ $apelTotal }}
+          ],
+          backgroundColor: [
+              '#4e73df',
+              '#1cc88a',
+              '#e74a3b',
+              '#36b9cc',
+              '#f6c23e',
+              '#fd7e14'
+          ]
         }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: { display: true },
         tooltip: { enabled: true }
       },
       scales: {
@@ -533,6 +687,9 @@ body.dark-mode .badge {
     }
   });
 </script>
+@endif
+
+@if($role === 'frontliner')
 <script>
   var ctxFront = document.getElementById('chartFrontliner').getContext('2d');
   var chartFrontliner = new Chart(ctxFront, {
@@ -540,7 +697,7 @@ body.dark-mode .badge {
     data: {
       labels: ['Total Kunjungan','Diterima','Ditolak','Sedang Bertamu','Selesai'],
       datasets: [{
-        label: 'Statistik',
+        label: 'Statistik {{ $bulanList[$bulan] }} {{ $tahun }}',
         data: [
           {{ $total }},
           {{ $diterima }},
@@ -554,11 +711,14 @@ body.dark-mode .badge {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: true } },
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
   });
 </script>
+@endif
+
+@if($role === 'pegawai')
 <script>
   var ctxPegawai = document.getElementById('chartPegawai').getContext('2d');
   var chartPegawai = new Chart(ctxPegawai, {
@@ -566,7 +726,7 @@ body.dark-mode .badge {
     data: {
       labels: ['Total Kunjungan','Selesai','Sedang Bertamu','Ditolak'],
       datasets: [{
-        label: 'Statistik',
+        label: 'Statistik {{ $bulanList[$bulan] }} {{ $tahun }}',
         data: [
           {{ $totalKunjungan }},
           {{ $selesai }},
@@ -579,11 +739,14 @@ body.dark-mode .badge {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: true } },
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
   });
 </script>
+@endif
+
+@if($role === 'tamu')
 <script>
   var ctxTamu = document.getElementById('chartTamu').getContext('2d');
   var chartTamu = new Chart(ctxTamu, {
@@ -591,7 +754,7 @@ body.dark-mode .badge {
     data: {
       labels: ['Total Kunjungan Saya','Diterima','Ditolak','Undangan Rapat'],
       datasets: [{
-        label: 'Statistik',
+        label: 'Statistik {{ $bulanList[$bulan] }} {{ $tahun }}',
         data: [
           {{ $total }},
           {{ $diterima }},
@@ -604,10 +767,10 @@ body.dark-mode .badge {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: true } },
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
   });
 </script>
+@endif
 @endpush
-

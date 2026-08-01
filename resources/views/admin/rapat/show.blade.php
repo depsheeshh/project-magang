@@ -270,7 +270,7 @@
 {{-- Statistik --}}
 @php
   $total   = $rapat->undangan->count();
-  $hadir   = $rapat->undangan->where('status_kehadiran','hadir', 'selesai')->count();
+  $hadir   = $rapat->undangan->whereIn('status_kehadiran',['hadir','selesai'])->count();
   $selesai = $rapat->undangan->where('status_kehadiran','selesai')->count();
   $pending = $rapat->undangan->where('status_kehadiran','pending')->count();
   $tidak   = $rapat->undangan->where('status_kehadiran','tidak_hadir')->count();

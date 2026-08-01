@@ -275,45 +275,6 @@
             </a>
         </li>
 
-        <li class="menu-header">Rapat</li>
-        <li class="dropdown @activeIfRoute(
-            'pegawai.rapat.index',
-            'pegawai.rapat.rekap',
-            'pegawai.instansi.*',
-            'pegawai.kantor.*',
-            'pegawai.ruangan.*'
-        )">
-            <a href="#" class="nav-link has-dropdown">
-            <i class="fas fa-handshake"></i> <span>Rapat</span>
-            </a>
-            <ul class="dropdown-menu">
-            <li class="@activeIfRoute('pegawai.rapat.index')">
-                <a class="nav-link" href="{{ route('pegawai.rapat.index') }}">
-                <i class="fas fa-list"></i> Manajemen Rapat
-                </a>
-            </li>
-            <li class="@activeIfRoute('pegawai.instansi.*')">
-                <a class="nav-link" href="{{ route('pegawai.instansi.index') }}">
-                <i class="fas fa-building"></i> Data Instansi
-                </a>
-            </li>
-            <li class="@activeIfRoute('pegawai.kantor.*')">
-                <a class="nav-link" href="{{ route('pegawai.kantor.index') }}">
-                <i class="fas fa-city"></i> Data Kantor
-                </a>
-            </li>
-            <li class="@activeIfRoute('pegawai.ruangan.*')">
-                <a class="nav-link" href="{{ route('pegawai.ruangan.index') }}">
-                <i class="fas fa-door-open"></i> Data Ruangan
-                </a>
-            </li>
-            <li class="@activeIfRoute('pegawai.rapat.rekap')">
-                <a class="nav-link" href="{{ route('pegawai.rapat.rekap') }}">
-                <i class="fas fa-chart-bar"></i> Rekap Rapat
-                </a>
-            </li>
-            </ul>
-        </li>
         @endrole
 
 

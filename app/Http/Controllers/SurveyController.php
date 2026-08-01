@@ -256,7 +256,8 @@ class SurveyController extends Controller
         }
 
         $pdf = Pdf::loadView('admin.surveys.rekap_pdf', compact('rekap','periode'))
-                ->setPaper('a4','portrait');
+                ->setPaper('a4','portrait')
+                ->setOption('isPhpEnabled', true);
 
         return $pdf->download("rekap-survey-{$periode}.pdf");
     }

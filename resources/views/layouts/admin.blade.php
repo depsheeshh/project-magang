@@ -442,34 +442,99 @@
         </div>`;
     }
 
-  // === Handler Per Role ===
-  function renderAdmin(data) {
-    const badge = document.getElementById('notif-badge');
-    const list = document.getElementById('notif-list');
-    if (!badge || !list) return;
-
-    const items = data.items ?? [];
-    if (items.length === 0) {
-      badge.classList.add('d-none');
-      list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
-      return;
+    function renderTamuBaru(item) {
+        return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+            <div class="notif-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:38px;height:38px;">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">Tamu Baru Menunggu Persetujuan</div>
+                <div class="notif-sub small">${item.nama} • ${item.instansi} • Keperluan: ${item.keperluan}</div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
     }
 
-    badge.textContent = items.length;
-    badge.classList.remove('d-none');
+    function renderTamuBaruPegawai(item) {
+        return `
+        <div class="notif-item d-flex align-items-start border-bottom py-2 px-2" data-id="${item.id}">
+            <div class="notif-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width:38px;height:38px;">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="notif-content flex-fill">
+                <div class="notif-title font-weight-bold">Tamu Baru untuk Anda</div>
+                <div class="notif-sub small">${item.nama} • ${item.instansi} • Keperluan: ${item.keperluan}</div>
+                <div class="notif-time small"><i class="fas fa-clock"></i> ${item.waktu}</div>
+            </div>
+            <button class="btn btn-sm btn-link text-danger delete-notif" data-id="${item.id}">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
+    }
 
-    list.innerHTML = items.map(item => {
-      switch(item.event) {
-        case 'instansi_baru': return renderInstansiBaru(item);
-        case 'user_baru': return renderUserBaru(item);
-        case 'survey_pelayanan': return renderSurveyPelayanan(item);
-        case 'survey_baru': return renderSurveyBaru(item);
-        case 'survey_rapat_baru': return renderSurveyRapatBaru(item);
-        case 'survey_rapat_respon': return renderSurveyRapatRespon(item);
-        default: return '';
-      }
-    }).join('');
-  }
+
+    // === Handler Per Role ===
+    function renderAdmin(data) {
+        const badge = document.getElementById('notif-badge');
+        const list = document.getElementById('notif-list');
+        if (!badge || !list) return;
+
+        const items = data.items ?? [];
+        if (items.length === 0) {
+        badge.classList.add('d-none');
+        list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
+        return;
+        }
+
+        badge.textContent = items.length;
+        badge.classList.remove('d-none');
+
+        list.innerHTML = items.map(item => {
+        switch(item.event) {
+            case 'instansi_baru': return renderInstansiBaru(item);
+            case 'user_baru': return renderUserBaru(item);
+            case 'survey_pelayanan': return renderSurveyPelayanan(item);
+            case 'survey_baru': return renderSurveyBaru(item);
+            case 'survey_rapat_baru': return renderSurveyRapatBaru(item);
+            case 'survey_rapat_respon': return renderSurveyRapatRespon(item);
+            default: return '';
+        }
+        }).join('');
+    }
+
+    function renderFrontliner(data) {
+        const badge = document.getElementById('notif-badge');
+        const list = document.getElementById('notif-list');
+        if (!badge || !list) return;
+
+        const items = data.items ?? [];
+        if (items.length === 0) {
+            badge.classList.add('d-none');
+            list.innerHTML = `<span class="dropdown-item text-muted text-center py-3">Tidak ada notifikasi</span>`;
+            return;
+        }
+
+        badge.textContent = items.length;
+        badge.classList.remove('d-none');
+
+        list.innerHTML = items.map(item => {
+            switch(item.event) {
+                case 'tamu_baru':
+                    return renderTamuBaru(item);
+                case 'disetujui':
+                    return renderKunjunganDisetujui(item);
+                case 'ditolak':
+                    return renderKunjunganDitolak(item);
+                default:
+                    return '';
+            }
+        }).join('');
+    }
+
 
   function renderPegawai(data) {
     const badge = document.getElementById('notif-badge');
@@ -488,6 +553,7 @@
 
     list.innerHTML = items.map(item => {
       switch(item.event) {
+        case 'tamu_baru': return renderTamuBaruPegawai(item);
         case 'rapat_undangan': return renderRapatUndanganPegawai(item);
         case 'survey_rapat_baru': return renderSurveyRapatBaru(item);
         case 'survey_rapat_respon': return renderSurveyRapatRespon(item);
@@ -527,7 +593,7 @@
   if (roles.includes('admin')) {
     renderHandler = renderAdmin;
   } else if (roles.includes('frontliner')) {
-    renderHandler = renderAdmin; // share event admin
+    renderHandler = renderFrontliner; // share event admin
   } else if (roles.includes('pegawai')) {
     renderHandler = renderPegawai;
   } else if (roles.includes('tamu')) {

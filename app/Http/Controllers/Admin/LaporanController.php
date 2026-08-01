@@ -75,7 +75,8 @@ class LaporanController extends Controller
     $kunjungan = $query->get();
 
     $pdf = PDF::loadView('admin.laporan.pdf', compact('kunjungan'))
-              ->setPaper('a4', 'landscape');
+              ->setPaper('a4', 'landscape')
+              ->setOption('isPhpEnabled', true);
 
     // $pdf->getDomPDF()->getCanvas()->page_script(function ($pageNumber, $pageCount, $canvas, $fontMetrics) {
     //     $text = "Halaman $pageNumber dari $pageCount";

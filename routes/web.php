@@ -92,6 +92,10 @@ Route::prefix('tamu')->name('tamu.')->group(function () {
     Route::get('rapat/checkin-pending', fn () => view('tamu.rapat.checkin_pending'))
         ->name('rapat.checkin.pending');
 
+    // Resend email verifikasi check-in
+    Route::post('rapat/checkin-resend', [RapatCheckinEksternalController::class, 'resendVerificationEmail'])
+        ->name('rapat.checkin.resend');
+
     // Halaman sukses (setelah verifikasi email berhasil)
     Route::get('rapat/checkin-success', fn () => view('tamu.rapat.checkin_success'))
         ->name('rapat.checkin.success');
